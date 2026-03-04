@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mi Galería Local</title>
+<link rel="stylesheet" href="fontawesome/css/all.min.css">
+
+<style>
+body { background: #111; color: white; font-family: Arial; text-align: center; margin: 0; }
+
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input, select {
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+}
+
+img, video {
+    -webkit-user-drag: none;
+}
+
+.controls-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap; 
+    padding: 0 20px;
+}
+
+button { 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    border: none; 
+    background: #444; 
+    color: white; 
+    cursor: pointer; 
+    transition: background 0.3s; 
+}
+button:hover { background: #666; }
+
+#searchInput, .control-select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #222;
+    color: white;
+    font-size: 15px;
+    transition: border-color 0.3s;
+}
+#searchInput { width: 200px; }
+.control-select { cursor: pointer; }
+
+#searchInput:focus, .control-select:focus { outline: none; border-color: #888; }
+#searchInput:disabled, .control-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#currentPathDisplay { font-size: 18px; color: #ccc; margin-bottom: 20px; font-weight: bold; }
+.grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 0 20px; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.item { margin: 0; position: relative; width: 200px; height: 150px; }
+
+img.thumb { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    transition: transform 0.2s, opacity 0.2s; 
+    object-fit: cover; 
+    background-color: #222; 
+    display: block;
+}
+
+.item:hover img.thumb, .item:hover .preview-video { 
+    transform: scale(1.05); 
+}
+
+.preview-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    z-index: 5;
+    pointer-events: none;
+    transition: transform 0.2s;
+}
+
+@keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+.skeleton {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, #222 4%, #3a3a3a 25%, #222 36%);
+    background-size: 800px 100%;
+}
+
+.media-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.badge-gif { background: rgba(0,0,0,0.8); }
+.badge-video { background: rgba(220, 53, 69, 0.9); letter-spacing: 1px; }
+
+.fav-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 20px;
+    pointer-events: none;
+    z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+
+.folder { 
+    width: 200px; 
+    height: 150px; 
+    background: #2a2a2a; 
+    border-radius: 10px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-direction: column; 
+    cursor: pointer; 
+    transition: transform 0.2s, border-color 0.3s, box-shadow 0.2s; 
+    color: white; 
+    border: 2px solid #444; 
+    box-sizing: border-box; 
+    user-select: none;
+    position: relative; 
+    overflow: hidden; 
+}
+.folder:hover { 
+    transform: scale(1.05); 
+    border-color: #888; 
+    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+}
+.folder-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-color: #222;
+}
+.folder-icon-fallback {
+    font-size: 50px;
+    margin-bottom: 15px; 
+}
+.folder-name-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px); 
+    -webkit-backdrop-filter: blur(4px);
+    padding: 8px 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    word-break: break-all;
+    text-shadow: 1px 1px 2px black;
+    pointer-events: none;
+}
+
+.viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; overflow: hidden; z-index: 1000; }
+
+.viewer-content, .custom-video-wrapper { width: auto; height: auto; max-width: calc(100vw - 160px); max-height: 85vh; object-fit: contain; user-select: none; touch-action: none;}
+img.viewer-content { cursor: grab; }
+img.viewer-content.grabbing { cursor: grabbing !important; }
+
+.custom-video-wrapper { position: relative; max-width: calc(100vw - 160px); max-height: 85vh; background: #000; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6); cursor: grab; user-select: none; }
+.custom-video-wrapper.grabbing { cursor: grabbing !important; }
+.custom-video-wrapper video { display: block; max-width: calc(100vw - 160px); max-height: 85vh; width: auto; height: auto; margin: 0 auto; }
+.custom-video-wrapper:fullscreen { max-width: 100vw; max-height: 100vh; border-radius: 0; }
+.custom-video-wrapper:fullscreen video { max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; object-fit: contain; }
+
+.custom-controls { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%); display: flex; flex-direction: column; padding: 20px 10px 10px 10px; box-sizing: border-box; opacity: 0; transition: opacity 0.3s; z-index: 10; }
+.custom-video-wrapper:hover .custom-controls, .custom-controls:hover { opacity: 1; }
+.progress-container { width: 100%; height: 5px; background: rgba(255,255,255,0.3); cursor: pointer; margin-bottom: 10px; position: relative; border-radius: 2px; }
+.progress-bar { height: 100%; background: #ff0000; width: 0%; border-radius: 2px; position: relative; pointer-events: none; }
+.progress-bar::after { content: ''; position: absolute; right: -5px; top: -4px; width: 13px; height: 13px; background: #ff0000; border-radius: 50%; opacity: 0; transition: opacity 0.2s; }
+.progress-container:hover .progress-bar::after { opacity: 1; }
+
+.controls-row { display: flex; align-items: center; gap: 15px; color: white; }
+.controls-row button { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 0; margin: 0; }
+.controls-row button:hover { background: none; color: #ff0000; }
+.time-display { font-size: 13px; font-family: Roboto, Arial, sans-serif; }
+#volSlider { width: 80px; cursor: pointer; accent-color: white; }
+
+.close { position: absolute; top: 20px; right: 30px; font-size: 30px; cursor: pointer; z-index: 1001; }
+.download-btn { position: absolute; top: 22px; right: 80px; font-size: 26px; cursor: pointer; z-index: 1001; color: white; text-decoration: none; transition: transform 0.2s; }
+.download-btn:hover { transform: scale(1.1); }
+
+.fav-btn { position: absolute; top: 22px; right: 130px; font-size: 26px; cursor: pointer; z-index: 1001; user-select: none; transition: transform 0.2s; }
+.fav-btn:hover { transform: scale(1.1); }
+
+.nav-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 40px; color: white; background: transparent; border: none; cursor: pointer; padding: 20px; z-index: 1001; user-select: none; }
+.nav-btn:hover { background: rgba(255,255,255,0.1); }
+.prev { left: 10px; }
+.next { right: 10px; }
+.file-name { position: absolute; bottom: 15px; color: white; font-size: 15px; background: rgba(0,0,0,0.8); padding: 8px 15px; border-radius: 8px; z-index: 1001; pointer-events: none; }
+
+@media (max-width: 800px) {
+    .nav-btn { padding: 10px; font-size: 25px; }
+    .viewer-content, .custom-video-wrapper { max-width: calc(100vw - 90px); }
+    .download-btn { right: 60px; font-size: 24px; }
+    .fav-btn { right: 110px; font-size: 24px; }
+    .copyright-link { font-size: 12px; bottom: 10px; right: 10px; } /* Ajuste en móviles */
+}
+
+.custom-video-wrapper, .custom-video-wrapper video {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+.is-dragging {
+    box-shadow: none !important;
+}
+
+.is-dragging * {
+    pointer-events: none !important; 
+}
+
+.win11-context-menu {
+    position: absolute;
+    z-index: 10000;
+    display: none; /* Oculto por defecto */
+    flex-direction: row;
+    background: rgba(35, 35, 35, 0.7);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    gap: 2px;
+    user-select: none;
+}
+
+.menu-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    min-width: 55px;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.menu-action:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-action:active {
+    transform: scale(0.95);
+}
+
+.menu-action .icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.copyright-link {
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    color: rgba(255, 255, 255, 0.3);
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 500;
+    transition: color 0.3s ease, transform 0.2s ease;
+    user-select: none;
+}
+
+.copyright-link:hover {
+    color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
+}
+
+</style>
+</head>
+<body>
+
+<h1>Mi Galería Automática</h1>
+
+<input type="file" id="fileInput" webkitdirectory multiple hidden>
+
+<div class="controls-container">
+    <button onclick="document.getElementById('fileInput').click()">
+        <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
+    </button>
+    
+    <select id="sortCriteria" class="control-select" disabled>
+        <option value="name">Ordenar por Nombre</option>
+        <option value="date">Ordenar por Fecha</option>
+        <option value="size">Ordenar por Tamaño</option>
+        <option value="type">Ordenar por Tipo</option>
+    </select>
+
+    <select id="sortOrder" class="control-select" disabled>
+        <option value="asc">Ascendente (A-Z / Menor-Mayor)</option>
+        <option value="desc">Descendente (Z-A / Mayor-Menor)</option>
+    </select>
+
+    <select id="typeFilter" class="control-select" disabled>
+        <option value="all">Todos los archivos</option>
+        <option value="image">Solo Imágenes</option>
+        <option value="video">Solo Videos</option>
+        <option value="gif">Solo GIFs</option>
+        <option value="favs">Solo Favoritos</option>
+    </select>
+
+    <input type="text" id="searchInput" placeholder="Buscar..." disabled>
+</div>
+
+<div id="currentPathDisplay">Esperando carpeta...</div>
+
+<div class="grid" id="gallery"></div>
+
+<div class="viewer" id="viewer">
+    <i id="favBtn" class="fav-btn fa-regular fa-heart" title="Marcar como favorito"></i>
+    <a id="downloadBtn" class="download-btn" title="Descargar/Guardar archivo">
+        <i class="fa-solid fa-download"></i>
+    </a>
+    <i class="fa-solid fa-xmark close" onclick="closeViewer()" title="Cerrar"></i>
+    
+    <button class="nav-btn prev" onclick="navigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="nav-btn next" onclick="navigate(1)"><i class="fa-solid fa-chevron-right"></i></button>
+    <div class="file-name" id="fileName"></div>
+</div>
+
+<div id="customContextMenu" class="win11-context-menu">
+    <div class="menu-action" id="ctxCopy">
+        <i class="fa-regular fa-copy icon"></i>
+        <span>Copiar</span>
+    </div>
+    <div class="menu-action" id="ctxShare">
+        <i class="fa-solid fa-share-nodes icon"></i>
+        <span>Compartir</span>
+    </div>
+    <div class="menu-action" id="ctxDownload">
+        <i class="fa-solid fa-download icon"></i>
+        <span>Descargar</span>
+    </div>
+    <div class="menu-action" id="ctxFav">
+        <i class="fa-regular fa-heart icon" id="ctxFavIcon"></i>
+        <span id="ctxFavText">Favorito</span>
+    </div>
+</div>
+
+<a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
+    <i class="fa-brands fa-github"></i> RynnAzura
+</a>
+
+<script>
+const input = document.getElementById("fileInput");
+const searchInput = document.getElementById("searchInput");
+const typeFilter = document.getElementById("typeFilter"); 
+const sortCriteria = document.getElementById("sortCriteria"); 
+const sortOrder = document.getElementById("sortOrder"); 
+const gallery = document.getElementById("gallery");
+const viewer = document.getElementById("viewer");
+const fileNameDisplay = document.getElementById("fileName");
+const pathDisplay = document.getElementById("currentPathDisplay");
+const downloadBtn = document.getElementById("downloadBtn"); 
+const favBtn = document.getElementById("favBtn");
+
+// --- BLOQUEAR MENÚ CONTEXTUAL NATIVO EN TODA LA PÁGINA ---
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+let mediaFiles = []; 
+let currentIndex = 0;
+let foldersMap = {};
+let rootFolderName = "";
+let currentPath = ""; 
+let allFiles = []; 
+
+// SISTEMA DE FAVORITOS LOCALSTORAGE
+let favorites = new Set(JSON.parse(localStorage.getItem('myGalleryFavs')) || []);
+const saveFavorites = () => localStorage.setItem('myGalleryFavs', JSON.stringify([...favorites]));
+
+const workerCode = `
+self.onmessage = async function(e) {
+    const { id, file, targetWidth } = e.data;
+    try {
+        const bitmap = await createImageBitmap(file);
+        const scale = Math.min(1, targetWidth / bitmap.width);
+        
+        // LA SOLUCIÓN: Forzar números enteros para evitar el bug de renderizado
+        const width = Math.round(bitmap.width * scale);
+        const height = Math.round(bitmap.height * scale);
+        
+        const canvas = new OffscreenCanvas(width, height);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0, width, height);
+        
+        const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 });
+        self.postMessage({ id, success: true, blob });
+        
+        bitmap.close();
+    } catch (error) {
+        self.postMessage({ id, success: false, error: error.message });
+    }
+};
+`;
+
+const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+const imageWorker = new Worker(URL.createObjectURL(workerBlob));
+const pendingTasks = new Map();
+let taskIdCounter = 0;
+
+imageWorker.onmessage = function(e) {
+    const { id, success, blob, error } = e.data;
+    if (pendingTasks.has(id)) {
+        const { resolve, reject } = pendingTasks.get(id);
+        pendingTasks.delete(id);
+        if (success) resolve(blob);
+        else reject(error);
+    }
+};
+
+function generateThumbWithWorker(file, targetWidth) {
+    return new Promise((resolve, reject) => {
+        const id = taskIdCounter++;
+        pendingTasks.set(id, { resolve, reject });
+        imageWorker.postMessage({ id, file, targetWidth });
+    });
+}
+
+function cleanupMemory() {
+    if (!allFiles || allFiles.length === 0) return;
+    
+    allFiles.forEach(fileData => {
+        if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) {
+            URL.revokeObjectURL(fileData.thumbSrc);
+        }
+        if (fileData.src && fileData.src.startsWith('blob:')) {
+            URL.revokeObjectURL(fileData.src);
+        }
+    });
+    console.log("Memoria optimizada: URLs anteriores revocadas 🧹");
+}
+
+input.addEventListener("change", function() {
+    foldersMap = {};
+    rootFolderName = "";
+    allFiles = []; 
+
+    Array.from(this.files).forEach(file => {
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+
+        if(isImage || isVideo) {
+            const pathParts = file.webkitRelativePath.split('/');
+            const fileName = pathParts.pop(); 
+            
+            if (!rootFolderName) rootFolderName = pathParts[0];
+
+            for (let i = 0; i < pathParts.length; i++) {
+                let folderPath = pathParts.slice(0, i + 1).join('/');
+                if (!foldersMap[folderPath]) {
+                    foldersMap[folderPath] = { files: [], subfolders: new Set() };
+                }
+                if (i > 0) {
+                    let parentPath = pathParts.slice(0, i).join('/');
+                    foldersMap[parentPath].subfolders.add(folderPath);
+                }
+            }
+            
+            let finalFolderPath = pathParts.join('/');
+            
+            const fileData = {
+                type: isImage ? "image" : "video",
+                file: file, 
+                name: fileName,
+                src: null, 
+                thumbSrc: null, 
+                parentFolder: finalFolderPath,
+                uniquePath: file.webkitRelativePath
+            };
+
+            foldersMap[finalFolderPath].files.push(fileData);
+            allFiles.push(fileData);
+        }
+    });
+
+    if (rootFolderName) {
+        searchInput.disabled = false;
+        typeFilter.disabled = false;
+        sortCriteria.disabled = false; 
+        sortOrder.disabled = false;
+        
+        searchInput.value = ""; 
+        typeFilter.value = "all";
+        sortCriteria.value = "name";
+        sortOrder.value = "asc";
+        
+        renderGallery(rootFolderName);
+    }
+});
+
+function triggerGalleryAnimation() {
+    gallery.classList.remove('fade-in');
+    void gallery.offsetWidth; 
+    gallery.classList.add('fade-in');
+}
+
+function updateGalleryView() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm === "" && typeFilter.value !== "favs" && typeFilter.value !== "folder") {
+        if (currentPath) renderGallery(currentPath);
+    } else {
+        renderGlobalSearch(searchTerm);
+    }
+}
+
+searchInput.addEventListener("input", updateGalleryView);
+typeFilter.addEventListener("change", updateGalleryView);
+sortCriteria.addEventListener("change", updateGalleryView);
+sortOrder.addEventListener("change", updateGalleryView);
+
+function passesFilter(fileData) {
+    const filter = typeFilter.value;
+    if (filter === "folder") return false; 
+    if (filter === "favs") return favorites.has(fileData.uniquePath);
+    
+    if (filter === "all") return true;
+    if (filter === "video" && fileData.type === "video") return true;
+    if (filter === "gif" && fileData.file.type === "image/gif") return true;
+    if (filter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true;
+    return false;
+}
+
+function sortFilesArray(filesArray) {
+    const criteria = sortCriteria.value;
+    const isAscending = sortOrder.value === "asc" ? 1 : -1;
+
+    return filesArray.sort((a, b) => {
+        let valA, valB;
+        if (criteria === "name") {
+            valA = a.name.toLowerCase(); valB = b.name.toLowerCase();
+        } else if (criteria === "date") {
+            valA = a.file.lastModified; valB = b.file.lastModified;
+        } else if (criteria === "size") {
+            valA = a.file.size; valB = b.file.size;
+        } else if (criteria === "type") {
+            valA = a.file.type; valB = b.file.type;
+        }
+        if (valA < valB) return -1 * isAscending;
+        if (valA > valB) return 1 * isAscending;
+        return 0;
+    });
+}
+
+function getFolderCoverData(folderPath) {
+    let possibleCovers = [];
+    for (let i = 0; i < allFiles.length; i++) {
+        const f = allFiles[i];
+        if ((f.parentFolder === folderPath || f.parentFolder.startsWith(folderPath + '/'))) {
+            possibleCovers.push({ data: f, index: i });
+        }
+    }
+    if (possibleCovers.length === 0) return null;
+    possibleCovers.sort((a, b) => a.data.name.toLowerCase().localeCompare(b.data.name.toLowerCase()));
+    return possibleCovers[0];
+}
+
+const smartThumbWidth = 200 * (window.devicePixelRatio || 1);
+
+const handleIntersection = (entries, obs) => {
+    entries.forEach(entry => {
+        const mediaElement = entry.target;
+        
+        let fileData;
+        if (mediaElement.classList.contains('folder-cover')) {
+            fileData = allFiles[mediaElement.dataset.allIndex];
+        } else {
+            fileData = mediaFiles[mediaElement.dataset.index];
+        }
+
+        if (!fileData) return;
+
+        if (entry.isIntersecting) {
+            if (fileData.thumbSrc) {
+                mediaElement.src = fileData.thumbSrc;
+                mediaElement.dataset.loaded = "true";
+                return;
+            }
+
+            if (fileData.file.type.startsWith("image/")) {
+                generateThumbWithWorker(fileData.file, smartThumbWidth)
+                    .then(blob => {
+                        fileData.thumbSrc = URL.createObjectURL(blob);
+                        mediaElement.src = fileData.thumbSrc;
+                        mediaElement.dataset.loaded = "true";
+                    })
+                    .catch(() => {
+                        fileData.thumbSrc = URL.createObjectURL(fileData.file);
+                        mediaElement.src = fileData.thumbSrc;
+                        mediaElement.dataset.loaded = "true";
+                    });
+            } 
+            else if (fileData.file.type.startsWith("video/")) {
+                const tempUrl = URL.createObjectURL(fileData.file);
+                const tempVideo = document.createElement("video");
+                tempVideo.src = tempUrl;
+                tempVideo.muted = true; 
+                tempVideo.playsInline = true;
+                
+                tempVideo.onloadeddata = () => {
+                    if (tempVideo.duration > 1) tempVideo.currentTime = 1;
+                    else tempVideo.currentTime = tempVideo.duration / 2;
+                };
+
+                tempVideo.onseeked = () => {
+                    const canvas = document.createElement("canvas");
+                    const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200));
+                    canvas.width = (tempVideo.videoWidth || 200) * scaleFactor;
+                    canvas.height = (tempVideo.videoHeight || 150) * scaleFactor;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                    
+                    fileData.thumbSrc = canvas.toDataURL("image/jpeg", 0.6);
+                    mediaElement.src = fileData.thumbSrc;
+                    URL.revokeObjectURL(tempUrl);
+                    mediaElement.dataset.loaded = "true";
+                };
+                tempVideo.onerror = () => {
+                    fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>";
+                    mediaElement.src = fileData.thumbSrc;
+                    mediaElement.dataset.loaded = "true";
+                    URL.revokeObjectURL(tempUrl);
+                };
+            }
+        } 
+        else {
+            if (mediaElement.dataset.loaded) {
+                mediaElement.removeAttribute("src");
+                mediaElement.removeAttribute("data-loaded");
+            }
+        }
+    });
+};
+
+function renderGlobalSearch(searchTerm) {
+    triggerGalleryAnimation();
+    gallery.innerHTML = "";
+    mediaFiles = [];
+    let indexCounter = 0;
+    
+    if (typeFilter.value === "favs" && searchTerm === "") {
+        pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
+    } else if (typeFilter.value === "folder" && searchTerm === "") {
+        pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
+    } else {
+        pathDisplay.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Resultados para: "${searchTerm}"`;
+    }
+
+    const backDiv = document.createElement("div");
+    backDiv.className = "item folder";
+    backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`;
+    backDiv.onclick = () => { 
+        searchInput.value = ""; 
+        if (typeFilter.value === "favs" || typeFilter.value === "folder") {
+            typeFilter.value = "all";
+        }
+        updateGalleryView(); 
+    };
+    gallery.appendChild(backDiv);
+
+    const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
+
+    if (typeFilter.value === "all" || typeFilter.value === "folder") {
+        let allFolders = Object.keys(foldersMap);
+        
+        let foldersToRender = allFolders.filter(folderPath => {
+            if (folderPath === rootFolderName) return false; 
+            const folderName = folderPath.split('/').pop().toLowerCase();
+            return folderName.includes(searchTerm);
+        });
+
+        foldersToRender.sort((a, b) => {
+            const nameA = a.split('/').pop().toLowerCase();
+            const nameB = b.split('/').pop().toLowerCase();
+            return sortOrder.value === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        });
+
+        foldersToRender.forEach(folderPath => {
+            const folderName = folderPath.split('/').pop();
+            const folderDiv = document.createElement("div");
+            folderDiv.className = "item folder";
+            
+            const coverData = getFolderCoverData(folderPath);
+            
+            if (coverData) {
+                folderDiv.innerHTML = `
+                    <img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')">
+                    <div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>
+                `;
+            } else {
+                folderDiv.innerHTML = `
+                    <div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div>
+                    <div class="folder-name-overlay">${folderName}</div>
+                `;
+            }
+
+            folderDiv.onclick = () => {
+                searchInput.value = "";
+                typeFilter.value = "all";
+                renderGallery(folderPath);
+            };
+            gallery.appendChild(folderDiv);
+            
+            if (coverData) {
+                const coverImg = folderDiv.querySelector('.folder-cover');
+                observer.observe(coverImg);
+            }
+        });
+    }
+
+    let filesToRender = allFiles.filter(fileData => 
+        fileData.name.toLowerCase().includes(searchTerm) && passesFilter(fileData)
+    );
+    filesToRender = sortFilesArray(filesToRender);
+
+    filesToRender.forEach(fileData => {
+        fileData.index = indexCounter;
+        mediaFiles.push(fileData); 
+        createThumbElement(fileData, indexCounter, observer);
+        indexCounter++;
+    });
+
+    if (gallery.children.length === 1) {
+        gallery.innerHTML += "<p style='width: 100%; color: #888; font-size: 18px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados que coincidan con tu búsqueda</p>";
+    }
+}
+
+function renderGallery(folderPath) {
+    triggerGalleryAnimation();
+    currentPath = folderPath; 
+    gallery.innerHTML = "";
+    mediaFiles = [];
+    let indexCounter = 0;
+
+    const currentFolder = foldersMap[folderPath];
+    if (!currentFolder) return;
+
+    pathDisplay.innerHTML = '<i class="fa-solid fa-folder-open"></i> ' + folderPath.replace(/\//g, ' / ');
+    
+    const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
+
+    if (folderPath !== rootFolderName) {
+        const parts = folderPath.split('/');
+        parts.pop(); 
+        const parentPath = parts.join('/');
+        
+        const backDiv = document.createElement("div");
+        backDiv.className = "item folder";
+        backDiv.style.background = "#222"; 
+        backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`;
+        backDiv.onclick = () => renderGallery(parentPath);
+        gallery.appendChild(backDiv);
+    }
+
+    Array.from(currentFolder.subfolders).sort().forEach(subfolderPath => {
+        const folderName = subfolderPath.split('/').pop();
+        const folderDiv = document.createElement("div");
+        folderDiv.className = "item folder";
+        
+        const coverData = getFolderCoverData(subfolderPath);
+        
+        if (coverData) {
+            folderDiv.innerHTML = `
+                <img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')">
+                <div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>
+            `;
+        } else {
+            folderDiv.innerHTML = `
+                <div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div>
+                <div class="folder-name-overlay">${folderName}</div>
+            `;
+        }
+
+        folderDiv.onclick = () => renderGallery(subfolderPath);
+        gallery.appendChild(folderDiv);
+        
+        if (coverData) {
+            const coverImg = folderDiv.querySelector('.folder-cover');
+            observer.observe(coverImg);
+        }
+    });
+
+    let filesToRender = currentFolder.files.filter(passesFilter);
+    filesToRender = sortFilesArray(filesToRender);
+
+    filesToRender.forEach(fileData => {
+        fileData.index = indexCounter;
+        mediaFiles.push(fileData);
+        createThumbElement(fileData, indexCounter, observer);
+        indexCounter++;
+    });
+}
+
+function createThumbElement(fileData, indexCounter, observer) {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    let mediaElement = document.createElement("img");
+    mediaElement.className = "thumb skeleton"; 
+    mediaElement.dataset.index = indexCounter; 
+    
+    mediaElement.onload = () => mediaElement.classList.remove("skeleton");
+    
+    mediaElement.ondragstart = function() { return false; };
+    mediaElement.onclick = () => openViewer(indexCounter);
+    
+    div.addEventListener('contextmenu', (e) => {
+        e.preventDefault(); 
+        
+        contextMenuTarget = { fileData, thumbDiv: div };
+        
+        if (favorites.has(fileData.uniquePath)) {
+            ctxFavIcon.className = "fa-solid fa-heart-crack icon";
+            ctxFavIcon.style.color = "#ff4d4d"; 
+            ctxFavText.textContent = "Quitar Fav";
+        } else {
+            ctxFavIcon.className = "fa-regular fa-heart icon";
+            ctxFavIcon.style.color = "white"; 
+            ctxFavText.textContent = "Favorito";
+        }
+
+        ctxMenu.style.display = "flex";
+        
+        let x = e.pageX;
+        let y = e.pageY;
+        
+        if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10;
+        if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10;
+
+        ctxMenu.style.left = `${x}px`;
+        ctxMenu.style.top = `${y}px`;
+    });
+    
+    div.appendChild(mediaElement);
+
+    if (fileData.file.type === "image/gif") {
+        const badge = document.createElement("span");
+        badge.className = "media-badge badge-gif";
+        badge.innerHTML = '<i class="fa-solid fa-film"></i> GIF';
+        div.appendChild(badge);
+    } else if (fileData.type === "video") {
+        const badge = document.createElement("span");
+        badge.className = "media-badge badge-video";
+        badge.innerHTML = '<i class="fa-solid fa-play"></i> VIDEO';
+        div.appendChild(badge);
+    }
+
+    if (favorites.has(fileData.uniquePath)) {
+        const favBadge = document.createElement("span");
+        favBadge.className = "fav-badge";
+        favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>';
+        div.appendChild(favBadge);
+    }
+
+    if (fileData.file.type === "image/gif" || fileData.type === "video") {
+        let previewVideo = null;
+        let isHovering = false;
+
+    const startPreview = () => {
+            if (isHovering) return;
+            isHovering = true;
+
+            if (!fileData.src) fileData.src = URL.createObjectURL(fileData.file);
+
+            if (fileData.file.type === "image/gif") {
+                mediaElement.src = fileData.src; 
+            } else if (fileData.type === "video") {
+                previewVideo = document.createElement("video");
+                previewVideo.src = fileData.src;
+                previewVideo.muted = true;
+                previewVideo.loop = true;
+                previewVideo.playsInline = true;
+                previewVideo.className = "preview-video"; 
+                div.appendChild(previewVideo);
+                
+                mediaElement.style.opacity = "0"; 
+                
+                previewVideo.play().catch(e => console.log("Preview pausado"));
+            }
+        };
+
+        const stopPreview = () => {
+            if (!isHovering) return;
+            isHovering = false;
+
+            if (fileData.file.type === "image/gif") {
+                mediaElement.src = fileData.thumbSrc; 
+            } else if (previewVideo) {
+                previewVideo.pause();
+                previewVideo.removeAttribute('src');
+                previewVideo.load();
+                previewVideo.remove();
+                previewVideo = null;
+                
+                mediaElement.style.opacity = "1"; 
+            }
+        };
+
+        div.addEventListener('mouseenter', startPreview);
+        div.addEventListener('mouseleave', stopPreview);
+        div.addEventListener('touchstart', startPreview, { passive: true });
+        div.addEventListener('touchend', stopPreview);
+        div.addEventListener('touchcancel', stopPreview);
+    }
+
+    gallery.appendChild(div);
+    observer.observe(mediaElement); 
+}
+
+function formatTime(seconds) {
+    seconds = Math.floor(seconds);
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+let scale = 1;
+let isMouseDown = false;
+let currentTranslateX = 0, currentTranslateY = 0;
+let initialX, initialY, xOffset = 0, yOffset = 0;
+let isDragging = false; 
+let startClickX, startClickY;
+
+function openViewer(index) {
+    if(mediaFiles.length === 0) return;
+    
+    currentIndex = index;
+    const file = mediaFiles[currentIndex];
+
+    const existingImgs = viewer.querySelectorAll('.viewer-content');
+    const existingVideos = viewer.querySelectorAll('.custom-video-wrapper');
+    existingImgs.forEach(el => el.remove());
+    existingVideos.forEach(el => el.remove());
+
+    viewer.style.display = "flex";
+    fileNameDisplay.textContent = file.name;
+    
+    scale = 1;
+    currentTranslateX = 0;
+    currentTranslateY = 0;
+    xOffset = 0;
+    yOffset = 0;
+    isDragging = false;
+
+    if (!file.src) file.src = URL.createObjectURL(file.file);
+
+    downloadBtn.href = file.src;
+    downloadBtn.download = file.name;
+
+    const isFav = favorites.has(file.uniquePath);
+    favBtn.className = isFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart";
+    favBtn.style.color = isFav ? "#ff4d4d" : "white";
+
+    favBtn.onclick = () => {
+        if (favorites.has(file.uniquePath)) {
+            favorites.delete(file.uniquePath);
+            favBtn.className = "fav-btn fa-regular fa-heart";
+            favBtn.style.color = "white";
+        } else {
+            favorites.add(file.uniquePath);
+            favBtn.className = "fav-btn fa-solid fa-heart";
+            favBtn.style.color = "#ff4d4d";
+        }
+        saveFavorites();
+        
+        if(typeFilter.value === "favs") {
+            updateGalleryView();
+        } else {
+            const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`);
+            if(targetImg) {
+                const targetThumbDiv = targetImg.closest('.item');
+                const existingHeart = targetThumbDiv.querySelector('.fav-badge');
+                
+                if (favorites.has(file.uniquePath) && !existingHeart) {
+                    const favBadge = document.createElement("span");
+                    favBadge.className = "fav-badge";
+                    favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>';
+                    targetThumbDiv.appendChild(favBadge);
+                } else if (!favorites.has(file.uniquePath) && existingHeart) {
+                    existingHeart.remove();
+                }
+            }
+        }
+    };
+
+    const setupInteractive = (targetEl) => {
+        targetEl.ondragstart = function() { return false; };
+        
+        targetEl.style.willChange = 'transform';
+        targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`;
+
+        let animationFrameId;
+        
+        const videoElement = targetEl.tagName === 'VIDEO' ? targetEl : targetEl.querySelector('video');
+        let wasPlayingBeforeDrag = false;
+
+        targetEl.onpointerdown = (e) => {
+            if (e.target.closest('.custom-controls')) return;
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            startClickX = e.clientX;
+            startClickY = e.clientY;
+            isMouseDown = true;
+            isDragging = false;
+            
+            targetEl.setPointerCapture(e.pointerId);
+        };
+
+        targetEl.onpointermove = (e) => {
+            if (!isMouseDown) return;
+            e.preventDefault();
+            
+            if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) {
+                isDragging = true;
+                targetEl.classList.add('is-dragging'); 
+                
+                if (videoElement && !videoElement.paused) {
+                    wasPlayingBeforeDrag = true;
+                    videoElement.pause();
+                }
+            }
+            
+            if (isDragging) {
+                currentTranslateX = e.clientX - initialX;
+                currentTranslateY = e.clientY - initialY;
+                
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(() => {
+                    targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`;
+                });
+            }
+        };
+
+        const dragEnd = (e) => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            
+            if (isDragging) {
+                xOffset = currentTranslateX;
+                yOffset = currentTranslateY;
+                targetEl.classList.remove('is-dragging'); 
+                
+                if (wasPlayingBeforeDrag && videoElement) {
+                    videoElement.play().catch(err => console.log("Auto-play prevenido", err));
+                    wasPlayingBeforeDrag = false;
+                }
+            }
+            
+            if (e && e.pointerId) {
+                targetEl.releasePointerCapture(e.pointerId);
+            }
+        };
+
+        targetEl.onpointerup = dragEnd;
+        targetEl.onpointercancel = dragEnd;
+
+        targetEl.onwheel = (e) => {
+            if (e.target.closest('.custom-controls')) return;
+            e.preventDefault();
+            scale += e.deltaY * -0.002;
+            scale = Math.min(Math.max(0.5, scale), 5);
+            
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(() => {
+                targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`;
+            });
+        };
+    };
+
+    if (file.type === "image") {
+        let element = document.createElement("img");
+        element.src = file.src; 
+        element.className = "viewer-content";
+        viewer.insertBefore(element, fileNameDisplay);
+        
+        setupInteractive(element);
+
+        element.onclick = (e) => {
+            if (isDragging) return; 
+            if (e.clientX < window.innerWidth / 2) { navigate(-1); } 
+            else { navigate(1); }
+        };
+
+    } else {
+        const wrapper = document.createElement("div");
+        wrapper.className = "custom-video-wrapper";
+
+        const video = document.createElement("video");
+        video.src = file.src; 
+        video.autoplay = true;
+        video.controls = false; 
+
+        const controlsDiv = document.createElement("div");
+        controlsDiv.className = "custom-controls";
+        controlsDiv.innerHTML = `
+            <div class="progress-container" id="progContainer">
+                <div class="progress-bar" id="progBar"></div>
+            </div>
+            <div class="controls-row">
+                <button id="playBtn"><i class="fa-solid fa-pause"></i></button>
+                <div class="time-display"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div>
+                <button id="muteBtn" style="margin-left:15px;"><i class="fa-solid fa-volume-high"></i></button>
+                <input type="range" id="volSlider" min="0" max="1" step="0.05" value="1">
+                <div style="flex-grow: 1;"></div>
+                <button id="fullBtn"><i class="fa-solid fa-expand"></i></button>
+            </div>
+        `;
+
+        wrapper.appendChild(video);
+        wrapper.appendChild(controlsDiv);
+        viewer.insertBefore(wrapper, fileNameDisplay);
+
+        setupInteractive(wrapper);
+
+        const playBtn = wrapper.querySelector('#playBtn');
+        const muteBtn = wrapper.querySelector('#muteBtn');
+        const fullBtn = wrapper.querySelector('#fullBtn');
+        const progContainer = wrapper.querySelector('#progContainer');
+        const progBar = wrapper.querySelector('#progBar');
+        const currTimeEl = wrapper.querySelector('#currTime');
+        const totTimeEl = wrapper.querySelector('#totTime');
+        const volSlider = wrapper.querySelector('#volSlider');
+
+        const togglePlay = (e) => {
+            if (isDragging) return; 
+            if (video.paused) { 
+                video.play(); 
+                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; 
+            } else { 
+                video.pause(); 
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; 
+            }
+        };
+        video.onclick = togglePlay;
+        playBtn.onclick = togglePlay;
+
+        video.addEventListener('loadedmetadata', () => {
+            totTimeEl.textContent = formatTime(video.duration);
+        });
+
+        video.addEventListener('timeupdate', () => {
+            currTimeEl.textContent = formatTime(video.currentTime);
+            const percent = (video.currentTime / video.duration) * 100;
+            progBar.style.width = `${percent}%`;
+        });
+
+        progContainer.addEventListener('click', (e) => {
+            const rect = progContainer.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            video.currentTime = pos * video.duration;
+        });
+
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+            volSlider.value = video.muted ? 0 : video.volume;
+        });
+        
+        volSlider.addEventListener('input', (e) => {
+            video.volume = e.target.value;
+            video.muted = video.volume === 0;
+            muteBtn.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+        });
+
+        fullBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) wrapper.requestFullscreen();
+            else document.exitFullscreen();
+        });
+    }
+}
+
+function navigate(direction) {
+    currentIndex += direction;
+    if(currentIndex >= mediaFiles.length) currentIndex = 0;
+    if(currentIndex < 0) currentIndex = mediaFiles.length - 1;
+    openViewer(currentIndex);
+}
+
+function closeViewer() {
+    viewer.style.display = "none";
+    const existingImgs = viewer.querySelectorAll('.viewer-content');
+    const existingVideos = viewer.querySelectorAll('.custom-video-wrapper');
+    existingImgs.forEach(el => el.remove());
+    existingVideos.forEach(el => el.remove());
+}
+
+viewer.addEventListener('click', function(e) {
+    if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) {
+        if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) {
+            closeViewer();
+        }
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if(viewer.style.display === "flex") {
+        if(e.key === "Escape") closeViewer();
+        
+        if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+            if(e.key === "ArrowRight") navigate(1);
+            if(e.key === "ArrowLeft") navigate(-1);
+            
+            if(e.code === "Space") {
+                e.preventDefault(); 
+                const video = viewer.querySelector('video');
+                if(video) {
+                    const playBtn = viewer.querySelector('#playBtn');
+                    if (video.paused) { 
+                        video.play(); 
+                        if(playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; 
+                    } else { 
+                        video.pause(); 
+                        if(playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; 
+                    }
+                }
+            }
+        }
+    }
+});
+
+const ctxMenu = document.getElementById("customContextMenu");
+const ctxFavIcon = document.getElementById("ctxFavIcon");
+const ctxFavText = document.getElementById("ctxFavText");
+let contextMenuTarget = null; 
+
+function closeContextMenu() {
+    ctxMenu.style.display = "none";
+    contextMenuTarget = null;
+}
+
+document.addEventListener('click', closeContextMenu);
+document.addEventListener('scroll', closeContextMenu);
+
+document.getElementById('ctxCopy').addEventListener('click', async () => {
+    if (!contextMenuTarget) return;
+    const file = contextMenuTarget.fileData.file;
+    
+    try {
+        if (file.type.startsWith('image/')) {
+            const bitmap = await createImageBitmap(file);
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                try {
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    alert("¡Imagen copiada al portapapeles!");
+                } catch (err) {
+                    alert("Tu navegador no permite copiar imágenes directamente.");
+                }
+            }, 'image/png');
+        } else {
+            alert("Solo se pueden copiar imágenes. Para videos usa 'Compartir' o 'Descargar'.");
+        }
+    } catch(e) { console.error(e); }
+});
+
+document.getElementById('ctxShare').addEventListener('click', async () => {
+    if (!contextMenuTarget) return;
+    const file = contextMenuTarget.fileData.file;
+    if (navigator.share) {
+        try {
+            await navigator.share({ files: [file], title: file.name });
+        } catch (err) { console.log("Compartir cancelado"); }
+    } else {
+        alert("La API de compartir no está disponible en tu navegador de PC.");
+    }
+});
+
+document.getElementById('ctxDownload').addEventListener('click', () => {
+    if (!contextMenuTarget) return;
+    const fileData = contextMenuTarget.fileData;
+    const url = fileData.src || URL.createObjectURL(fileData.file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileData.name;
+    a.click();
+    if (!fileData.src) URL.revokeObjectURL(url);
+});
+
+document.getElementById('ctxFav').addEventListener('click', () => {
+    if (!contextMenuTarget) return;
+    const { fileData, thumbDiv } = contextMenuTarget;
+    
+    if (favorites.has(fileData.uniquePath)) {
+        favorites.delete(fileData.uniquePath);
+        const existingHeart = thumbDiv.querySelector('.fav-badge');
+        if (existingHeart) existingHeart.remove();
+    } else {
+        favorites.add(fileData.uniquePath);
+        const existingHeart = thumbDiv.querySelector('.fav-badge');
+        if (!existingHeart) {
+            const favBadge = document.createElement("span");
+            favBadge.className = "fav-badge";
+            favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>';
+            thumbDiv.appendChild(favBadge);
+        }
+    }
+    saveFavorites();
+    if(typeFilter.value === "favs") updateGalleryView();
+});
+
+</script>
+
+</body>
+</html>
