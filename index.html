@@ -127,9 +127,33 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
 .copyright-link:hover .version-badge { background: rgba(255, 255, 255, 0.3); }
 
+/* --- ESTILOS PARA EL PERFIL DE GOOGLE --- */
+.google-profile-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 101; cursor: default; user-select: none; }
+#authBtn, #signoutBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; }
+#authBtn { background: white; color: #111; border: none; }
+#authBtn:hover { background: #eee; }
+#signoutBtn { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.1); }
+#signoutBtn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+.google-avatar { width: 38px; height: 38px; border-radius: 50%; background: #222; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); display: none; }
+.google-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* NUEVO: Pantalla de carga del Visor */
+#viewerLoading { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; z-index: 2000; flex-direction: column; align-items: center; }
 </style>
 </head>
 <body>
+
+<div class="google-profile-container">
+    <button id="authBtn" style="display: none;">
+        <i class="fa-brands fa-google"></i> Conectar Drive
+    </button>
+    <div class="google-avatar" id="googleAvatar">
+        <img src="" alt="Avatar">
+    </div>
+    <button id="signoutBtn" style="display: none; padding: 6px 10px;" title="Cerrar sesión">
+        <i class="fa-solid fa-power-off"></i>
+    </button>
+</div>
 
 <h1>Mi Galería Local</h1>
 
@@ -137,7 +161,13 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 
 <div class="sticky-header">
     <div class="controls-container">
-        <button onclick="document.getElementById('fileInput').click()">
+        
+        <select id="sourceSelect" class="control-select" style="background: rgba(255,255,255,0.1); border-color: transparent;">
+            <option value="local">📁 Archivos Locales</option>
+            <option value="drive">☁️ Mi Google Drive</option>
+        </select>
+        
+        <button id="fileInputBtn">
             <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
         </button>
         
@@ -158,9 +188,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
                 <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="date">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Fecha
                 </div>
-                
                 <div class="dropdown-divider"></div>
-                
                 <div class="dropdown-item sort-option order active" data-type="order" data-value="asc">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Ascendente
                 </div>
@@ -211,6 +239,11 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     <button class="nav-btn prev" onclick="navigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
     <button class="nav-btn next" onclick="navigate(1)"><i class="fa-solid fa-chevron-right"></i></button>
     <div class="file-name" id="fileName"></div>
+    
+    <div id="viewerLoading">
+        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+        <span style="margin-top:15px;" id="viewerLoadingText">Descargando archivo seguro...</span>
+    </div>
 </div>
 
 <div id="customContextMenu" class="win11-context-menu">
@@ -233,10 +266,15 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.6</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.0</span>
 </a>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <script>
+const CLIENT_ID = '731434427932-cnghf0huo1fsi27mg64dssl5q9mno82p.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile';
+
 const input = document.getElementById("fileInput");
 const searchInput = document.getElementById("searchInput");
 const gallery = document.getElementById("gallery");
@@ -245,10 +283,14 @@ const fileNameDisplay = document.getElementById("fileName");
 const pathDisplay = document.getElementById("currentPathDisplay");
 const downloadBtn = document.getElementById("downloadBtn"); 
 const favBtn = document.getElementById("favBtn");
+const viewerLoading = document.getElementById("viewerLoading");
 
-let currentSortCriteria = "name";
-let currentSortOrder = "asc";
-let currentFilter = "all";
+const authBtn = document.getElementById('authBtn');
+const signoutBtn = document.getElementById('signoutBtn');
+const googleAvatar = document.getElementById('googleAvatar');
+const googleAvatarImg = googleAvatar.querySelector('img');
+const sourceSelect = document.getElementById('sourceSelect');
+const fileInputBtn = document.getElementById('fileInputBtn');
 
 const sortBtn = document.getElementById('sortBtn');
 const sortMenu = document.getElementById('sortMenu');
@@ -259,29 +301,271 @@ const filterBtnText = document.getElementById('filterBtnText');
 const filterMenu = document.getElementById('filterMenu');
 const filterOptions = document.querySelectorAll('.filter-option');
 
-sortBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sortMenu.classList.toggle('show');
-    filterMenu.classList.remove('show');
+let currentSortCriteria = "name";
+let currentSortOrder = "asc";
+let currentFilter = "all";
+let currentViewSource = "local"; 
+let isGoogleConnected = false; 
+let tokenClient;
+let mediaFiles = []; 
+let currentIndex = 0;
+
+const appState = {
+    local: { foldersMap: {}, allFiles: [], rootFolderName: "", currentPath: "", loaded: false },
+    drive: { foldersMap: {}, allFiles: [], rootFolderName: "", currentPath: "", loaded: false }
+};
+
+const getState = () => appState[currentViewSource];
+
+function updateUIState() {
+    const state = getState();
+    if (state.loaded) {
+        searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
+        updateGalleryView();
+    } else {
+        searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
+        gallery.innerHTML = "";
+    }
+}
+
+fileInputBtn.addEventListener('click', () => {
+    if (currentViewSource === 'local') {
+        input.click();
+    } else {
+        if (isGoogleConnected) {
+            appState.drive.loaded = false; 
+            loadDriveMedia();
+        } else {
+            alert("Por favor conecta tu cuenta de Google arriba a la derecha primero.");
+        }
+    }
 });
 
-filterBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    filterMenu.classList.toggle('show');
-    sortMenu.classList.remove('show');
+sourceSelect.addEventListener('change', () => {
+    currentViewSource = sourceSelect.value;
+    gallery.innerHTML = ""; 
+    searchInput.value = ""; 
+
+    if (currentViewSource === 'local') {
+        fileInputBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta';
+        if (appState.local.loaded) {
+            updateUIState();
+        } else {
+            pathDisplay.innerHTML = 'Esperando carpeta...';
+            updateUIState();
+        }
+    } else if (currentViewSource === 'drive') {
+        fileInputBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Recargar Drive';
+        if (!isGoogleConnected) {
+            pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive"></i> Drive no conectado.';
+            gallery.innerHTML = "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-unlink'></i> Conecta tu Drive arriba a la derecha para ver tus archivos multimedia</p>";
+            updateUIState();
+        } else {
+            if (appState.drive.loaded) {
+                updateUIState();
+            } else {
+                loadDriveMedia();
+            }
+        }
+    }
 });
 
-document.addEventListener('click', (e) => {
-    if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) sortMenu.classList.remove('show');
-    if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.remove('show');
-});
+function initGoogleServices() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: handleAuthResponse,
+    });
+    authBtn.addEventListener('click', () => tokenClient.requestAccessToken());
+    signoutBtn.addEventListener('click', handleSignout);
+    checkStoredToken(); 
+}
+
+function handleAuthResponse(response) {
+    if (response.error !== undefined) throw response;
+    isGoogleConnected = true;
+    localStorage.setItem('drive_token', JSON.stringify(response)); 
+    updateGoogleUI(true);
+    getUserProfile(); 
+    if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
+}
+
+function handleSignout() {
+    const token = JSON.parse(localStorage.getItem('drive_token'));
+    if (token) {
+        google.accounts.oauth2.revoke(token.access_token, () => {
+            localStorage.removeItem('drive_token');
+            cleanupGoogleState();
+        });
+    } else cleanupGoogleState();
+}
+
+function cleanupGoogleState() {
+    isGoogleConnected = false;
+    appState.drive.loaded = false;
+    authBtn.style.display = "flex";
+    googleAvatar.style.display = signoutBtn.style.display = "none";
+    if (currentViewSource === 'drive') {
+        sourceSelect.value = "local";
+        sourceSelect.dispatchEvent(new Event('change'));
+    }
+}
+
+function checkStoredToken() {
+    const token = JSON.parse(localStorage.getItem('drive_token'));
+    if (token && token.expires_in && (Date.now() < (new Date(token.issued_at).getTime() + token.expires_in * 1000))) {
+        isGoogleConnected = true;
+        updateGoogleUI(true);
+        getUserProfile(); 
+        if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
+    } else cleanupGoogleState(); 
+}
+
+function updateGoogleUI(connected) {
+    if (connected) {
+        authBtn.style.display = "none";
+        googleAvatar.style.display = signoutBtn.style.display = "flex";
+    } else {
+        authBtn.style.display = "flex";
+        googleAvatar.style.display = signoutBtn.style.display = "none";
+    }
+}
+
+async function getUserProfile() {
+    const token = JSON.parse(localStorage.getItem('drive_token'));
+    if (!token) return;
+    try {
+        const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token.access_token}`);
+        const profile = await response.json();
+        if (profile.picture) {
+            googleAvatarImg.src = profile.picture;
+            googleAvatar.title = profile.name || "";
+        }
+    } catch (e) {}
+}
+
+async function loadDriveMedia() {
+    const state = appState.drive;
+    triggerGalleryAnimation();
+    pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive" style="color: #6da235;"></i> Mi Google Drive';
+    searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
+    
+    gallery.innerHTML = `
+        <div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'>
+            <i class='fa-solid fa-spinner fa-spin fa-3x' style='margin-bottom: 15px;'></i><br>
+            <p style='font-size: 18px;' id='driveLoadingText'>Leyendo el índice de carpetas (0 KB)...</p>
+        </div>
+    `;
+    
+    const token = JSON.parse(localStorage.getItem('drive_token'));
+    if (!token) return;
+
+    try {
+        const headers = { 'Authorization': 'Bearer ' + token.access_token };
+
+        let fetchedFolders = [];
+        let pageToken = null;
+        do {
+            const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and trashed=false&fields=nextPageToken,files(id,name,parents)&pageSize=1000&includeItemsFromAllDrives=true&supportsAllDrives=true${pageToken ? '&pageToken=' + pageToken : ''}`, { headers });
+            if (!res.ok) throw new Error("Faltan permisos. Cierra sesión y vuelve a entrar marcando la casilla de permisos de Drive.");
+            const data = await res.json();
+            if(data.files) fetchedFolders.push(...data.files);
+            pageToken = data.nextPageToken;
+        } while (pageToken);
+
+        let fetchedMedia = [];
+        pageToken = null;
+        let mediaPageCount = 1;
+        do {
+            const loadingText = document.getElementById('driveLoadingText');
+            if(loadingText) loadingText.textContent = `Sincronizando catálogo de Drive (Página ${mediaPageCount})...`;
+
+            const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false")}&fields=nextPageToken,files(id,name,mimeType,size,createdTime,thumbnailLink,webContentLink,parents)&pageSize=1000&includeItemsFromAllDrives=true&supportsAllDrives=true${pageToken ? '&pageToken=' + pageToken : ''}`, { headers });
+            const data = await res.json();
+            if(data.files) fetchedMedia.push(...data.files);
+            pageToken = data.nextPageToken;
+            mediaPageCount++;
+        } while (pageToken);
+
+        const folderTree = {};
+        fetchedFolders.forEach(f => folderTree[f.id] = { ...f, path: '' });
+
+        function getPath(folderId) {
+            if (!folderId || !folderTree[folderId]) return 'Mi Drive';
+            if (folderTree[folderId].path) {
+                if (folderTree[folderId].path === 'Resolving...') return 'Mi Drive'; 
+                return folderTree[folderId].path;
+            }
+            folderTree[folderId].path = 'Resolving...';
+            const parentId = (folderTree[folderId].parents && folderTree[folderId].parents.length > 0) ? folderTree[folderId].parents[0] : null;
+            const parentPath = getPath(parentId);
+            const safeName = folderTree[folderId].name.replace(/\//g, '-');
+            const fullPath = parentPath === 'Mi Drive' ? `Mi Drive/${safeName}` : `${parentPath}/${safeName}`;
+            folderTree[folderId].path = fullPath;
+            return fullPath;
+        }
+
+        state.foldersMap = { 'Mi Drive': { files: [], subfolders: new Set() } };
+        state.allFiles = [];
+        state.rootFolderName = 'Mi Drive';
+
+        fetchedMedia.forEach(file => {
+            const parentId = (file.parents && file.parents.length > 0) ? file.parents[0] : null;
+            const parentPath = getPath(parentId);
+            
+            let curr = parentPath;
+            while (curr !== 'Mi Drive') {
+                if (!state.foldersMap[curr]) state.foldersMap[curr] = { files: [], subfolders: new Set() };
+                const prev = curr;
+                curr = curr.substring(0, curr.lastIndexOf('/')) || 'Mi Drive';
+                if (!state.foldersMap[curr]) state.foldersMap[curr] = { files: [], subfolders: new Set() };
+                state.foldersMap[curr].subfolders.add(prev);
+            }
+
+            if (!state.foldersMap[parentPath]) state.foldersMap[parentPath] = { files: [], subfolders: new Set() };
+
+            let highResThumb = file.thumbnailLink;
+            if (highResThumb) highResThumb = highResThumb.replace(/=s\d+/, '=s400');
+
+            const fileData = {
+                type: file.mimeType.startsWith("image/") ? "image" : "video",
+                file: { type: file.mimeType, size: parseInt(file.size) || 0, lastModified: new Date(file.createdTime).getTime() },
+                name: file.name,
+                id: file.id, 
+                downloadUrl: file.webContentLink, 
+                thumbSrc: highResThumb, 
+                uniquePath: `drive_${file.id}`, 
+                parentFolder: parentPath,
+                index: 0 
+            };
+            state.foldersMap[parentPath].files.push(fileData);
+            state.allFiles.push(fileData);
+        });
+
+        state.loaded = true;
+        state.currentPath = 'Mi Drive';
+        
+        if (fetchedMedia.length === 0) {
+            gallery.innerHTML = "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-box-open'></i> Tu Drive está conectado, pero no se detectaron imágenes/videos. (Revisa si diste los permisos al iniciar sesión)</p>";
+            searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
+        } else {
+            updateUIState();
+        }
+
+    } catch (e) {
+        gallery.innerHTML = `<p style='width: 100%; color: #ff6666; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-circle-exclamation'></i> Error: ${e.message || "Fallo de conexión"}</p>`;
+    }
+}
+
+sortBtn.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('show'); filterMenu.classList.remove('show'); });
+filterBtn.addEventListener('click', (e) => { e.stopPropagation(); filterMenu.classList.toggle('show'); sortMenu.classList.remove('show'); });
+document.addEventListener('click', (e) => { if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) sortMenu.classList.remove('show'); if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.remove('show'); });
 
 sortOptions.forEach(option => {
     option.addEventListener('click', (e) => {
         e.stopPropagation();
         const type = option.getAttribute('data-type');
         const value = option.getAttribute('data-value');
-
         if (type === 'criteria') {
             currentSortCriteria = value;
             document.querySelectorAll('.sort-option.criteria').forEach(el => el.classList.remove('active'));
@@ -289,7 +573,6 @@ sortOptions.forEach(option => {
             currentSortOrder = value;
             document.querySelectorAll('.sort-option.order').forEach(el => el.classList.remove('active'));
         }
-        
         option.classList.add('active');
         sortMenu.classList.remove('show'); 
         updateGalleryView();
@@ -301,7 +584,6 @@ filterOptions.forEach(option => {
         e.stopPropagation();
         currentFilter = option.getAttribute('data-value');
         filterBtnText.textContent = option.getAttribute('data-label');
-        
         document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
         option.classList.add('active');
         filterMenu.classList.remove('show');
@@ -311,14 +593,6 @@ filterOptions.forEach(option => {
 
 document.addEventListener('contextmenu', event => event.preventDefault());
 
-let mediaFiles = []; 
-let currentIndex = 0;
-let foldersMap = {};
-let rootFolderName = "";
-let currentPath = ""; 
-let allFiles = []; 
-
-/* SUPER IMPORTANTE: GESTIÓN DE LOCALSTORAGE (FAVS Y VOLUMEN) */
 let favorites = new Set(JSON.parse(localStorage.getItem('myGalleryFavs')) || []);
 const saveFavorites = () => localStorage.setItem('myGalleryFavs', JSON.stringify([...favorites]));
 
@@ -326,7 +600,6 @@ let globalVolume = parseFloat(localStorage.getItem('myGalleryVolume'));
 if (isNaN(globalVolume)) globalVolume = 1; 
 let lastUnmutedVolume = globalVolume > 0 ? globalVolume : 1; 
 
-/* SUPER IMPORTANTE: WEB WORKER PARA RENDERIZADO FLUIDO DE IMÁGENES */
 const workerCode = `
 self.onmessage = async function(e) {
     const { id, file, targetWidth } = e.data;
@@ -335,11 +608,9 @@ self.onmessage = async function(e) {
         const scale = Math.min(1, targetWidth / bitmap.width);
         const width = Math.round(bitmap.width * scale);
         const height = Math.round(bitmap.height * scale);
-        
         const canvas = new OffscreenCanvas(width, height);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(bitmap, 0, 0, width, height);
-        
         const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 });
         self.postMessage({ id, success: true, blob });
         bitmap.close();
@@ -348,12 +619,10 @@ self.onmessage = async function(e) {
     }
 };
 `;
-
 const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
 const imageWorker = new Worker(URL.createObjectURL(workerBlob));
 const pendingTasks = new Map();
 let taskIdCounter = 0;
-
 imageWorker.onmessage = function(e) {
     const { id, success, blob, error } = e.data;
     if (pendingTasks.has(id)) {
@@ -363,7 +632,6 @@ imageWorker.onmessage = function(e) {
         else reject(error);
     }
 };
-
 function generateThumbWithWorker(file, targetWidth) {
     return new Promise((resolve, reject) => {
         const id = taskIdCounter++;
@@ -372,1099 +640,272 @@ function generateThumbWithWorker(file, targetWidth) {
     });
 }
 
-/* SUPER IMPORTANTE: PREVENCIÓN DE FUGAS DE MEMORIA RAM */
-function cleanupMemory() {
-    if (!allFiles || allFiles.length === 0) return;
-    allFiles.forEach(fileData => {
+function cleanupLocalMemory() {
+    if (!appState.local.allFiles || appState.local.allFiles.length === 0) return;
+    appState.local.allFiles.forEach(fileData => {
         if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) URL.revokeObjectURL(fileData.thumbSrc);
         if (fileData.src && fileData.src.startsWith('blob:')) URL.revokeObjectURL(fileData.src);
     });
-    console.log("Memoria optimizada: URLs anteriores revocadas 🧹");
 }
 
 input.addEventListener("change", function() {
-    foldersMap = {};
-    rootFolderName = "";
-    allFiles = []; 
-
+    const state = appState.local;
+    cleanupLocalMemory();
+    state.foldersMap = {}; 
+    state.rootFolderName = ""; 
+    state.allFiles = []; 
+    
     Array.from(this.files).forEach(file => {
-        const isImage = file.type.startsWith("image/");
-        const isVideo = file.type.startsWith("video/");
-
+        const isImage = file.type.startsWith("image/"); const isVideo = file.type.startsWith("video/");
         if(isImage || isVideo) {
-            const pathParts = file.webkitRelativePath.split('/');
-            const fileName = pathParts.pop(); 
-            
-            if (!rootFolderName) rootFolderName = pathParts[0];
-
+            const pathParts = file.webkitRelativePath.split('/'); const fileName = pathParts.pop(); 
+            if (!state.rootFolderName) state.rootFolderName = pathParts[0];
             for (let i = 0; i < pathParts.length; i++) {
                 let folderPath = pathParts.slice(0, i + 1).join('/');
-                if (!foldersMap[folderPath]) {
-                    foldersMap[folderPath] = { files: [], subfolders: new Set() };
-                }
-                if (i > 0) {
-                    let parentPath = pathParts.slice(0, i).join('/');
-                    foldersMap[parentPath].subfolders.add(folderPath);
-                }
+                if (!state.foldersMap[folderPath]) state.foldersMap[folderPath] = { files: [], subfolders: new Set() };
+                if (i > 0) { let parentPath = pathParts.slice(0, i).join('/'); state.foldersMap[parentPath].subfolders.add(folderPath); }
             }
-            
             let finalFolderPath = pathParts.join('/');
-            
-            const fileData = {
-                type: isImage ? "image" : "video",
-                file: file, 
-                name: fileName,
-                src: null, 
-                thumbSrc: null, 
-                parentFolder: finalFolderPath,
-                uniquePath: file.webkitRelativePath
-            };
-
-            foldersMap[finalFolderPath].files.push(fileData);
-            allFiles.push(fileData);
+            const fileData = { type: isImage ? "image" : "video", file: file, name: fileName, src: null, thumbSrc: null, parentFolder: finalFolderPath, uniquePath: file.webkitRelativePath };
+            state.foldersMap[finalFolderPath].files.push(fileData); state.allFiles.push(fileData);
         }
     });
-
-    if (rootFolderName) {
-        searchInput.disabled = false;
-        filterBtn.disabled = false;
-        sortBtn.disabled = false; 
+    
+    if (state.rootFolderName) {
+        state.loaded = true;
+        state.currentPath = state.rootFolderName;
         
-        searchInput.value = ""; 
-        currentFilter = "all";
-        filterBtnText.textContent = "Todos los archivos";
-        
-        currentSortCriteria = "name";
-        currentSortOrder = "asc";
-
+        searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
+        currentSortCriteria = "name"; currentSortOrder = "asc";
         document.querySelectorAll('.sort-option').forEach(el => el.classList.remove('active'));
         document.querySelector('.sort-option.criteria[data-value="name"]').classList.add('active');
         document.querySelector('.sort-option.order[data-value="asc"]').classList.add('active');
-        
         document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
         document.querySelector('.filter-option[data-value="all"]').classList.add('active');
         
-        renderGallery(rootFolderName);
+        if (currentViewSource === 'local') updateUIState();
     }
 });
 
-function triggerGalleryAnimation() {
-    gallery.classList.remove('fade-in');
-    void gallery.offsetWidth; 
-    gallery.classList.add('fade-in');
+function triggerGalleryAnimation() { gallery.classList.remove('fade-in'); void gallery.offsetWidth; gallery.classList.add('fade-in'); }
+function updateGalleryView() { 
+    const searchTerm = searchInput.value.toLowerCase().trim(); 
+    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") { 
+        if (getState().currentPath) renderGallery(getState().currentPath); 
+    } else { 
+        renderGlobalSearch(searchTerm); 
+    } 
 }
-
-function updateGalleryView() {
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") {
-        if (currentPath) renderGallery(currentPath);
-    } else {
-        renderGlobalSearch(searchTerm);
-    }
-}
-
 searchInput.addEventListener("input", updateGalleryView);
 
-function passesFilter(fileData) {
-    if (currentFilter === "folder") return false; 
-    if (currentFilter === "favs") return favorites.has(fileData.uniquePath);
-    
-    if (currentFilter === "all") return true;
-    if (currentFilter === "video" && fileData.type === "video") return true;
-    if (currentFilter === "gif" && fileData.file.type === "image/gif") return true;
-    if (currentFilter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true;
-    return false;
-}
-
-function sortFilesArray(filesArray) {
-    const criteria = currentSortCriteria;
-    const isAscending = currentSortOrder === "asc" ? 1 : -1;
-
-    return filesArray.sort((a, b) => {
-        let valA, valB;
-        if (criteria === "name") {
-            valA = a.name.toLowerCase(); valB = b.name.toLowerCase();
-        } else if (criteria === "date") {
-            valA = a.file.lastModified; valB = b.file.lastModified;
-        } else if (criteria === "size") {
-            valA = a.file.size; valB = b.file.size;
-        } else if (criteria === "type") {
-            valA = a.file.type; valB = b.file.type;
-        }
-        if (valA < valB) return -1 * isAscending;
-        if (valA > valB) return 1 * isAscending;
-        return 0;
-    });
-}
-
-function getFolderCoverData(folderPath) {
-    let possibleCovers = [];
-    for (let i = 0; i < allFiles.length; i++) {
-        const f = allFiles[i];
-        if ((f.parentFolder === folderPath || f.parentFolder.startsWith(folderPath + '/'))) {
-            possibleCovers.push({ data: f, index: i });
-        }
-    }
-    if (possibleCovers.length === 0) return null;
-    possibleCovers.sort((a, b) => a.data.name.toLowerCase().localeCompare(b.data.name.toLowerCase()));
-    return possibleCovers[0];
-}
+function passesFilter(fileData) { if (currentFilter === "folder") return false; if (currentFilter === "favs") return favorites.has(fileData.uniquePath); if (currentFilter === "all") return true; if (currentFilter === "video" && fileData.type === "video") return true; if (currentFilter === "gif" && fileData.file.type === "image/gif") return true; if (currentFilter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true; return false; }
+function sortFilesArray(filesArray) { const criteria = currentSortCriteria; const isAscending = currentSortOrder === "asc" ? 1 : -1; return filesArray.sort((a, b) => { let valA, valB; if (criteria === "name") { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if (criteria === "date") { valA = a.file.lastModified; valB = b.file.lastModified; } else if (criteria === "size") { valA = a.file.size; valB = b.file.size; } else if (criteria === "type") { valA = a.file.type; valB = b.file.type; } if (valA < valB) return -1 * isAscending; if (valA > valB) return 1 * isAscending; return 0; }); }
+function getFolderCoverData(folderPath) { let possibleCovers = []; const state = getState(); for (let i = 0; i < state.allFiles.length; i++) { const f = state.allFiles[i]; if ((f.parentFolder === folderPath || f.parentFolder.startsWith(folderPath + '/'))) { possibleCovers.push({ data: f, index: i }); } } if (possibleCovers.length === 0) return null; possibleCovers.sort((a, b) => a.data.name.toLowerCase().localeCompare(b.data.name.toLowerCase())); return possibleCovers[0]; }
 
 const smartThumbWidth = 200 * (window.devicePixelRatio || 1);
 
-const handleIntersection = (entries, obs) => {
-    entries.forEach(entry => {
-        const mediaElement = entry.target;
+const handleIntersection = (entries, obs) => { 
+    entries.forEach(entry => { 
+        const mediaElement = entry.target; 
+        let fileData; 
+        const state = getState();
+        if (mediaElement.classList.contains('folder-cover')) fileData = state.allFiles[mediaElement.dataset.allIndex]; 
+        else fileData = mediaFiles[mediaElement.dataset.index]; 
         
-        let fileData;
-        if (mediaElement.classList.contains('folder-cover')) {
-            fileData = allFiles[mediaElement.dataset.allIndex];
-        } else {
-            fileData = mediaFiles[mediaElement.dataset.index];
-        }
-
-        if (!fileData) return;
-
-        if (entry.isIntersecting) {
-            if (fileData.thumbSrc) {
-                mediaElement.src = fileData.thumbSrc;
+        if (!fileData) return; 
+        
+        if (entry.isIntersecting) { 
+            
+            // SUPER IMPORTANTE: SOLUCIÓN A MINIATURAS ROTAS DE DRIVE
+            if (fileData.uniquePath && fileData.uniquePath.startsWith('drive_')) {
+                if (fileData.thumbSrc) {
+                    mediaElement.src = fileData.thumbSrc;
+                } else {
+                    mediaElement.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='14'>Sin Vista Previa</text></svg>";
+                }
                 mediaElement.dataset.loaded = "true";
                 return;
             }
 
-            if (fileData.file.type.startsWith("image/")) {
-                generateThumbWithWorker(fileData.file, smartThumbWidth)
-                    .then(blob => {
-                        fileData.thumbSrc = URL.createObjectURL(blob);
-                        mediaElement.src = fileData.thumbSrc;
-                        mediaElement.dataset.loaded = "true";
-                    })
-                    .catch(() => {
-                        fileData.thumbSrc = URL.createObjectURL(fileData.file);
-                        mediaElement.src = fileData.thumbSrc;
-                        mediaElement.dataset.loaded = "true";
-                    });
+            if (fileData.thumbSrc) { 
+                mediaElement.src = fileData.thumbSrc; 
+                mediaElement.dataset.loaded = "true"; 
+                return; 
             } 
-            else if (fileData.file.type.startsWith("video/")) {
-                const tempUrl = URL.createObjectURL(fileData.file);
-                const tempVideo = document.createElement("video");
-                tempVideo.src = tempUrl;
-                tempVideo.muted = true; 
-                tempVideo.playsInline = true;
-                
-                tempVideo.onloadeddata = () => {
-                    if (tempVideo.duration > 1) tempVideo.currentTime = 1;
-                    else tempVideo.currentTime = tempVideo.duration / 2;
-                };
 
-                tempVideo.onseeked = () => {
-                    const canvas = document.createElement("canvas");
-                    const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200));
-                    canvas.width = (tempVideo.videoWidth || 200) * scaleFactor;
-                    canvas.height = (tempVideo.videoHeight || 150) * scaleFactor;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-                    
-                    fileData.thumbSrc = canvas.toDataURL("image/jpeg", 0.6);
-                    mediaElement.src = fileData.thumbSrc;
-                    URL.revokeObjectURL(tempUrl);
-                    mediaElement.dataset.loaded = "true";
-                };
-                tempVideo.onerror = () => {
-                    fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>";
-                    mediaElement.src = fileData.thumbSrc;
-                    mediaElement.dataset.loaded = "true";
-                    URL.revokeObjectURL(tempUrl);
-                };
-            }
+            if (fileData.file.type.startsWith("image/")) generateThumbWithWorker(fileData.file, smartThumbWidth).then(blob => { fileData.thumbSrc = URL.createObjectURL(blob); mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; }).catch(() => { fileData.thumbSrc = URL.createObjectURL(fileData.file); mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; }); else if (fileData.file.type.startsWith("video/")) { const tempUrl = URL.createObjectURL(fileData.file); const tempVideo = document.createElement("video"); tempVideo.src = tempUrl; tempVideo.muted = tempVideo.playsInline = true; tempVideo.onloadeddata = () => { if (tempVideo.duration > 1) tempVideo.currentTime = 1; else tempVideo.currentTime = tempVideo.duration / 2; }; tempVideo.onseeked = () => { const canvas = document.createElement("canvas"); const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200)); canvas.width = (tempVideo.videoWidth || 200) * scaleFactor; canvas.height = (tempVideo.videoHeight || 150) * scaleFactor; canvas.getContext("2d").drawImage(tempVideo, 0, 0, canvas.width, canvas.height); fileData.thumbSrc = canvas.toDataURL("image/jpeg", 0.6); mediaElement.src = fileData.thumbSrc; URL.revokeObjectURL(tempUrl); mediaElement.dataset.loaded = "true"; }; tempVideo.onerror = () => { fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>"; mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; URL.revokeObjectURL(tempUrl); }; } 
+        } else if (mediaElement.dataset.loaded) { 
+            mediaElement.removeAttribute("src"); 
+            mediaElement.removeAttribute("data-loaded"); 
         } 
-        else {
-            if (mediaElement.dataset.loaded) {
-                mediaElement.removeAttribute("src");
-                mediaElement.removeAttribute("data-loaded");
-            }
-        }
-    });
+    }); 
 };
 
-function renderGlobalSearch(searchTerm) {
-    triggerGalleryAnimation();
-    gallery.innerHTML = "";
-    mediaFiles = [];
-    let indexCounter = 0;
+function renderGlobalSearch(searchTerm) { 
+    triggerGalleryAnimation(); gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0;
+    const state = getState();
+
+    if (currentFilter === "favs" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
+    else if (currentFilter === "folder" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
+    else pathDisplay.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Resultados para: "${searchTerm}"`;
     
-    if (currentFilter === "favs" && searchTerm === "") {
-        pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
-    } else if (currentFilter === "folder" && searchTerm === "") {
-        pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
-    } else {
-        pathDisplay.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Resultados para: "${searchTerm}"`;
+    const backDiv = document.createElement("div"); backDiv.className = "item folder"; backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`; backDiv.onclick = () => { searchInput.value = ""; if (currentFilter === "favs" || currentFilter === "folder") { currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active'); } updateGalleryView(); }; gallery.appendChild(backDiv); const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
+    
+    if (currentFilter === "all" || currentFilter === "folder") { 
+        let allFolders = Object.keys(state.foldersMap); 
+        let foldersToRender = allFolders.filter(folderPath => { if (folderPath === state.rootFolderName) return false; const folderName = folderPath.split('/').pop().toLowerCase(); return folderName.includes(searchTerm); }); 
+        foldersToRender.sort((a, b) => { const nameA = a.split('/').pop().toLowerCase(); const nameB = b.split('/').pop().toLowerCase(); return currentSortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA); }); 
+        foldersToRender.forEach(folderPath => { 
+            const folderName = folderPath.split('/').pop(); const folderDiv = document.createElement("div"); folderDiv.className = "item folder"; const coverData = getFolderCoverData(folderPath); 
+            if (coverData) { folderDiv.innerHTML = `<img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>`; } else { folderDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${folderName}</div>`; } 
+            folderDiv.onclick = () => { searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active'); renderGallery(folderPath); }; gallery.appendChild(folderDiv); if (coverData) observer.observe(folderDiv.querySelector('.folder-cover')); 
+        }); 
     }
+    
+    let filesToRender = state.allFiles.filter(fileData => fileData.name.toLowerCase().includes(searchTerm) && passesFilter(fileData)); filesToRender = sortFilesArray(filesToRender); filesToRender.forEach(fileData => { fileData.index = indexCounter; mediaFiles.push(fileData); createThumbElement(fileData, indexCounter, observer); indexCounter++; }); if (gallery.children.length === 1) gallery.innerHTML += "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados compatibles con tu búsqueda.</p>";
+}
 
-    const backDiv = document.createElement("div");
-    backDiv.className = "item folder";
-    backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`;
-    backDiv.onclick = () => { 
-        searchInput.value = ""; 
-        if (currentFilter === "favs" || currentFilter === "folder") {
-            currentFilter = "all";
-            filterBtnText.textContent = "Todos los archivos";
-            document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-            document.querySelector('.filter-option[data-value="all"]').classList.add('active');
-        }
-        updateGalleryView(); 
-    };
-    gallery.appendChild(backDiv);
-
+function renderGallery(folderPath) { 
+    const state = getState();
+    triggerGalleryAnimation(); state.currentPath = folderPath; gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0; const currentFolder = state.foldersMap[folderPath]; if (!currentFolder) return; 
+    pathDisplay.innerHTML = (currentViewSource === 'drive' ? '<i class="fa-brands fa-google-drive" style="color: #6da235;"></i> ' : '<i class="fa-solid fa-folder-open"></i> ') + folderPath.replace(/\//g, ' / '); 
     const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
-
-    if (currentFilter === "all" || currentFilter === "folder") {
-        let allFolders = Object.keys(foldersMap);
-        
-        let foldersToRender = allFolders.filter(folderPath => {
-            if (folderPath === rootFolderName) return false; 
-            const folderName = folderPath.split('/').pop().toLowerCase();
-            return folderName.includes(searchTerm);
-        });
-
-        foldersToRender.sort((a, b) => {
-            const nameA = a.split('/').pop().toLowerCase();
-            const nameB = b.split('/').pop().toLowerCase();
-            return currentSortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-        });
-
-        foldersToRender.forEach(folderPath => {
-            const folderName = folderPath.split('/').pop();
-            const folderDiv = document.createElement("div");
-            folderDiv.className = "item folder";
-            
-            const coverData = getFolderCoverData(folderPath);
-            
-            if (coverData) {
-                folderDiv.innerHTML = `
-                    <img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')">
-                    <div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>
-                `;
-            } else {
-                folderDiv.innerHTML = `
-                    <div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div>
-                    <div class="folder-name-overlay">${folderName}</div>
-                `;
-            }
-
-            folderDiv.onclick = () => {
-                searchInput.value = "";
-                currentFilter = "all";
-                filterBtnText.textContent = "Todos los archivos";
-                document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-                document.querySelector('.filter-option[data-value="all"]').classList.add('active');
-                renderGallery(folderPath);
-            };
-            gallery.appendChild(folderDiv);
-            
-            if (coverData) {
-                const coverImg = folderDiv.querySelector('.folder-cover');
-                observer.observe(coverImg);
-            }
-        });
-    }
-
-    let filesToRender = allFiles.filter(fileData => 
-        fileData.name.toLowerCase().includes(searchTerm) && passesFilter(fileData)
-    );
-    filesToRender = sortFilesArray(filesToRender);
-
-    filesToRender.forEach(fileData => {
-        fileData.index = indexCounter;
-        mediaFiles.push(fileData); 
-        createThumbElement(fileData, indexCounter, observer);
-        indexCounter++;
-    });
-
-    if (gallery.children.length === 1) {
-        gallery.innerHTML += "<p style='width: 100%; color: #888; font-size: 18px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados que coincidan con tu búsqueda</p>";
-    }
+    
+    if (folderPath !== state.rootFolderName) { const parts = folderPath.split('/'); parts.pop(); const parentPath = parts.join('/'); const backDiv = document.createElement("div"); backDiv.className = "item folder"; backDiv.style.background = "#222"; backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`; backDiv.onclick = () => renderGallery(parentPath); gallery.appendChild(backDiv); }
+    
+    Array.from(currentFolder.subfolders).sort().forEach(subfolderPath => { const folderName = subfolderPath.split('/').pop(); const folderDiv = document.createElement("div"); folderDiv.className = "item folder"; const coverData = getFolderCoverData(subfolderPath); if (coverData) folderDiv.innerHTML = `<img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>`; else folderDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${folderName}</div>`; folderDiv.onclick = () => renderGallery(subfolderPath); gallery.appendChild(folderDiv); if (coverData) observer.observe(folderDiv.querySelector('.folder-cover')); });
+    
+    let filesToRender = currentFolder.files.filter(passesFilter); filesToRender = sortFilesArray(filesToRender); filesToRender.forEach(fileData => { fileData.index = indexCounter; mediaFiles.push(fileData); createThumbElement(fileData, indexCounter, observer); indexCounter++; });
 }
 
-function renderGallery(folderPath) {
-    triggerGalleryAnimation();
-    currentPath = folderPath; 
-    gallery.innerHTML = "";
-    mediaFiles = [];
-    let indexCounter = 0;
+function createThumbElement(fileData, indexCounter, observer) { const div = document.createElement("div"); div.className = "item"; let mediaElement = document.createElement("img"); mediaElement.className = "thumb skeleton"; mediaElement.dataset.index = indexCounter; mediaElement.onload = () => mediaElement.classList.remove("skeleton"); mediaElement.ondragstart = () => false; mediaElement.onclick = () => openViewer(indexCounter); div.addEventListener('contextmenu', e => { e.preventDefault(); contextMenuTarget = { fileData, thumbDiv: div }; if (favorites.has(fileData.uniquePath)) { ctxFavIcon.className = "fa-solid fa-heart-crack icon"; ctxFavIcon.style.color = "#ff4d4d"; ctxFavText.textContent = "Quitar Fav"; } else { ctxFavIcon.className = "fa-regular fa-heart icon"; ctxFavIcon.style.color = "white"; ctxFavText.textContent = "Favorito"; } ctxMenu.style.display = "flex"; let x = e.pageX; let y = e.pageY; if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10; if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10; ctxMenu.style.left = `${x}px`; ctxMenu.style.top = `${y}px`; }); div.appendChild(mediaElement); if (fileData.file.type === "image/gif") div.appendChild(createBadge("film", "GIF")); else if (fileData.type === "video") div.appendChild(createBadge("play", "VIDEO")); if (favorites.has(fileData.uniquePath)) { const favBadge = document.createElement("span"); favBadge.className = "fav-badge"; favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; div.appendChild(favBadge); } if (currentViewSource === 'local' && (fileData.file.type === "image/gif" || fileData.type === "video")) { let previewVideo = null; let isHovering = false; const startPreview = () => { if (isHovering) return; isHovering = true; if (!fileData.src) fileData.src = URL.createObjectURL(fileData.file); if (fileData.file.type === "image/gif") mediaElement.src = fileData.src; else if (fileData.type === "video") { previewVideo = document.createElement("video"); previewVideo.src = fileData.src; previewVideo.muted = previewVideo.loop = previewVideo.playsInline = true; previewVideo.className = "preview-video"; div.appendChild(previewVideo); mediaElement.style.opacity = "0"; previewVideo.play().catch(e => console.log("Preview pausado")); } }; const stopPreview = () => { if (!isHovering) return; isHovering = false; if (fileData.file.type === "image/gif") mediaElement.src = fileData.thumbSrc; else if (previewVideo) { previewVideo.pause(); previewVideo.removeAttribute('src'); previewVideo.load(); previewVideo.remove(); previewVideo = null; mediaElement.style.opacity = "1"; } }; div.addEventListener('mouseenter', startPreview); div.addEventListener('mouseleave', stopPreview); div.addEventListener('touchstart', startPreview, { passive: true }); div.addEventListener('touchend', stopPreview); div.addEventListener('touchcancel', stopPreview); } gallery.appendChild(div); observer.observe(mediaElement); }
+function createBadge(icon, text) { const badge = document.createElement("span"); badge.className = `media-badge badge-${text.toLowerCase()}`; badge.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${text}`; return badge; }
+function formatTime(seconds) { seconds = Math.floor(seconds); const m = Math.floor(seconds / 60); const s = seconds % 60; return `${m}:${s < 10 ? '0' : ''}${s}`; }
 
-    const currentFolder = foldersMap[folderPath];
-    if (!currentFolder) return;
+let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
 
-    pathDisplay.innerHTML = '<i class="fa-solid fa-folder-open"></i> ' + folderPath.replace(/\//g, ' / ');
+/* SUPER IMPORTANTE: NUEVA ARQUITECTURA DE CARGA DE VISOR PARA EVITAR PANTALLAS NEGRAS */
+async function openViewer(index) {
+    if(mediaFiles.length === 0) return; currentIndex = index; const file = mediaFiles[currentIndex];
+    viewer.querySelectorAll('.viewer-content, .custom-video-wrapper').forEach(el => el.remove());
+    viewer.style.display = "flex"; fileNameDisplay.textContent = file.name;
+    viewerLoading.style.display = "flex"; 
     
-    const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
+    scale = 1; currentTranslateX = currentTranslateY = xOffset = yOffset = 0; isDragging = false;
+    let mediaUrl = "";
 
-    if (folderPath !== rootFolderName) {
-        const parts = folderPath.split('/');
-        parts.pop(); 
-        const parentPath = parts.join('/');
-        
-        const backDiv = document.createElement("div");
-        backDiv.className = "item folder";
-        backDiv.style.background = "#222"; 
-        backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`;
-        backDiv.onclick = () => renderGallery(parentPath);
-        gallery.appendChild(backDiv);
-    }
-
-    Array.from(currentFolder.subfolders).sort().forEach(subfolderPath => {
-        const folderName = subfolderPath.split('/').pop();
-        const folderDiv = document.createElement("div");
-        folderDiv.className = "item folder";
-        
-        const coverData = getFolderCoverData(subfolderPath);
-        
-        if (coverData) {
-            folderDiv.innerHTML = `
-                <img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')">
-                <div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>
-            `;
+    if (currentViewSource === 'local') {
+        if (!file.src) file.src = URL.createObjectURL(file.file);
+        mediaUrl = file.src;
+        viewerLoading.style.display = "none";
+        renderViewerMedia(file, mediaUrl);
+    } else if (currentViewSource === 'drive') {
+        if (file.blobSrc) {
+            mediaUrl = file.blobSrc;
+            viewerLoading.style.display = "none";
+            renderViewerMedia(file, mediaUrl);
         } else {
-            folderDiv.innerHTML = `
-                <div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div>
-                <div class="folder-name-overlay">${folderName}</div>
-            `;
-        }
-
-        folderDiv.onclick = () => renderGallery(subfolderPath);
-        gallery.appendChild(folderDiv);
-        
-        if (coverData) {
-            const coverImg = folderDiv.querySelector('.folder-cover');
-            observer.observe(coverImg);
-        }
-    });
-
-    let filesToRender = currentFolder.files.filter(passesFilter);
-    filesToRender = sortFilesArray(filesToRender);
-
-    filesToRender.forEach(fileData => {
-        fileData.index = indexCounter;
-        mediaFiles.push(fileData);
-        createThumbElement(fileData, indexCounter, observer);
-        indexCounter++;
-    });
-}
-
-function createThumbElement(fileData, indexCounter, observer) {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    let mediaElement = document.createElement("img");
-    mediaElement.className = "thumb skeleton"; 
-    mediaElement.dataset.index = indexCounter; 
-    
-    mediaElement.onload = () => mediaElement.classList.remove("skeleton");
-    
-    mediaElement.ondragstart = function() { return false; };
-    mediaElement.onclick = () => openViewer(indexCounter);
-    
-    div.addEventListener('contextmenu', (e) => {
-        e.preventDefault(); 
-        
-        contextMenuTarget = { fileData, thumbDiv: div };
-        
-        if (favorites.has(fileData.uniquePath)) {
-            ctxFavIcon.className = "fa-solid fa-heart-crack icon";
-            ctxFavIcon.style.color = "#ff4d4d"; 
-            ctxFavText.textContent = "Quitar Fav";
-        } else {
-            ctxFavIcon.className = "fa-regular fa-heart icon";
-            ctxFavIcon.style.color = "white"; 
-            ctxFavText.textContent = "Favorito";
-        }
-
-        ctxMenu.style.display = "flex";
-        
-        let x = e.pageX;
-        let y = e.pageY;
-        
-        if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10;
-        if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10;
-
-        ctxMenu.style.left = `${x}px`;
-        ctxMenu.style.top = `${y}px`;
-    });
-    
-    div.appendChild(mediaElement);
-
-    if (fileData.file.type === "image/gif") {
-        const badge = document.createElement("span");
-        badge.className = "media-badge badge-gif";
-        badge.innerHTML = '<i class="fa-solid fa-film"></i> GIF';
-        div.appendChild(badge);
-    } else if (fileData.type === "video") {
-        const badge = document.createElement("span");
-        badge.className = "media-badge badge-video";
-        badge.innerHTML = '<i class="fa-solid fa-play"></i> VIDEO';
-        div.appendChild(badge);
-    }
-
-    if (favorites.has(fileData.uniquePath)) {
-        const favBadge = document.createElement("span");
-        favBadge.className = "fav-badge";
-        favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>';
-        div.appendChild(favBadge);
-    }
-
-    if (fileData.file.type === "image/gif" || fileData.type === "video") {
-        let previewVideo = null;
-        let isHovering = false;
-
-    const startPreview = () => {
-            if (isHovering) return;
-            isHovering = true;
-
-            if (!fileData.src) fileData.src = URL.createObjectURL(fileData.file);
-
-            if (fileData.file.type === "image/gif") {
-                mediaElement.src = fileData.src; 
-            } else if (fileData.type === "video") {
-                previewVideo = document.createElement("video");
-                previewVideo.src = fileData.src;
-                previewVideo.muted = true;
-                previewVideo.loop = true;
-                previewVideo.playsInline = true;
-                previewVideo.className = "preview-video"; 
-                div.appendChild(previewVideo);
-                
-                mediaElement.style.opacity = "0"; 
-                
-                previewVideo.play().catch(e => console.log("Preview pausado"));
-            }
-        };
-
-        const stopPreview = () => {
-            if (!isHovering) return;
-            isHovering = false;
-
-            if (fileData.file.type === "image/gif") {
-                mediaElement.src = fileData.thumbSrc; 
-            } else if (previewVideo) {
-                previewVideo.pause();
-                previewVideo.removeAttribute('src');
-                previewVideo.load();
-                previewVideo.remove();
-                previewVideo = null;
-                
-                mediaElement.style.opacity = "1"; 
-            }
-        };
-
-        div.addEventListener('mouseenter', startPreview);
-        div.addEventListener('mouseleave', stopPreview);
-        div.addEventListener('touchstart', startPreview, { passive: true });
-        div.addEventListener('touchend', stopPreview);
-        div.addEventListener('touchcancel', stopPreview);
-    }
-
-    gallery.appendChild(div);
-    observer.observe(mediaElement); 
-}
-
-function formatTime(seconds) {
-    seconds = Math.floor(seconds);
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-}
-
-let scale = 1;
-let isMouseDown = false;
-let currentTranslateX = 0, currentTranslateY = 0;
-let initialX, initialY, xOffset = 0, yOffset = 0;
-let isDragging = false; 
-let startClickX, startClickY;
-
-function openViewer(index) {
-    if(mediaFiles.length === 0) return;
-    
-    currentIndex = index;
-    const file = mediaFiles[currentIndex];
-
-    const existingImgs = viewer.querySelectorAll('.viewer-content');
-    const existingVideos = viewer.querySelectorAll('.custom-video-wrapper');
-    existingImgs.forEach(el => el.remove());
-    existingVideos.forEach(el => el.remove());
-
-    viewer.style.display = "flex";
-    fileNameDisplay.textContent = file.name;
-    
-    scale = 1;
-    currentTranslateX = 0;
-    currentTranslateY = 0;
-    xOffset = 0;
-    yOffset = 0;
-    isDragging = false;
-
-    if (!file.src) file.src = URL.createObjectURL(file.file);
-
-    downloadBtn.href = file.src;
-    downloadBtn.download = file.name;
-
-    const isFav = favorites.has(file.uniquePath);
-    favBtn.className = isFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart";
-    favBtn.style.color = isFav ? "#ff4d4d" : "white";
-
-    favBtn.onclick = () => {
-        if (favorites.has(file.uniquePath)) {
-            favorites.delete(file.uniquePath);
-            favBtn.className = "fav-btn fa-regular fa-heart";
-            favBtn.style.color = "white";
-        } else {
-            favorites.add(file.uniquePath);
-            favBtn.className = "fav-btn fa-solid fa-heart";
-            favBtn.style.color = "#ff4d4d";
-        }
-        saveFavorites();
-        
-        if(currentFilter === "favs") {
-            updateGalleryView();
-        } else {
-            const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`);
-            if(targetImg) {
-                const targetThumbDiv = targetImg.closest('.item');
-                const existingHeart = targetThumbDiv.querySelector('.fav-badge');
-                
-                if (favorites.has(file.uniquePath) && !existingHeart) {
-                    const favBadge = document.createElement("span");
-                    favBadge.className = "fav-badge";
-                    favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>';
-                    targetThumbDiv.appendChild(favBadge);
-                } else if (!favorites.has(file.uniquePath) && existingHeart) {
-                    existingHeart.remove();
-                }
-            }
-        }
-    };
-
-    const setupInteractive = (targetEl) => {
-        targetEl.ondragstart = function() { return false; };
-        
-        targetEl.style.willChange = 'transform';
-        targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`;
-
-        let animationFrameId;
-        
-        targetEl.onpointerdown = (e) => {
-            if (e.target.closest('.custom-controls')) return;
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-            startClickX = e.clientX;
-            startClickY = e.clientY;
-            isMouseDown = true;
-            isDragging = false;
-            
-            targetEl.setPointerCapture(e.pointerId);
-        };
-
-        targetEl.onpointermove = (e) => {
-            if (!isMouseDown) return;
-            e.preventDefault();
-            
-            if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) {
-                isDragging = true;
-                targetEl.classList.add('is-dragging'); 
-            }
-            
-            if (isDragging) {
-                currentTranslateX = e.clientX - initialX;
-                currentTranslateY = e.clientY - initialY;
-                
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animationFrameId = requestAnimationFrame(() => {
-                    targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`;
+            try {
+                const token = JSON.parse(localStorage.getItem('drive_token')).access_token;
+                const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
                 });
-            }
-        };
-
-        const dragEnd = (e) => {
-            if (!isMouseDown) return;
-            isMouseDown = false;
-            
-            if (isDragging) {
-                xOffset = currentTranslateX;
-                yOffset = currentTranslateY;
-                targetEl.classList.remove('is-dragging'); 
-            }
-            
-            if (e && e.pointerId) {
-                targetEl.releasePointerCapture(e.pointerId);
-            }
-        };
-
-        targetEl.onpointerup = dragEnd;
-        targetEl.onpointercancel = dragEnd;
-
-        targetEl.onwheel = (e) => {
-            if (e.target.closest('.custom-controls')) return;
-            e.preventDefault();
-            scale += e.deltaY * -0.002;
-            scale = Math.min(Math.max(0.5, scale), 5);
-            
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            animationFrameId = requestAnimationFrame(() => {
-                targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`;
-            });
-        };
-    };
-
-    if (file.type === "image") {
-        let element = document.createElement("img");
-        element.src = file.src; 
-        element.className = "viewer-content";
-        viewer.insertBefore(element, fileNameDisplay);
-        
-        setupInteractive(element);
-
-        element.onclick = (e) => {
-            if (isDragging) return; 
-            if (e.clientX < window.innerWidth / 2) { navigate(-1); } 
-            else { navigate(1); }
-        };
-
-    } else {
-        const wrapper = document.createElement("div");
-        wrapper.className = "custom-video-wrapper paused";
-
-        const video = document.createElement("video");
-        video.src = file.src; 
-        video.autoplay = true;
-        video.controls = false; 
-        video.volume = globalVolume;
-        video.muted = globalVolume === 0;
-
-        const centerIcon = document.createElement("div");
-        centerIcon.className = "center-play-icon";
-        centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>';
-
-        const controlsDiv = document.createElement("div");
-        controlsDiv.className = "custom-controls";
-        controlsDiv.innerHTML = `
-            <div class="progress-container" id="progContainer">
-                <div class="progress-bar" id="progBar"></div>
-                
-                <div class="progress-preview" id="progPreview">
-                    <canvas id="previewCanvas"></canvas>
-                    <div class="progress-preview-time" id="previewTime">0:00</div>
-                </div>
-
-            </div>
-            <div class="controls-row">
-                <button id="playBtn" title="Reproducir/Pausar"><i class="fa-solid fa-pause"></i></button>
-                <div class="volume-container">
-                    <button id="muteBtn" title="Silenciar"><i class="fa-solid fa-volume-high"></i></button>
-                    <input type="range" id="volSlider" min="0" max="1" step="0.05" value="1">
-                </div>
-                <div class="time-display"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div>
-                <div style="flex-grow: 1;"></div>
-                <button id="fullBtn" title="Pantalla Completa"><i class="fa-solid fa-expand"></i></button>
-            </div>
-        `;
-
-        wrapper.appendChild(video);
-        wrapper.appendChild(centerIcon);
-        wrapper.appendChild(controlsDiv);
-        viewer.insertBefore(wrapper, fileNameDisplay);
-
-        setupInteractive(wrapper);
-
-        const playBtn = wrapper.querySelector('#playBtn');
-        const muteBtn = wrapper.querySelector('#muteBtn');
-        const fullBtn = wrapper.querySelector('#fullBtn');
-        const progContainer = wrapper.querySelector('#progContainer');
-        const progBar = wrapper.querySelector('#progBar');
-        const currTimeEl = wrapper.querySelector('#currTime');
-        const totTimeEl = wrapper.querySelector('#totTime');
-        const volSlider = wrapper.querySelector('#volSlider');
-
-        const progPreview = wrapper.querySelector('#progPreview');
-        const previewCanvas = wrapper.querySelector('#previewCanvas');
-        const previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true });
-        const previewTimeEl = wrapper.querySelector('#previewTime');
-
-        const thumbVideo = document.createElement('video');
-        thumbVideo.src = file.src;
-        thumbVideo.muted = true;
-        thumbVideo.preload = 'auto'; 
-
-        let isSeekingPreview = false;
-        let pendingPreviewTime = null;
-        let lastRenderedTime = -1; 
-
-        thumbVideo.addEventListener('seeked', () => {
-            if (thumbVideo.videoWidth > 0) {
-                const videoW = thumbVideo.videoWidth;
-                const videoH = thumbVideo.videoHeight;
-                const isVertical = videoH > videoW;
-
-                const maxVisualSize = 200;
-                let visualW, visualH;
-
-                if (isVertical) {
-                    visualH = maxVisualSize;
-                    visualW = maxVisualSize * (videoW / videoH);
-                } else {
-                    visualW = maxVisualSize;
-                    visualH = maxVisualSize * (videoH / videoW);
+                if (!res.ok) throw new Error("Error HTTP " + res.status);
+                const blob = await res.blob();
+                file.blobSrc = URL.createObjectURL(blob);
+                mediaUrl = file.blobSrc;
+                viewerLoading.style.display = "none";
+                if (viewer.style.display === "flex" && mediaFiles[currentIndex] === file) {
+                    renderViewerMedia(file, mediaUrl);
                 }
-
-                const qualityScale = 0.5; 
-                previewCanvas.width = visualW * qualityScale;
-                previewCanvas.height = visualH * qualityScale;
-
-                previewCanvas.style.width = `${visualW}px`;
-                previewCanvas.style.height = `${visualH}px`;
-
-                previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height);
+            } catch(e) {
+                viewerLoading.innerHTML = "<i class='fa-solid fa-triangle-exclamation fa-2x'></i><span style='margin-top:15px;'>Error al descargar archivo de Google</span>";
             }
-            isSeekingPreview = false;
-            
-            if (pendingPreviewTime !== null) {
-                const timeToSeek = pendingPreviewTime;
-                pendingPreviewTime = null;
-                setTimeout(() => triggerPreviewSeek(timeToSeek), 40); 
-            }
-        });
+        }
+    }
+}
 
-        const triggerPreviewSeek = (time) => {
-            const roundedTime = Math.floor(time * 2) / 2; 
+function renderViewerMedia(file, mediaUrl) {
+    downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl;
+    downloadBtn.download = file.name;
+    const isFav = favorites.has(file.uniquePath); favBtn.className = isFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isFav ? "#ff4d4d" : "white";
+    favBtn.onclick = () => { if (favorites.has(file.uniquePath)) favorites.delete(file.uniquePath); else favorites.add(file.uniquePath); saveFavorites(); if(currentFilter === "favs") updateGalleryView(); else { const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`); if(targetImg) { const targetThumbDiv = targetImg.closest('.item'); const existingHeart = targetThumbDiv.querySelector('.fav-badge'); if (favorites.has(file.uniquePath) && !existingHeart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetThumbDiv.appendChild(fb); } else if (!favorites.has(file.uniquePath) && existingHeart) existingHeart.remove(); } } const isNowFav = favorites.has(file.uniquePath); favBtn.className = isNowFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; };
+    
+    const setupInteractive = targetEl => { targetEl.ondragstart = () => false; targetEl.style.willChange = 'transform'; targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`; let animationFrameId; targetEl.onpointerdown = e => { if (e.target.closest('.custom-controls')) return; initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; startClickX = e.clientX; startClickY = e.clientY; isMouseDown = true; isDragging = false; targetEl.setPointerCapture(e.pointerId); }; targetEl.onpointermove = e => { if (!isMouseDown) return; e.preventDefault(); if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) { isDragging = true; targetEl.classList.add('is-dragging'); } if (isDragging) { currentTranslateX = e.clientX - initialX; currentTranslateY = e.clientY - initialY; if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } }; const dragEnd = e => { if (!isMouseDown) return; isMouseDown = false; if (isDragging) { xOffset = currentTranslateX; yOffset = currentTranslateY; targetEl.classList.remove('is-dragging'); } if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId); }; targetEl.onpointerup = dragEnd; targetEl.onpointercancel = dragEnd; targetEl.onwheel = e => { if (e.target.closest('.custom-controls')) return; e.preventDefault(); scale += e.deltaY * -0.002; scale = Math.min(Math.max(0.5, scale), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); }; };
+    // AQUI SE ENCUENTRA "const qualityScale"
+    if (file.type === "image") { let element = document.createElement("img"); element.src = mediaUrl; element.className = "viewer-content"; viewer.insertBefore(element, fileNameDisplay); setupInteractive(element); element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; } 
+    else { const wrapper = document.createElement("div"); wrapper.className = "custom-video-wrapper paused"; const video = document.createElement("video"); video.src = mediaUrl; video.autoplay = true; video.controls = false; video.volume = globalVolume; video.muted = globalVolume === 0; const centerIcon = document.createElement("div"); centerIcon.className = "center-play-icon"; centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>'; const controlsDiv = document.createElement("div"); controlsDiv.className = "custom-controls"; controlsDiv.innerHTML = `<div class="progress-container" id="progContainer"><div class="progress-bar" id="progBar"></div><div class="progress-preview" id="progPreview"><canvas id="previewCanvas"></canvas><div class="progress-preview-time" id="previewTime">0:00</div></div></div><div class="controls-row"><button id="playBtn" title="Reproducir/Pausar"><i class="fa-solid fa-pause"></i></button><div class="volume-container"><button id="muteBtn" title="Silenciar"><i class="fa-solid fa-volume-high"></i></button><input type="range" id="volSlider" min="0" max="1" step="0.05" value="1"></div><div class="time-display"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div><div style="flex-grow: 1;"></div><button id="fullBtn" title="Pantalla Completa"><i class="fa-solid fa-expand"></i></button></div>`; wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); viewer.insertBefore(wrapper, fileNameDisplay); setupInteractive(wrapper); const playBtn = wrapper.querySelector('#playBtn'), muteBtn = wrapper.querySelector('#muteBtn'), fullBtn = wrapper.querySelector('#fullBtn'), progContainer = wrapper.querySelector('#progContainer'), progBar = wrapper.querySelector('#progBar'), currTimeEl = wrapper.querySelector('#currTime'), totTimeEl = wrapper.querySelector('#totTime'), volSlider = wrapper.querySelector('#volSlider'), progPreview = wrapper.querySelector('#progPreview'), previewCanvas = wrapper.querySelector('#previewCanvas'), previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true }), previewTimeEl = wrapper.querySelector('#previewTime'), thumbVideo = document.createElement('video'); thumbVideo.src = mediaUrl; thumbVideo.muted = true; thumbVideo.preload = 'auto'; let isSeekingPreview = false, pendingPreviewTime = null, lastRenderedTime = -1; thumbVideo.addEventListener('seeked', () => { if (thumbVideo.videoWidth > 0) { const videoW = thumbVideo.videoWidth, videoH = thumbVideo.videoHeight, isVertical = videoH > videoW; const maxVisualSize = 200; let visualW, visualH; if (isVertical) { visualH = maxVisualSize; visualW = maxVisualSize * (videoW / videoH); } else { visualW = maxVisualSize; visualH = maxVisualSize * (videoH / videoW); } const qualityScale = 0.5; previewCanvas.width = visualW * qualityScale; previewCanvas.height = visualH * qualityScale; previewCanvas.style.width = `${visualW}px`; previewCanvas.style.height = `${visualH}px`; previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height); } isSeekingPreview = false; if (pendingPreviewTime !== null) { const timeToSeek = pendingPreviewTime; pendingPreviewTime = null; setTimeout(() => triggerPreviewSeek(timeToSeek), 40); } }); const triggerPreviewSeek = time => { const roundedTime = Math.floor(time * 2) / 2; if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return; if (isSeekingPreview) { pendingPreviewTime = roundedTime; return; } isSeekingPreview = true; lastRenderedTime = roundedTime; thumbVideo.currentTime = roundedTime; }; progContainer.addEventListener('mousemove', e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); const hoverTime = pos * video.duration; let previewX = e.clientX - rect.left; const boxWidth = 170; if (previewX < boxWidth / 2) previewX = boxWidth / 2; if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2; progPreview.style.left = `${previewX}px`; progPreview.style.display = 'flex'; previewTimeEl.textContent = formatTime(hoverTime); triggerPreviewSeek(hoverTime); }); progContainer.addEventListener('mouseleave', () => { progPreview.style.display = 'none'; pendingPreviewTime = null; }); let idleTimeout; const resetIdleTimer = () => { wrapper.classList.remove('idle'); clearTimeout(idleTimeout); if (!video.paused) idleTimeout = setTimeout(() => wrapper.classList.add('idle'), 2500); }; wrapper.addEventListener('mousemove', resetIdleTimer); wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); }); const showCenterIcon = iconClass => { centerIcon.innerHTML = `<i class="fa-solid ${iconClass}"></i>`; wrapper.classList.add('show-center-icon'); setTimeout(() => wrapper.classList.remove('show-center-icon'), 500); }; const togglePlay = () => { if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); showCenterIcon('fa-play'); resetIdleTimer(); } else { video.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); showCenterIcon('fa-pause'); clearTimeout(idleTimeout); wrapper.classList.remove('idle'); } }; video.onclick = e => { if (!isDragging) togglePlay(); }; playBtn.onclick = togglePlay; video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; video.addEventListener('loadedmetadata', () => { totTimeEl.textContent = formatTime(video.duration); volSlider.value = globalVolume; muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; }); video.addEventListener('timeupdate', () => { currTimeEl.textContent = formatTime(video.currentTime); const percent = (video.currentTime / video.duration) * 100; progBar.style.width = `${percent}%`; }); video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); }); video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); }); let isScrubbing = false; const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; progContainer.addEventListener('mousedown', e => { isScrubbing = true; progContainer.classList.add('dragging'); scrub(e); video.pause(); }); document.addEventListener('mousemove', e => { if (isScrubbing) scrub(e); }); document.addEventListener('mouseup', () => { if (isScrubbing) { isScrubbing = false; progContainer.classList.remove('dragging'); if (playBtn.innerHTML.includes('pause')) video.play(); } }); const updateVolumeUI = () => { muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; if (video.muted) volSlider.value = 0; else volSlider.value = video.volume || 1; globalVolume = video.muted ? 0 : video.volume; localStorage.setItem('myGalleryVolume', globalVolume); }; muteBtn.addEventListener('click', () => { if (video.muted || video.volume === 0) { video.muted = false; video.volume = lastUnmutedVolume; } else { lastUnmutedVolume = video.volume; video.muted = true; video.volume = 0; } updateVolumeUI(); }); volSlider.addEventListener('input', e => { video.volume = parseFloat(e.target.value); video.muted = video.volume === 0; if (video.volume > 0) lastUnmutedVolume = video.volume; updateVolumeUI(); }); fullBtn.addEventListener('click', () => { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); }); }
+}
 
-            if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return;
+function navigate(direction) { currentIndex += direction; if(currentIndex >= mediaFiles.length) currentIndex = 0; if(currentIndex < 0) currentIndex = mediaFiles.length - 1; openViewer(currentIndex); }
+function closeViewer() { 
+    viewer.style.display = "none"; 
+    viewer.querySelectorAll('.viewer-content, .custom-video-wrapper').forEach(el => el.remove()); 
+    viewerLoading.style.display = "none";
+    viewerLoading.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x"></i><span style="margin-top:15px;" id="viewerLoadingText">Descargando archivo seguro...</span>`;
+}
+viewer.addEventListener('click', e => { if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) { if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) closeViewer(); } });
+document.addEventListener('keydown', e => { if(viewer.style.display === "flex") { if(e.key === "Escape") closeViewer(); if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') { const video = viewer.querySelector('video'); if (video) { if(e.key === "ArrowRight") { e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 5); } if(e.key === "ArrowLeft") { e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 5); } if(e.key === "ArrowUp") { e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); video.muted = false; if (video.volume > 0) lastUnmutedVolume = video.volume; const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; const muteBtn = viewer.querySelector('#muteBtn'); if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; globalVolume = video.volume; localStorage.setItem('myGalleryVolume', globalVolume); } if(e.key === "ArrowDown") { e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; if(video.volume === 0) { video.muted = true; const muteBtn = viewer.querySelector('#muteBtn'); if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; } else lastUnmutedVolume = video.volume; globalVolume = video.volume; localStorage.setItem('myGalleryVolume', globalVolume); } if(e.code === "Space") { e.preventDefault(); if (video.paused) video.play(); else video.pause(); } } else { if(e.key === "ArrowRight") navigate(1); if(e.key === "ArrowLeft") navigate(-1); } } } });
 
-            if (isSeekingPreview) {
-                pendingPreviewTime = roundedTime; 
-                return;
-            }
-            
-            isSeekingPreview = true;
-            lastRenderedTime = roundedTime;
-            thumbVideo.currentTime = roundedTime;
-        };
+const ctxMenu = document.getElementById("customContextMenu"); const ctxFavIcon = document.getElementById("ctxFavIcon"); const ctxFavText = document.getElementById("ctxFavText"); let contextMenuTarget = null;
+function closeContextMenu() { ctxMenu.style.display = "none"; contextMenuTarget = null; }
+document.addEventListener('click', closeContextMenu); document.addEventListener('scroll', closeContextMenu);
 
-        progContainer.addEventListener('mousemove', (e) => {
-            const rect = progContainer.getBoundingClientRect();
-            let pos = (e.clientX - rect.left) / rect.width;
-            pos = Math.max(0, Math.min(1, pos)); 
-            const hoverTime = pos * video.duration;
-
-            let previewX = e.clientX - rect.left;
-            const boxWidth = 170;
-            if (previewX < boxWidth / 2) previewX = boxWidth / 2;
-            if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2;
-
-            progPreview.style.left = `${previewX}px`;
-            progPreview.style.display = 'flex';
-            previewTimeEl.textContent = formatTime(hoverTime);
-
-            triggerPreviewSeek(hoverTime);
-        });
-
-        progContainer.addEventListener('mouseleave', () => {
-            progPreview.style.display = 'none';
-            pendingPreviewTime = null; 
-        });
-
-        let idleTimeout;
-        const resetIdleTimer = () => {
-            wrapper.classList.remove('idle');
-            clearTimeout(idleTimeout);
-            if (!video.paused) {
-                idleTimeout = setTimeout(() => wrapper.classList.add('idle'), 2500);
-            }
-        };
-        wrapper.addEventListener('mousemove', resetIdleTimer);
-        wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); });
-
-        const showCenterIcon = (iconClass) => {
-            centerIcon.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
-            wrapper.classList.add('show-center-icon');
-            setTimeout(() => wrapper.classList.remove('show-center-icon'), 500);
-        };
-
-        const togglePlay = () => {
-            if (video.paused) { 
-                video.play(); 
-                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; 
-                wrapper.classList.remove('paused');
-                showCenterIcon('fa-play');
-                resetIdleTimer();
-            } else { 
-                video.pause(); 
-                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; 
-                wrapper.classList.add('paused');
-                showCenterIcon('fa-pause');
-                clearTimeout(idleTimeout);
-                wrapper.classList.remove('idle');
-            }
-        };
-
-        video.onclick = (e) => {
-            if (isDragging) return; 
-            togglePlay();
-        };
-        
-        playBtn.onclick = togglePlay;
-
-        video.ondblclick = (e) => {
-            if (isDragging) return;
-            if (!document.fullscreenElement) wrapper.requestFullscreen();
-            else document.exitFullscreen();
-        };
-
-        video.addEventListener('loadedmetadata', () => {
-            totTimeEl.textContent = formatTime(video.duration);
-            volSlider.value = globalVolume;
-            muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
-        });
-
-        video.addEventListener('timeupdate', () => {
-            currTimeEl.textContent = formatTime(video.currentTime);
-            const percent = (video.currentTime / video.duration) * 100;
-            progBar.style.width = `${percent}%`;
-        });
-
-        video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); });
-        video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); });
-
-        let isScrubbing = false;
-        const scrub = (e) => {
-            const rect = progContainer.getBoundingClientRect();
-            let pos = (e.clientX - rect.left) / rect.width;
-            pos = Math.max(0, Math.min(1, pos)); 
-            video.currentTime = pos * video.duration;
-            progBar.style.width = `${pos * 100}%`;
-        };
-
-        progContainer.addEventListener('mousedown', (e) => {
-            isScrubbing = true;
-            progContainer.classList.add('dragging');
-            scrub(e);
-            video.pause(); 
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (isScrubbing) scrub(e);
-        });
-        
-        document.addEventListener('mouseup', () => {
-            if (isScrubbing) {
-                isScrubbing = false;
-                progContainer.classList.remove('dragging');
-                if (playBtn.innerHTML.includes('pause')) video.play(); 
-            }
-        });
-
-        const updateVolumeUI = () => {
-            muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
-            if (video.muted) volSlider.value = 0;
-            else volSlider.value = video.volume || 1;
-            
-            globalVolume = video.muted ? 0 : video.volume;
-            localStorage.setItem('myGalleryVolume', globalVolume);
-        };
-
-        muteBtn.addEventListener('click', () => {
-            if (video.muted || video.volume === 0) {
-                video.muted = false;
-                video.volume = lastUnmutedVolume; 
+/* SUPER IMPORTANTE: LOGICA DE DESCARGA Y COPIA SEGURA PARA DRIVE */
+document.getElementById('ctxCopy').addEventListener('click', async () => { 
+    if (!contextMenuTarget) return; 
+    const file = contextMenuTarget.fileData; 
+    try { 
+        if (file.type === 'image') { 
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+                canvas.toBlob(async blob => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); alert("¡Imagen copiada!"); } catch (err) { alert("Navegador no soporta copiar imágenes de esta forma."); } }, 'image/png');
+            };
+            if (currentViewSource === 'drive') {
+                const token = JSON.parse(localStorage.getItem('drive_token')).access_token;
+                img.src = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&access_token=${token}`;
             } else {
-                lastUnmutedVolume = video.volume; 
-                video.muted = true;
-                video.volume = 0;
+                img.src = file.src || URL.createObjectURL(file.file);
             }
-            updateVolumeUI();
-        });
-        
-        volSlider.addEventListener('input', (e) => {
-            video.volume = parseFloat(e.target.value);
-            video.muted = video.volume === 0;
-            if (video.volume > 0) lastUnmutedVolume = video.volume;
-            updateVolumeUI();
-        });
-
-        fullBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) wrapper.requestFullscreen();
-            else document.exitFullscreen();
-        });
-    }
-}
-
-function navigate(direction) {
-    currentIndex += direction;
-    if(currentIndex >= mediaFiles.length) currentIndex = 0;
-    if(currentIndex < 0) currentIndex = mediaFiles.length - 1;
-    openViewer(currentIndex);
-}
-
-function closeViewer() {
-    viewer.style.display = "none";
-    const existingImgs = viewer.querySelectorAll('.viewer-content');
-    const existingVideos = viewer.querySelectorAll('.custom-video-wrapper');
-    existingImgs.forEach(el => el.remove());
-    existingVideos.forEach(el => el.remove());
-}
-
-viewer.addEventListener('click', function(e) {
-    if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) {
-        if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) {
-            closeViewer();
-        }
-    }
+        } else alert("Solo imágenes."); 
+    } catch(e) { console.error(e); } 
 });
 
-document.addEventListener('keydown', function(e) {
-    if(viewer.style.display === "flex") {
-        if(e.key === "Escape") closeViewer();
-        
-        if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
-            const video = viewer.querySelector('video');
-            
-            if (video) {
-                if(e.key === "ArrowRight") { 
-                    e.preventDefault(); 
-                    video.currentTime = Math.min(video.duration, video.currentTime + 5); 
-                }
-                if(e.key === "ArrowLeft") { 
-                    e.preventDefault(); 
-                    video.currentTime = Math.max(0, video.currentTime - 5); 
-                }
-                if(e.key === "ArrowUp") { 
-                    e.preventDefault(); 
-                    video.volume = Math.min(1, video.volume + 0.1); 
-                    video.muted = false;
-                    if (video.volume > 0) lastUnmutedVolume = video.volume;
-                    
-                    const volSlider = viewer.querySelector('#volSlider');
-                    if(volSlider) volSlider.value = video.volume;
-                    const muteBtn = viewer.querySelector('#muteBtn');
-                    if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-                    
-                    globalVolume = video.volume;
-                    localStorage.setItem('myGalleryVolume', globalVolume);
-                }
-                if(e.key === "ArrowDown") { 
-                    e.preventDefault(); 
-                    video.volume = Math.max(0, video.volume - 0.1); 
-                    const volSlider = viewer.querySelector('#volSlider');
-                    if(volSlider) volSlider.value = video.volume;
-                    
-                    if(video.volume === 0) {
-                        video.muted = true;
-                        const muteBtn = viewer.querySelector('#muteBtn');
-                        if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
-                    } else {
-                        lastUnmutedVolume = video.volume;
-                    }
-                    
-                    globalVolume = video.volume;
-                    localStorage.setItem('myGalleryVolume', globalVolume);
-                }
-                
-                if(e.code === "Space") {
-                    e.preventDefault(); 
-                    if (video.paused) video.play(); 
-                    else video.pause(); 
-                }
-            } 
-            else {
-                if(e.key === "ArrowRight") navigate(1);
-                if(e.key === "ArrowLeft") navigate(-1);
-            }
-        }
-    }
-});
-
-const ctxMenu = document.getElementById("customContextMenu");
-const ctxFavIcon = document.getElementById("ctxFavIcon");
-const ctxFavText = document.getElementById("ctxFavText");
-let contextMenuTarget = null; 
-
-function closeContextMenu() {
-    ctxMenu.style.display = "none";
-    contextMenuTarget = null;
-}
-
-document.addEventListener('click', closeContextMenu);
-document.addEventListener('scroll', closeContextMenu);
-
-document.getElementById('ctxCopy').addEventListener('click', async () => {
-    if (!contextMenuTarget) return;
-    const file = contextMenuTarget.fileData.file;
-    
-    try {
-        if (file.type.startsWith('image/')) {
-            const bitmap = await createImageBitmap(file);
-            const canvas = document.createElement('canvas');
-            canvas.width = bitmap.width;
-            canvas.height = bitmap.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(bitmap, 0, 0);
-            
-            canvas.toBlob(async (blob) => {
-                try {
-                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                    alert("¡Imagen copiada al portapapeles!");
-                } catch (err) {
-                    alert("Tu navegador no permite copiar imágenes directamente.");
-                }
-            }, 'image/png');
-        } else {
-            alert("Solo se pueden copiar imágenes. Para videos usa 'Compartir' o 'Descargar'.");
-        }
-    } catch(e) { console.error(e); }
-});
-
-document.getElementById('ctxShare').addEventListener('click', async () => {
-    if (!contextMenuTarget) return;
-    const file = contextMenuTarget.fileData.file;
+document.getElementById('ctxShare').addEventListener('click', async () => { 
+    if (!contextMenuTarget) return; 
+    const fd = contextMenuTarget.fileData; 
     if (navigator.share) {
-        try {
-            await navigator.share({ files: [file], title: file.name });
-        } catch (err) { console.log("Compartir cancelado"); }
-    } else {
-        alert("La API de compartir no está disponible en tu navegador de PC.");
-    }
+        try { 
+            if (currentViewSource === 'drive') {
+                await navigator.share({ url: fd.downloadUrl, title: fd.name });
+            } else {
+                await navigator.share({ files: [fd.file], title: fd.name }); 
+            }
+        } catch (err) {} 
+    } else alert("PC share API no disponible."); 
 });
 
-document.getElementById('ctxDownload').addEventListener('click', () => {
-    if (!contextMenuTarget) return;
-    const fileData = contextMenuTarget.fileData;
-    const url = fileData.src || URL.createObjectURL(fileData.file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileData.name;
-    a.click();
-    if (!fileData.src) URL.revokeObjectURL(url);
+document.getElementById('ctxDownload').addEventListener('click', () => { 
+    if (!contextMenuTarget) return; 
+    const fd = contextMenuTarget.fileData; 
+    let url;
+    if (currentViewSource === 'drive') {
+        url = fd.downloadUrl || `https://www.googleapis.com/drive/v3/files/${fd.id}?alt=media&access_token=${JSON.parse(localStorage.getItem('drive_token')).access_token}`;
+    } else {
+        url = fd.src || URL.createObjectURL(fd.file); 
+    }
+    const a = document.createElement('a'); a.href = url; a.download = fd.name; a.click(); 
+    if (currentViewSource === 'local' && !fd.src) URL.revokeObjectURL(url); 
 });
 
-document.getElementById('ctxFav').addEventListener('click', () => {
-    if (!contextMenuTarget) return;
-    const { fileData, thumbDiv } = contextMenuTarget;
-    
-    if (favorites.has(fileData.uniquePath)) {
-        favorites.delete(fileData.uniquePath);
-        const existingHeart = thumbDiv.querySelector('.fav-badge');
-        if (existingHeart) existingHeart.remove();
-    } else {
-        favorites.add(fileData.uniquePath);
-        const existingHeart = thumbDiv.querySelector('.fav-badge');
-        if (!existingHeart) {
-            const favBadge = document.createElement("span");
-            favBadge.className = "fav-badge";
-            favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>';
-            thumbDiv.appendChild(favBadge);
-        }
-    }
-    saveFavorites();
-    if(currentFilter === "favs") updateGalleryView();
-});
+document.getElementById('ctxFav').addEventListener('click', () => { if (!contextMenuTarget) return; const { fileData, thumbDiv } = contextMenuTarget; if (favorites.has(fileData.uniquePath)) { favorites.delete(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (heart) heart.remove(); } else { favorites.add(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (!heart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; thumbDiv.appendChild(fb); } } saveFavorites(); if(currentFilter === "favs") updateGalleryView(); });
+
+window.onload = () => {
+    initGoogleServices();
+};
 
 </script>
 </body>
