@@ -196,13 +196,11 @@ img.thumb {
 img.viewer-content { cursor: grab; }
 img.viewer-content.grabbing { cursor: grabbing !important; }
 
-/* --- REPRODUCTOR DE VIDEO MEJORADO --- */
 .custom-video-wrapper { position: relative; max-width: calc(100vw - 160px); max-height: 85vh; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: default; user-select: none; }
 .custom-video-wrapper video { display: block; max-width: calc(100vw - 160px); max-height: 85vh; width: auto; height: auto; margin: 0 auto; }
 .custom-video-wrapper:fullscreen { max-width: 100vw; max-height: 100vh; border-radius: 0; }
 .custom-video-wrapper:fullscreen video { max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; object-fit: contain; }
 
-/* Controles flotantes que se ocultan solos */
 .custom-controls { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%); display: flex; flex-direction: column; padding: 30px 20px 15px 20px; box-sizing: border-box; opacity: 0; transition: opacity 0.3s ease; z-index: 10; }
 .custom-video-wrapper:hover .custom-controls, .custom-controls:hover, .custom-video-wrapper.paused .custom-controls { opacity: 1; }
 .custom-video-wrapper.idle:not(.paused) { cursor: none; }
@@ -220,16 +218,12 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .controls-row button:hover { color: #ff3b30; transform: scale(1.1); }
 .time-display { font-size: 14px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 500; letter-spacing: 0.5px; opacity: 0.9; }
 
-/* Deslizador de volumen dinámico */
 .volume-container { display: flex; align-items: center; gap: 10px; }
 #volSlider { width: 0px; opacity: 0; transition: width 0.3s, opacity 0.3s; cursor: pointer; accent-color: #ff3b30; }
 .volume-container:hover #volSlider, #volSlider:focus { width: 80px; opacity: 1; }
 
-/* Animación central de Play/Pausa */
 .center-play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); font-size: 60px; color: white; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
 .custom-video-wrapper.show-center-icon .center-play-icon { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
-/* --- FIN REPRODUCTOR DE VIDEO MEJORADO --- */
-
 
 .close { position: absolute; top: 20px; right: 30px; font-size: 30px; cursor: pointer; z-index: 1001; }
 .download-btn { position: absolute; top: 22px; right: 80px; font-size: 26px; cursor: pointer; z-index: 1001; color: white; text-decoration: none; transition: transform 0.2s; }
@@ -322,7 +316,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     display: none;
     flex-direction: column;
     align-items: center;
-    pointer-events: none; /* Para que no estorbe los clics */
+    pointer-events: none; 
     z-index: 20;
     box-shadow: 0 5px 20px rgba(0,0,0,0.8);
     padding: 4px;
@@ -332,9 +326,8 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .progress-container:hover .progress-preview {
     opacity: 1;
 }
+
 .progress-preview canvas {
-    max-width: 160px;
-    max-height: 90px;
     background: #000;
     border-radius: 4px;
 }
@@ -453,7 +446,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.1</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.2</span>
 </a>
 
 <script>
@@ -1250,14 +1243,35 @@ function openViewer(index) {
 
         thumbVideo.addEventListener('seeked', () => {
             if (thumbVideo.videoWidth > 0) {
-                const aspectRatio = thumbVideo.videoWidth / thumbVideo.videoHeight;
-                previewCanvas.width = 160;
-                previewCanvas.height = 160 / Math.max(1, aspectRatio); // Prevenir divisiones por 0
+                const videoW = thumbVideo.videoWidth;
+                const videoH = thumbVideo.videoHeight;
+                const isVertical = videoH > videoW;
+
+                // 1. Calcular tamaño visual (CSS) - Máximo 160px en su lado más largo
+                const maxVisualSize = 340;
+                let visualW, visualH;
+
+                if (isVertical) {
+                    visualH = maxVisualSize;
+                    visualW = maxVisualSize * (videoW / videoH);
+                } else {
+                    visualW = maxVisualSize;
+                    visualH = maxVisualSize * (videoH / videoW);
+                }
+
+                // (Low Quality)
+                const qualityScale = 0.5; 
+                previewCanvas.width = visualW * qualityScale;
+                previewCanvas.height = visualH * qualityScale;
+
+                previewCanvas.style.width = `${visualW}px`;
+                previewCanvas.style.height = `${visualH}px`;
+
                 previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height);
             }
             isSeekingPreview = false;
             
-            // Throttling: Darle un micro-respiro al CPU antes del siguiente frame
+            // Throttling
             if (pendingPreviewTime !== null) {
                 const timeToSeek = pendingPreviewTime;
                 pendingPreviewTime = null;
@@ -1266,7 +1280,6 @@ function openViewer(index) {
         });
 
         const triggerPreviewSeek = (time) => {
-            // OPTIMIZACIÓN CLAVE: Redondear a intervalos de 0.5 segundos. 
             const roundedTime = Math.floor(time * 2) / 2; 
 
             if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return;
@@ -1304,7 +1317,6 @@ function openViewer(index) {
             pendingPreviewTime = null; // Cancelar búsquedas pendientes
         });
 
-        // Lógica de inactividad (ocultar controles)
         let idleTimeout;
         const resetIdleTimer = () => {
             wrapper.classList.remove('idle');
