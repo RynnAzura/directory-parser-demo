@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Mi Galería Local</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AzuraMedia Sync</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
 <style>
-body { background: #111; color: white; font-family: Arial; text-align: center; margin: 0; }
+body { background: #111; color: white; font-family: Arial, sans-serif; text-align: center; margin: 0; }
 body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 input, select { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
 img, video { -webkit-user-drag: none; }
 
+/* Controles Base */
+button { font-family: inherit; }
 .sticky-header { position: sticky; top: 0; background: rgba(17, 17, 17, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 100; padding: 15px 0 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 20px; }
 .controls-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 15px 0; flex-wrap: wrap; padding: 0 20px; }
 button { padding: 10px 20px; border-radius: 8px; border: none; background: #444; color: white; cursor: pointer; transition: background 0.3s; }
@@ -20,6 +23,7 @@ button:hover { background: #666; }
 #searchInput:disabled { opacity: 0.5; cursor: not-allowed; }
 #currentPathDisplay { font-size: 18px; color: #ccc; margin-bottom: 5px; font-weight: bold; }
 
+/* Dropdowns */
 .custom-dropdown { position: relative; display: inline-block; }
 .dropdown-btn { display: flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-size: 15px; cursor: pointer; transition: border-color 0.3s, background 0.3s; }
 .dropdown-btn:hover:not(:disabled) { background: #333; border-color: #888; }
@@ -27,16 +31,18 @@ button:hover { background: #666; }
 .dropdown-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 1000; display: none; flex-direction: column; background: rgba(35, 35, 35, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); min-width: 180px; text-align: left; opacity: 0; transform: translateY(-10px); transition: opacity 0.2s ease, transform 0.2s ease; }
 .dropdown-menu.show { display: flex; opacity: 1; transform: translateY(0); }
 .dropdown-item { display: flex; align-items: center; padding: 8px 12px; border-radius: 6px; color: white; font-size: 14px; cursor: pointer; transition: background 0.15s; user-select: none; }
-.dropdown-item:hover { background: rgba(255, 255, 255, 0.1); }
+.dropdown-item:hover, .dropdown-item:focus { background: rgba(255, 255, 255, 0.1); outline: none; }
 .dot-indicator { width: 20px; display: inline-block; font-size: 6px; color: transparent; transition: color 0.2s; text-align: center; margin-right: 5px; }
 .dropdown-item.active .dot-indicator { color: white; }
 .dropdown-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 6px 0; }
 
+/* Galería y Elementos */
 .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 0 20px; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-.item { margin: 0; position: relative; width: 200px; height: 150px; }
-img.thumb { width: 100%; height: 100%; border-radius: 10px; cursor: pointer; transition: transform 0.2s, opacity 0.2s; object-fit: cover; background-color: #222; display: block; }
+.item { margin: 0; position: relative; width: 200px; height: 150px; cursor: pointer; border-radius: 10px; outline: none; transition: box-shadow 0.2s; }
+.item:focus-visible { box-shadow: 0 0 0 3px #4da6ff; }
+img.thumb { width: 100%; height: 100%; border-radius: 10px; transition: transform 0.2s, opacity 0.2s; object-fit: cover; background-color: #222; display: block; pointer-events: none; }
 .item:hover img.thumb, .item:hover .preview-video { transform: scale(1.05); }
 .preview-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; z-index: 5; pointer-events: none; transition: transform 0.2s; }
 
@@ -48,12 +54,14 @@ img.thumb { width: 100%; height: 100%; border-radius: 10px; cursor: pointer; tra
 .badge-video { background: rgba(220, 53, 69, 0.9); letter-spacing: 1px; }
 .fav-badge { position: absolute; bottom: 8px; right: 8px; font-size: 20px; pointer-events: none; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
 
+/* Carpetas */
 .folder { width: 200px; height: 150px; background: #2a2a2a; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: transform 0.2s, border-color 0.3s, box-shadow 0.2s; color: white; border: 2px solid #444; box-sizing: border-box; user-select: none; position: relative; overflow: hidden; }
-.folder:hover { transform: scale(1.05); border-color: #888; box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
-.folder-cover { width: 100%; height: 100%; object-fit: cover; background-color: #222; }
-.folder-icon-fallback { font-size: 50px; margin-bottom: 15px; }
+.folder:hover, .folder:focus-visible { transform: scale(1.05); border-color: #888; box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
+.folder-cover { width: 100%; height: 100%; object-fit: cover; background-color: #222; pointer-events: none; }
+.folder-icon-fallback { font-size: 50px; margin-bottom: 15px; pointer-events: none; }
 .folder-name-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 8px 5px; box-sizing: border-box; font-size: 14px; font-weight: bold; text-align: center; word-break: break-all; text-shadow: 1px 1px 2px black; pointer-events: none; }
 
+/* Visor y Controles de Video */
 .viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; overflow: hidden; z-index: 1000; }
 .viewer-content { width: auto; height: auto; max-width: calc(100vw - 160px); max-height: 85vh; object-fit: contain; user-select: none; touch-action: none;}
 img.viewer-content { cursor: grab; }
@@ -77,25 +85,28 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 
 .controls-row { display: flex; align-items: center; gap: 20px; color: white; }
 .controls-row button { background: none; border: none; color: white; cursor: pointer; font-size: 20px; padding: 0; margin: 0; transition: transform 0.1s, color 0.2s; }
-.controls-row button:hover { color: #ff3b30; transform: scale(1.1); }
-.time-display { font-size: 14px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 500; letter-spacing: 0.5px; opacity: 0.9; }
+.controls-row button:hover, .controls-row button:focus-visible { color: #ff3b30; transform: scale(1.1); outline: none; }
+.time-display { font-size: 14px; font-weight: 500; letter-spacing: 0.5px; opacity: 0.9; }
 
 .volume-container { display: flex; align-items: center; gap: 10px; }
 #volSlider { width: 0px; opacity: 0; transition: width 0.3s, opacity 0.3s; cursor: pointer; accent-color: #ff3b30; }
-.volume-container:hover #volSlider, #volSlider:focus { width: 80px; opacity: 1; }
+.volume-container:hover #volSlider, #volSlider:focus, .volume-container:focus-within #volSlider { width: 80px; opacity: 1; }
 
 .center-play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.5); font-size: 60px; color: white; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
 .custom-video-wrapper.show-center-icon .center-play-icon { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
 
-.close { position: absolute; top: 20px; right: 30px; font-size: 30px; cursor: pointer; z-index: 1001; }
-.download-btn { position: absolute; top: 22px; right: 80px; font-size: 26px; cursor: pointer; z-index: 1001; color: white; text-decoration: none; transition: transform 0.2s; }
-.download-btn:hover { transform: scale(1.1); }
-.fav-btn { position: absolute; top: 22px; right: 130px; font-size: 26px; cursor: pointer; z-index: 1001; user-select: none; transition: transform 0.2s; }
-.fav-btn:hover { transform: scale(1.1); }
-.nav-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 40px; color: white; background: transparent; border: none; cursor: pointer; padding: 20px; z-index: 1001; user-select: none; }
-.nav-btn:hover { background: rgba(255,255,255,0.1); }
+/* Botones del visor adaptados para a11y */
+.close, .download-btn, .fav-btn { position: absolute; z-index: 1001; background: transparent; border: none; outline: none; padding: 0; color: white; cursor: pointer; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.close:hover, .download-btn:hover, .fav-btn:hover, .close:focus-visible, .download-btn:focus-visible, .fav-btn:focus-visible { transform: scale(1.1); }
+.close { top: 20px; right: 30px; font-size: 30px; }
+.download-btn { top: 22px; right: 80px; font-size: 26px; }
+.fav-btn { top: 22px; right: 130px; font-size: 26px; }
+.nav-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 40px; color: white; background: transparent; border: none; cursor: pointer; padding: 20px; z-index: 1001; user-select: none; transition: background 0.2s; }
+.nav-btn:hover, .nav-btn:focus-visible { background: rgba(255,255,255,0.1); outline: none; }
 .prev { left: 10px; }
 .next { right: 10px; }
+.close i, .download-btn i, .fav-btn i, .nav-btn i { pointer-events: none; } /* Importante para el event listener de click */
+
 .file-name { position: absolute; bottom: 15px; color: white; font-size: 15px; background: rgba(0,0,0,0.8); padding: 8px 15px; border-radius: 8px; z-index: 1001; pointer-events: none; }
 
 @media (max-width: 800px) {
@@ -110,17 +121,20 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .is-dragging { box-shadow: none !important; }
 .is-dragging * { pointer-events: none !important; }
 
+/* Menú Contextual Windows 11 */
 .win11-context-menu { position: absolute; z-index: 10000; display: none; flex-direction: row; background: rgba(35, 35, 35, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); gap: 2px; user-select: none; }
-.menu-action { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 14px; cursor: pointer; border-radius: 8px; color: white; font-size: 13px; min-width: 55px; transition: background 0.15s, transform 0.1s; }
-.menu-action:hover { background: rgba(255, 255, 255, 0.1); }
+.menu-action { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 14px; cursor: pointer; border-radius: 8px; color: white; font-size: 13px; min-width: 55px; transition: background 0.15s, transform 0.1s; background: transparent; border: none; }
+.menu-action:hover, .menu-action:focus-visible { background: rgba(255, 255, 255, 0.1); outline: none; }
 .menu-action:active { transform: scale(0.95); }
 .menu-action .icon { font-size: 20px; margin-bottom: 6px; pointer-events: none; transition: color 0.2s; }
+.menu-action span { pointer-events: none; }
 
 .progress-preview { position: absolute; bottom: 15px; left: 0; transform: translateX(-50%); background: #111; border: 2px solid #444; border-radius: 8px; display: none; flex-direction: column; align-items: center; pointer-events: none; z-index: 20; box-shadow: 0 5px 20px rgba(0,0,0,0.8); padding: 4px; opacity: 0; transition: opacity 0.2s; }
 .progress-container:hover .progress-preview { opacity: 1; }
 .progress-preview canvas { background: #000; border-radius: 4px; }
-.progress-preview-time { color: white; font-size: 13px; margin-top: 5px; font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; }
+.progress-preview-time { color: white; font-size: 13px; margin-top: 5px; font-weight: bold; }
 
+/* Otros UI Elements */
 .copyright-link { position: fixed; bottom: 15px; right: 20px; color: rgba(255, 255, 255, 0.3); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; z-index: 500; transition: color 0.3s ease, transform 0.2s ease; user-select: none; }
 .copyright-link:hover { color: rgba(255, 255, 255, 0.9); transform: scale(1.05); }
 .version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
@@ -128,9 +142,9 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 
 .google-profile-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: default; user-select: none; }
 #authBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight:bold; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; background: white; color: #111; border: none; }
-#authBtn:hover { background: #eee; }
-.google-avatar-wrapper { position: relative; cursor: pointer; border-radius: 50%; transition: transform 0.2s; }
-.google-avatar-wrapper:hover { transform: scale(1.05); }
+#authBtn:hover, #authBtn:focus-visible { background: #eee; outline: 2px solid #4da6ff; }
+.google-avatar-wrapper { position: relative; cursor: pointer; border-radius: 50%; transition: transform 0.2s; outline: none; }
+.google-avatar-wrapper:hover, .google-avatar-wrapper:focus-visible { transform: scale(1.05); box-shadow: 0 0 0 2px #4da6ff; }
 .google-avatar { width: 40px; height: 40px; border-radius: 50%; background: #222; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); display: block; }
 .google-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .google-profile-menu { position: absolute; top: calc(100% + 15px); right: 0; z-index: 1000; display: none; flex-direction: column; background: rgba(35, 35, 35, 0.95); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); min-width: 250px; text-align: center; opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; cursor: default; }
@@ -143,25 +157,25 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .user-name { font-size: 16px; font-weight: bold; color: white; margin:0;}
 .user-email { font-size: 13px; color: #aaa; margin:0;}
 .menu-signout-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #ff6b6b; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.3s, border-color 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-.menu-signout-btn:hover { background: rgba(255, 77, 77, 0.1); border-color: rgba(255, 77, 77, 0.2); }
+.menu-signout-btn:hover, .menu-signout-btn:focus-visible { background: rgba(255, 77, 77, 0.1); border-color: rgba(255, 77, 77, 0.2); outline: none; }
 </style>
 </head>
 <body>
 
 <div class="google-profile-container">
-    <button id="authBtn" style="display: none;">
+    <button id="authBtn" style="display: none;" aria-label="Conectar cuenta de Google Drive" tabindex="-1">
         <i class="fa-brands fa-google"></i> Conectar Drive
     </button>
     
-    <div class="google-avatar-wrapper" id="googleAvatarWrapper" style="display: none;">
+    <div class="google-avatar-wrapper" id="googleAvatarWrapper" tabindex="-1" aria-label="Abrir menú de perfil de Google" role="button" style="display: none;">
         <div class="google-avatar" id="googleAvatar">
-            <img src="" alt="Avatar" id="googleAvatarImg">
+            <img src="" alt="Avatar del usuario" id="googleAvatarImg">
         </div>
         
-        <div class="google-profile-menu" id="googleProfileMenu">
+        <div class="google-profile-menu" id="googleProfileMenu" role="menu">
             <div class="menu-user-info">
                 <div class="menu-big-avatar">
-                    <img src="" alt="Big Avatar" id="menuBigAvatar">
+                    <img src="" alt="" id="menuBigAvatar" aria-hidden="true">
                 </div>
                 <div class="user-details">
                     <p class="user-name" id="userName">Cargando...</p>
@@ -169,134 +183,138 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
                 </div>
             </div>
             <div class="dropdown-divider" style="margin: 0 0 15px 0;"></div>
-            <button class="menu-signout-btn" id="realSignoutBtn">
+            <button class="menu-signout-btn" id="realSignoutBtn" role="menuitem" aria-label="Cerrar sesión de Google" tabindex="-1">
                 <i class="fa-solid fa-power-off"></i> Cerrar sesión
             </button>
         </div>
     </div>
 </div>
 
-<h1>Mi Galería Local</h1>
+<h1>AzuraMedia Sync</h1>
 
-<input type="file" id="fileInput" webkitdirectory multiple hidden>
+<input type="file" id="fileInput" webkitdirectory multiple hidden aria-hidden="true">
 
 <div class="sticky-header">
     <div class="controls-container">
         
         <div class="custom-dropdown" id="sourceDropdown">
-            <button class="dropdown-btn" id="sourceBtn" style="background: rgba(255,255,255,0.1); border-color: transparent;">
+            <button class="dropdown-btn" id="sourceBtn" aria-label="Seleccionar origen de archivos" aria-haspopup="true" aria-expanded="false" tabindex="-1" style="background: rgba(255,255,255,0.1); border-color: transparent;">
                 <span id="sourceBtnText">📁 Archivos Locales</span> <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
             </button>
-            <div class="dropdown-menu" id="sourceMenu">
-                <div class="dropdown-item source-option active" data-value="local" data-label="📁 Archivos Locales">
+            <div class="dropdown-menu" id="sourceMenu" role="menu">
+                <div class="dropdown-item source-option active" tabindex="-1" role="menuitem" data-value="local" data-label="📁 Archivos Locales">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> 📁 Archivos Locales
                 </div>
-                <div class="dropdown-item source-option" data-value="drive" data-label="☁️ Mi Google Drive">
+                <div class="dropdown-item source-option" tabindex="-1" role="menuitem" data-value="drive" data-label="☁️ Mi Google Drive">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> ☁️ Mi Google Drive
                 </div>
             </div>
         </div>
         
-        <button id="fileInputBtn">
+        <button id="fileInputBtn" aria-label="Seleccionar carpeta local a explorar" tabindex="-1">
             <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
         </button>
         
         <div class="custom-dropdown" id="sortDropdown">
-            <button class="dropdown-btn" id="sortBtn" disabled>
+            <button class="dropdown-btn" id="sortBtn" aria-label="Opciones de ordenamiento" aria-haspopup="true" aria-expanded="false" tabindex="-1" disabled>
                 <i class="fa-solid fa-arrows-up-down"></i> Ordenar <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
             </button>
-            <div class="dropdown-menu" id="sortMenu">
-                <div class="dropdown-item sort-option criteria active" data-type="criteria" data-value="name">
+            <div class="dropdown-menu" id="sortMenu" role="menu">
+                <div class="dropdown-item sort-option criteria active" tabindex="-1" role="menuitem" data-type="criteria" data-value="name">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Nombre
                 </div>
-                <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="type">
+                <div class="dropdown-item sort-option criteria" tabindex="-1" role="menuitem" data-type="criteria" data-value="type">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Tipo
                 </div>
-                <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="size">
+                <div class="dropdown-item sort-option criteria" tabindex="-1" role="menuitem" data-type="criteria" data-value="size">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Tamaño
                 </div>
-                <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="date">
+                <div class="dropdown-item sort-option criteria" tabindex="-1" role="menuitem" data-type="criteria" data-value="date">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Fecha
                 </div>
                 <div class="dropdown-divider"></div>
-                <div class="dropdown-item sort-option order active" data-type="order" data-value="asc">
+                <div class="dropdown-item sort-option order active" tabindex="-1" role="menuitem" data-type="order" data-value="asc">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Ascendente
                 </div>
-                <div class="dropdown-item sort-option order" data-type="order" data-value="desc">
+                <div class="dropdown-item sort-option order" tabindex="-1" role="menuitem" data-type="order" data-value="desc">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Descendente
                 </div>
             </div>
         </div>
 
         <div class="custom-dropdown" id="filterDropdown">
-            <button class="dropdown-btn" id="filterBtn" disabled>
+            <button class="dropdown-btn" id="filterBtn" aria-label="Opciones de filtrado por tipo de archivo" aria-haspopup="true" aria-expanded="false" tabindex="-1" disabled>
                 <span id="filterBtnText">Todos los archivos</span> <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
             </button>
-            <div class="dropdown-menu" id="filterMenu">
-                <div class="dropdown-item filter-option active" data-value="all" data-label="Todos los archivos">
+            <div class="dropdown-menu" id="filterMenu" role="menu">
+                <div class="dropdown-item filter-option active" tabindex="-1" role="menuitem" data-value="all" data-label="Todos los archivos">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Todos los archivos
                 </div>
-                <div class="dropdown-item filter-option" data-value="image" data-label="Solo Imágenes">
+                <div class="dropdown-item filter-option" tabindex="-1" role="menuitem" data-value="image" data-label="Solo Imágenes">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo Imágenes
                 </div>
-                <div class="dropdown-item filter-option" data-value="video" data-label="Solo Videos">
+                <div class="dropdown-item filter-option" tabindex="-1" role="menuitem" data-value="video" data-label="Solo Videos">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo Videos
                 </div>
-                <div class="dropdown-item filter-option" data-value="gif" data-label="Solo GIFs">
+                <div class="dropdown-item filter-option" tabindex="-1" role="menuitem" data-value="gif" data-label="Solo GIFs">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo GIFs
                 </div>
-                <div class="dropdown-item filter-option" data-value="favs" data-label="Solo Favoritos">
+                <div class="dropdown-item filter-option" tabindex="-1" role="menuitem" data-value="favs" data-label="Solo Favoritos">
                     <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo Favoritos
                 </div>
             </div>
         </div>
 
-        <input type="text" id="searchInput" placeholder="Buscar..." disabled>
+        <input type="text" id="searchInput" aria-label="Buscar archivos multimedia" placeholder="Buscar..." tabindex="-1" disabled>
     </div>
 
-    <div id="currentPathDisplay">Esperando carpeta...</div>
+    <div id="currentPathDisplay" aria-live="polite">Esperando carpeta...</div>
 </div>
 
-<div class="grid" id="gallery"></div>
+<div class="grid" id="gallery" role="region" aria-label="Galería de archivos"></div>
 
-<div class="viewer" id="viewer">
-    <i id="favBtn" class="fav-btn fa-regular fa-heart" title="Marcar como favorito"></i>
-    <a id="downloadBtn" class="download-btn" title="Descargar/Guardar archivo">
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Visor multimedia">
+    <button id="favBtn" class="fav-btn" aria-label="Marcar o desmarcar como favorito" title="Marcar como favorito">
+        <i class="fa-regular fa-heart"></i>
+    </button>
+    <a id="downloadBtn" class="download-btn" aria-label="Descargar archivo" title="Descargar/Guardar archivo">
         <i class="fa-solid fa-download"></i>
     </a>
-    <i class="fa-solid fa-xmark close" onclick="closeViewer()" title="Cerrar"></i>
+    <button class="close" onclick="closeViewer()" aria-label="Cerrar visor" title="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
     
-    <button class="nav-btn prev" onclick="navigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-    <button class="nav-btn next" onclick="navigate(1)"><i class="fa-solid fa-chevron-right"></i></button>
-    <div class="file-name" id="fileName"></div>
+    <button class="nav-btn prev" onclick="navigate(-1)" aria-label="Elemento anterior"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="nav-btn next" onclick="navigate(1)" aria-label="Siguiente elemento"><i class="fa-solid fa-chevron-right"></i></button>
+    <div class="file-name" id="fileName" aria-live="polite"></div>
 
-    <div id="viewerLoading" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; z-index: 2000; flex-direction: column; align-items: center;">
+    <div id="viewerLoading" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; z-index: 2000; flex-direction: column; align-items: center;" aria-live="assertive">
         <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
         <span style="margin-top:15px;" id="viewerLoadingText">Cargando archivo seguro...</span>
     </div>
 </div>
 
-<div id="customContextMenu" class="win11-context-menu">
-    <div class="menu-action" id="ctxCopy">
+<div id="customContextMenu" class="win11-context-menu" role="menu" aria-label="Opciones de archivo">
+    <button class="menu-action" id="ctxCopy" role="menuitem" aria-label="Copiar imagen">
         <i class="fa-regular fa-copy icon"></i>
         <span>Copiar</span>
-    </div>
-    <div class="menu-action" id="ctxShare">
+    </button>
+    <button class="menu-action" id="ctxShare" role="menuitem" aria-label="Compartir archivo">
         <i class="fa-solid fa-share-nodes icon"></i>
         <span>Compartir</span>
-    </div>
-    <div class="menu-action" id="ctxDownload">
+    </button>
+    <button class="menu-action" id="ctxDownload" role="menuitem" aria-label="Descargar archivo">
         <i class="fa-solid fa-download icon"></i>
         <span>Descargar</span>
-    </div>
-    <div class="menu-action" id="ctxFav">
+    </button>
+    <button class="menu-action" id="ctxFav" role="menuitem" aria-label="Añadir a favoritos">
         <i class="fa-regular fa-heart icon" id="ctxFavIcon"></i>
         <span id="ctxFavText">Favorito</span>
-    </div>
+    </button>
 </div>
 
-<a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.3.1</span>
+<a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" aria-label="Visitar el perfil de GitHub de RynnAzura" title="Ver en GitHub" tabindex="-1">
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v2.4</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -360,6 +378,12 @@ function updateUIState() {
     if (state.loaded) {
         searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
         updateGalleryView();
+        setTimeout(() => {
+            const firstItem = gallery.querySelector('.item');
+            if (firstItem) {
+                firstItem.focus();
+            }
+        }, 50); 
     } else {
         searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
         gallery.innerHTML = "";
@@ -379,56 +403,49 @@ fileInputBtn.addEventListener('click', () => {
     }
 });
 
-sourceBtn.addEventListener('click', (e) => { 
-    e.stopPropagation(); 
-    sourceMenu.classList.toggle('show'); 
-    sortMenu.classList.remove('show'); 
-    filterMenu.classList.remove('show'); 
-});
+const toggleDropdown = (menu, btn) => {
+    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    document.querySelectorAll('.dropdown-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    if (!isExpanded) {
+        menu.classList.add('show');
+        btn.setAttribute('aria-expanded', 'true');
+    }
+};
+
+sourceBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(sourceMenu, sourceBtn); });
+sortBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(sortMenu, sortBtn); });
+filterBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(filterMenu, filterBtn); });
+
+document.addEventListener('contextmenu', e => e.preventDefault());
 
 sourceOptions.forEach(option => {
-    option.addEventListener('click', (e) => {
+    const handleSourceSelection = (e) => {
         e.stopPropagation();
         const newValue = option.getAttribute('data-value');
-        
-        if (currentViewSource === newValue) {
-            sourceMenu.classList.remove('show');
-            return; 
-        }
-
+        if (currentViewSource === newValue) { sourceMenu.classList.remove('show'); return; }
         currentViewSource = newValue;
         sourceBtnText.textContent = option.getAttribute('data-label');
-
         document.querySelectorAll('.source-option').forEach(el => el.classList.remove('active'));
         option.classList.add('active');
         sourceMenu.classList.remove('show');
-
-        gallery.innerHTML = ""; 
-        searchInput.value = ""; 
-
+        sourceBtn.setAttribute('aria-expanded', 'false');
+        gallery.innerHTML = ""; searchInput.value = ""; 
         if (currentViewSource === 'local') {
             fileInputBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta';
-            if (appState.local.loaded) {
-                updateUIState();
-            } else {
-                pathDisplay.innerHTML = 'Esperando carpeta...';
-                updateUIState();
-            }
+            if (appState.local.loaded) updateUIState();
+            else { pathDisplay.innerHTML = 'Esperando carpeta...'; updateUIState(); }
         } else if (currentViewSource === 'drive') {
             fileInputBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Recargar Drive';
             if (!isGoogleConnected) {
                 pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive"></i> Drive no conectado.';
                 gallery.innerHTML = "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-unlink'></i> Conecta tu Drive arriba a la derecha para ver tus archivos multimedia</p>";
                 updateUIState();
-            } else {
-                if (appState.drive.loaded) {
-                    updateUIState();
-                } else {
-                    loadDriveMedia();
-                }
-            }
+            } else { if (appState.drive.loaded) updateUIState(); else loadDriveMedia(); }
         }
-    });
+    };
+    option.addEventListener('click', handleSourceSelection);
+    option.addEventListener('keydown', e => { if (e.key === 'Enter') handleSourceSelection(e); });
 });
 
 function initGoogleServices() {
@@ -443,32 +460,25 @@ function initGoogleServices() {
         e.stopPropagation();
         profileMenu.classList.toggle('show');
     });
+    avatarWrapper.addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); profileMenu.classList.toggle('show'); } });
 
     document.addEventListener('click', (e) => {
-        if (!avatarWrapper.contains(e.target) && profileMenu.classList.contains('show')) {
-            profileMenu.classList.remove('show');
-        }
+        if (!avatarWrapper.contains(e.target) && profileMenu.classList.contains('show')) profileMenu.classList.remove('show');
+        if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) { sortMenu.classList.remove('show'); sortBtn.setAttribute('aria-expanded', 'false'); }
+        if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) { filterMenu.classList.remove('show'); filterBtn.setAttribute('aria-expanded', 'false'); }
+        if (!sourceBtn.contains(e.target) && !sourceMenu.contains(e.target)) { sourceMenu.classList.remove('show'); sourceBtn.setAttribute('aria-expanded', 'false'); }
     });
     
     realSignoutBtn.addEventListener('click', handleSignout);
-
     checkStoredToken(); 
 }
 
 function handleAuthResponse(response) {
-    if (response.error !== undefined) {
-        // Si cerraste la ventana de Google sin iniciar sesión o hubo un error
-        console.warn("Autenticación cancelada:", response.error);
-        cleanupGoogleState(); 
-        return;
-    }
-    
-    isGoogleConnected = true;
-    response.issued_at = Date.now(); 
+    if (response.error !== undefined) { cleanupGoogleState(); return; }
+    isGoogleConnected = true; response.issued_at = Date.now(); 
     localStorage.setItem('drive_token', JSON.stringify(response)); 
     localStorage.setItem('drive_auto_connect', 'true');
-    updateGoogleUI(true);
-    getUserProfile(); 
+    updateGoogleUI(true); getUserProfile(); 
     if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
 }
 
@@ -485,36 +495,22 @@ function handleSignout() {
 }
 
 function cleanupGoogleState() {
-    isGoogleConnected = false;
-    appState.drive.loaded = false;
-    authBtn.style.display = "flex";
-    avatarWrapper.style.display = "none";
-    if (currentViewSource === 'drive') {
-        document.querySelector('.source-option[data-value="local"]').click();
-    }
+    isGoogleConnected = false; appState.drive.loaded = false;
+    authBtn.style.display = "flex"; avatarWrapper.style.display = "none";
+    if (currentViewSource === 'drive') document.querySelector('.source-option[data-value="local"]').click();
 }
 
 function checkStoredToken() {
     const token = JSON.parse(localStorage.getItem('drive_token'));
-    
     if (token && token.expires_in && token.issued_at && (Date.now() < (token.issued_at + token.expires_in * 1000))) {
-        isGoogleConnected = true;
-        updateGoogleUI(true);
-        getUserProfile(); 
+        isGoogleConnected = true; updateGoogleUI(true); getUserProfile(); 
         if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
-    } else {
-        cleanupGoogleState(); 
-    }
+    } else cleanupGoogleState(); 
 }
 
 function updateGoogleUI(connected) {
-    if (connected) {
-        authBtn.style.display = "none";
-        avatarWrapper.style.display = "block"; 
-    } else {
-        authBtn.style.display = "flex";
-        avatarWrapper.style.display = "none";
-    }
+    if (connected) { authBtn.style.display = "none"; avatarWrapper.style.display = "block"; } 
+    else { authBtn.style.display = "flex"; avatarWrapper.style.display = "none"; }
 }
 
 async function getUserProfile() {
@@ -523,18 +519,13 @@ async function getUserProfile() {
     try {
         const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token.access_token}`);
         const profile = await response.json();
-        if (profile.picture) {
-            googleAvatarImg.src = profile.picture;
-            menuBigAvatar.src = profile.picture;
-        }
-        userNameDisplay.textContent = profile.name || "Usuario";
-        userEmailDisplay.textContent = profile.email || "";
+        if (profile.picture) { googleAvatarImg.src = profile.picture; menuBigAvatar.src = profile.picture; }
+        userNameDisplay.textContent = profile.name || "Usuario"; userEmailDisplay.textContent = profile.email || "";
     } catch (e) {}
 }
 
 async function loadDriveMedia() {
-    const state = appState.drive;
-    triggerGalleryAnimation();
+    const state = appState.drive; triggerGalleryAnimation();
     pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive" style="color: #6da235;"></i> Mi Google Drive';
     searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
     
@@ -550,66 +541,46 @@ async function loadDriveMedia() {
 
     try {
         const headers = { 'Authorization': 'Bearer ' + token.access_token };
-
-        let fetchedFolders = [];
-        let pageToken = null;
+        let fetchedFolders = []; let pageToken = null;
         do {
             const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and trashed=false&fields=nextPageToken,files(id,name,parents)&pageSize=1000&includeItemsFromAllDrives=true&supportsAllDrives=true${pageToken ? '&pageToken=' + pageToken : ''}`, { headers });
             if (!res.ok) throw new Error("Faltan permisos. Cierra sesión y vuelve a entrar marcando la casilla de permisos de Drive.");
-            const data = await res.json();
-            if(data.files) fetchedFolders.push(...data.files);
-            pageToken = data.nextPageToken;
+            const data = await res.json(); if(data.files) fetchedFolders.push(...data.files); pageToken = data.nextPageToken;
         } while (pageToken);
 
-        let fetchedMedia = [];
-        pageToken = null;
-        let mediaPageCount = 1;
+        let fetchedMedia = []; pageToken = null; let mediaPageCount = 1;
         do {
             const loadingText = document.getElementById('driveLoadingText');
             if(loadingText) loadingText.textContent = `Sincronizando catálogo de Drive (Página ${mediaPageCount})...`;
-
             const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false")}&fields=nextPageToken,files(id,name,mimeType,size,createdTime,thumbnailLink,webContentLink,parents)&pageSize=1000&includeItemsFromAllDrives=true&supportsAllDrives=true${pageToken ? '&pageToken=' + pageToken : ''}`, { headers });
-            const data = await res.json();
-            if(data.files) fetchedMedia.push(...data.files);
-            pageToken = data.nextPageToken;
-            mediaPageCount++;
+            const data = await res.json(); if(data.files) fetchedMedia.push(...data.files); pageToken = data.nextPageToken; mediaPageCount++;
         } while (pageToken);
 
-        const folderTree = {};
-        fetchedFolders.forEach(f => folderTree[f.id] = { ...f, path: '' });
+        const folderTree = {}; fetchedFolders.forEach(f => folderTree[f.id] = { ...f, path: '' });
 
         function getPath(folderId) {
             if (!folderId || !folderTree[folderId]) return 'Mi Drive';
-            if (folderTree[folderId].path) {
-                if (folderTree[folderId].path === 'Resolving...') return 'Mi Drive'; 
-                return folderTree[folderId].path;
-            }
+            if (folderTree[folderId].path) return folderTree[folderId].path === 'Resolving...' ? 'Mi Drive' : folderTree[folderId].path;
             folderTree[folderId].path = 'Resolving...';
             const parentId = (folderTree[folderId].parents && folderTree[folderId].parents.length > 0) ? folderTree[folderId].parents[0] : null;
             const parentPath = getPath(parentId);
             const safeName = folderTree[folderId].name.replace(/\//g, '-');
             const fullPath = parentPath === 'Mi Drive' ? `Mi Drive/${safeName}` : `${parentPath}/${safeName}`;
-            folderTree[folderId].path = fullPath;
-            return fullPath;
+            folderTree[folderId].path = fullPath; return fullPath;
         }
 
-        state.foldersMap = { 'Mi Drive': { files: [], subfolders: new Set() } };
-        state.allFiles = [];
-        state.rootFolderName = 'Mi Drive';
+        state.foldersMap = { 'Mi Drive': { files: [], subfolders: new Set() } }; state.allFiles = []; state.rootFolderName = 'Mi Drive';
 
         fetchedMedia.forEach(file => {
             const parentId = (file.parents && file.parents.length > 0) ? file.parents[0] : null;
             const parentPath = getPath(parentId);
-            
             let curr = parentPath;
             while (curr !== 'Mi Drive') {
                 if (!state.foldersMap[curr]) state.foldersMap[curr] = { files: [], subfolders: new Set() };
-                const prev = curr;
-                curr = curr.substring(0, curr.lastIndexOf('/')) || 'Mi Drive';
+                const prev = curr; curr = curr.substring(0, curr.lastIndexOf('/')) || 'Mi Drive';
                 if (!state.foldersMap[curr]) state.foldersMap[curr] = { files: [], subfolders: new Set() };
                 state.foldersMap[curr].subfolders.add(prev);
             }
-
             if (!state.foldersMap[parentPath]) state.foldersMap[parentPath] = { files: [], subfolders: new Set() };
 
             let highResThumb = file.thumbnailLink;
@@ -618,136 +589,63 @@ async function loadDriveMedia() {
             const fileData = {
                 type: file.mimeType.startsWith("image/") ? "image" : "video",
                 file: { type: file.mimeType, size: parseInt(file.size) || 0, lastModified: new Date(file.createdTime).getTime() },
-                name: file.name,
-                id: file.id, 
-                downloadUrl: file.webContentLink, 
-                thumbSrc: highResThumb, 
-                uniquePath: `drive_${file.id}`, 
-                parentFolder: parentPath,
-                index: 0 
+                name: file.name, id: file.id, downloadUrl: file.webContentLink, thumbSrc: highResThumb, uniquePath: `drive_${file.id}`, parentFolder: parentPath, index: 0 
             };
-            state.foldersMap[parentPath].files.push(fileData);
-            state.allFiles.push(fileData);
+            state.foldersMap[parentPath].files.push(fileData); state.allFiles.push(fileData);
         });
 
-        state.loaded = true;
-        state.currentPath = 'Mi Drive';
-        
+        state.loaded = true; state.currentPath = 'Mi Drive';
         if (fetchedMedia.length === 0) {
             gallery.innerHTML = "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-box-open'></i> Tu Drive está conectado, pero no se detectaron imágenes/videos. (Revisa si diste los permisos al iniciar sesión)</p>";
             searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
-        } else {
-            updateUIState();
-        }
+        } else updateUIState();
 
-    } catch (e) {
-        gallery.innerHTML = `<p style='width: 100%; color: #ff6666; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-circle-exclamation'></i> Error: ${e.message || "Fallo de conexión"}</p>`;
-    }
+    } catch (e) { gallery.innerHTML = `<p style='width: 100%; color: #ff6666; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-circle-exclamation'></i> Error: ${e.message || "Fallo de conexión"}</p>`; }
 }
 
-sortBtn.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('show'); filterMenu.classList.remove('show'); sourceMenu.classList.remove('show'); });
-filterBtn.addEventListener('click', (e) => { e.stopPropagation(); filterMenu.classList.toggle('show'); sortMenu.classList.remove('show'); sourceMenu.classList.remove('show'); });
-
-document.addEventListener('click', (e) => { 
-    if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) sortMenu.classList.remove('show'); 
-    if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.remove('show'); 
-    if (!sourceBtn.contains(e.target) && !sourceMenu.contains(e.target)) sourceMenu.classList.remove('show');
-});
-
 sortOptions.forEach(option => {
-    option.addEventListener('click', (e) => {
+    const handleSort = (e) => {
         e.stopPropagation();
-        const type = option.getAttribute('data-type');
-        const value = option.getAttribute('data-value');
-        if (type === 'criteria') {
-            currentSortCriteria = value;
-            document.querySelectorAll('.sort-option.criteria').forEach(el => el.classList.remove('active'));
-        } else if (type === 'order') {
-            currentSortOrder = value;
-            document.querySelectorAll('.sort-option.order').forEach(el => el.classList.remove('active'));
-        }
-        option.classList.add('active');
-        sortMenu.classList.remove('show'); 
-        updateGalleryView();
-    });
+        const type = option.getAttribute('data-type'); const value = option.getAttribute('data-value');
+        if (type === 'criteria') { currentSortCriteria = value; document.querySelectorAll('.sort-option.criteria').forEach(el => el.classList.remove('active')); } 
+        else if (type === 'order') { currentSortOrder = value; document.querySelectorAll('.sort-option.order').forEach(el => el.classList.remove('active')); }
+        option.classList.add('active'); sortMenu.classList.remove('show'); sortBtn.setAttribute('aria-expanded', 'false'); updateGalleryView();
+    };
+    option.addEventListener('click', handleSort);
+    option.addEventListener('keydown', e => { if (e.key === 'Enter') handleSort(e); });
 });
 
 filterOptions.forEach(option => {
-    option.addEventListener('click', (e) => {
-        e.stopPropagation();
-        currentFilter = option.getAttribute('data-value');
-        filterBtnText.textContent = option.getAttribute('data-label');
+    const handleFilter = (e) => {
+        e.stopPropagation(); currentFilter = option.getAttribute('data-value'); filterBtnText.textContent = option.getAttribute('data-label');
         document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-        option.classList.add('active');
-        filterMenu.classList.remove('show');
-        updateGalleryView();
-    });
+        option.classList.add('active'); filterMenu.classList.remove('show'); filterBtn.setAttribute('aria-expanded', 'false'); updateGalleryView();
+    };
+    option.addEventListener('click', handleFilter);
+    option.addEventListener('keydown', e => { if (e.key === 'Enter') handleFilter(e); });
 });
-
-document.addEventListener('contextmenu', event => event.preventDefault());
 
 let favorites = new Set(JSON.parse(localStorage.getItem('myGalleryFavs')) || []);
 const saveFavorites = () => localStorage.setItem('myGalleryFavs', JSON.stringify([...favorites]));
 
 let globalVolume = parseFloat(localStorage.getItem('myGalleryVolume'));
-if (isNaN(globalVolume)) globalVolume = 1; 
-let lastUnmutedVolume = globalVolume > 0 ? globalVolume : 1; 
+if (isNaN(globalVolume)) globalVolume = 1; let lastUnmutedVolume = globalVolume > 0 ? globalVolume : 1; 
 
 const workerCode = `
 self.onmessage = async function(e) {
     const { id, file, targetWidth } = e.data;
-    try {
-        const bitmap = await createImageBitmap(file);
-        const scale = Math.min(1, targetWidth / bitmap.width);
-        const width = Math.round(bitmap.width * scale);
-        const height = Math.round(bitmap.height * scale);
-        const canvas = new OffscreenCanvas(width, height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(bitmap, 0, 0, width, height);
-        const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 });
-        self.postMessage({ id, success: true, blob });
-        bitmap.close();
-    } catch (error) {
-        self.postMessage({ id, success: false, error: error.message });
-    }
-};
-`;
-const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
-const imageWorker = new Worker(URL.createObjectURL(workerBlob));
-const pendingTasks = new Map();
-let taskIdCounter = 0;
-imageWorker.onmessage = function(e) {
-    const { id, success, blob, error } = e.data;
-    if (pendingTasks.has(id)) {
-        const { resolve, reject } = pendingTasks.get(id);
-        pendingTasks.delete(id);
-        if (success) resolve(blob);
-        else reject(error);
-    }
-};
-function generateThumbWithWorker(file, targetWidth) {
-    return new Promise((resolve, reject) => {
-        const id = taskIdCounter++;
-        pendingTasks.set(id, { resolve, reject });
-        imageWorker.postMessage({ id, file, targetWidth });
-    });
-}
+    try { const bitmap = await createImageBitmap(file); const scale = Math.min(1, targetWidth / bitmap.width); const width = Math.round(bitmap.width * scale); const height = Math.round(bitmap.height * scale); const canvas = new OffscreenCanvas(width, height); const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0, width, height); const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 }); self.postMessage({ id, success: true, blob }); bitmap.close(); } 
+    catch (error) { self.postMessage({ id, success: false, error: error.message }); }
+};`;
+const workerBlob = new Blob([workerCode], { type: 'application/javascript' }); const imageWorker = new Worker(URL.createObjectURL(workerBlob));
+const pendingTasks = new Map(); let taskIdCounter = 0;
+imageWorker.onmessage = function(e) { const { id, success, blob, error } = e.data; if (pendingTasks.has(id)) { const { resolve, reject } = pendingTasks.get(id); pendingTasks.delete(id); if (success) resolve(blob); else reject(error); } };
+function generateThumbWithWorker(file, targetWidth) { return new Promise((resolve, reject) => { const id = taskIdCounter++; pendingTasks.set(id, { resolve, reject }); imageWorker.postMessage({ id, file, targetWidth }); }); }
 
-function cleanupLocalMemory() {
-    if (!appState.local.allFiles || appState.local.allFiles.length === 0) return;
-    appState.local.allFiles.forEach(fileData => {
-        if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) URL.revokeObjectURL(fileData.thumbSrc);
-        if (fileData.src && fileData.src.startsWith('blob:')) URL.revokeObjectURL(fileData.src);
-    });
-}
+function cleanupLocalMemory() { if (!appState.local.allFiles || appState.local.allFiles.length === 0) return; appState.local.allFiles.forEach(fileData => { if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) URL.revokeObjectURL(fileData.thumbSrc); if (fileData.src && fileData.src.startsWith('blob:')) URL.revokeObjectURL(fileData.src); }); }
 
 input.addEventListener("change", function() {
-    const state = appState.local;
-    cleanupLocalMemory();
-    state.foldersMap = {}; 
-    state.rootFolderName = ""; 
-    state.allFiles = []; 
-    
+    const state = appState.local; cleanupLocalMemory(); state.foldersMap = {}; state.rootFolderName = ""; state.allFiles = []; 
     Array.from(this.files).forEach(file => {
         const isImage = file.type.startsWith("image/"); const isVideo = file.type.startsWith("video/");
         if(isImage || isVideo) {
@@ -765,9 +663,7 @@ input.addEventListener("change", function() {
     });
     
     if (state.rootFolderName) {
-        state.loaded = true;
-        state.currentPath = state.rootFolderName;
-        
+        state.loaded = true; state.currentPath = state.rootFolderName;
         searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
         currentSortCriteria = "name"; currentSortOrder = "asc";
         document.querySelectorAll('.sort-option').forEach(el => el.classList.remove('active'));
@@ -775,7 +671,6 @@ input.addEventListener("change", function() {
         document.querySelector('.sort-option.order[data-value="asc"]').classList.add('active');
         document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
         document.querySelector('.filter-option[data-value="all"]').classList.add('active');
-        
         if (currentViewSource === 'local') updateUIState();
     }
 });
@@ -783,11 +678,8 @@ input.addEventListener("change", function() {
 function triggerGalleryAnimation() { gallery.classList.remove('fade-in'); void gallery.offsetWidth; gallery.classList.add('fade-in'); }
 function updateGalleryView() { 
     const searchTerm = searchInput.value.toLowerCase().trim(); 
-    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") { 
-        if (getState().currentPath) renderGallery(getState().currentPath); 
-    } else { 
-        renderGlobalSearch(searchTerm); 
-    } 
+    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") { if (getState().currentPath) renderGallery(getState().currentPath); } 
+    else { renderGlobalSearch(searchTerm); } 
 }
 searchInput.addEventListener("input", updateGalleryView);
 
@@ -800,10 +692,18 @@ const smartThumbWidth = 200 * (window.devicePixelRatio || 1);
 const handleIntersection = (entries, obs) => { 
     entries.forEach(entry => { 
         const mediaElement = entry.target; 
-        let fileData; 
         const state = getState();
-        if (mediaElement.classList.contains('folder-cover')) fileData = state.allFiles[mediaElement.dataset.allIndex]; 
-        else fileData = mediaFiles[mediaElement.dataset.index]; 
+        const parentItem = mediaElement.closest('.item');
+        if (!parentItem) return;
+        
+        let fileData; 
+        if (parentItem.classList.contains('folder')) {
+            const allIndex = mediaElement.getAttribute('data-all-index');
+            if(allIndex !== null) fileData = state.allFiles[allIndex];
+        } else {
+            const idx = parentItem.getAttribute('data-index');
+            if(idx !== null) fileData = mediaFiles[idx]; 
+        }
         
         if (!fileData) return; 
         
@@ -811,63 +711,201 @@ const handleIntersection = (entries, obs) => {
             if (fileData.uniquePath && fileData.uniquePath.startsWith('drive_')) {
                 if (fileData.thumbSrc) mediaElement.src = fileData.thumbSrc;
                 else mediaElement.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='14'>Sin Vista Previa</text></svg>";
-                mediaElement.dataset.loaded = "true";
-                return;
+                mediaElement.dataset.loaded = "true"; return;
             }
+            if (fileData.thumbSrc) { mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; return; } 
 
-            if (fileData.thumbSrc) { 
-                mediaElement.src = fileData.thumbSrc; 
-                mediaElement.dataset.loaded = "true"; 
-                return; 
+            if (fileData.file.type.startsWith("image/")) {
+                generateThumbWithWorker(fileData.file, smartThumbWidth).then(blob => { fileData.thumbSrc = URL.createObjectURL(blob); mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; }).catch(() => { fileData.thumbSrc = URL.createObjectURL(fileData.file); mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; }); 
+            } else if (fileData.file.type.startsWith("video/")) { 
+                const tempUrl = URL.createObjectURL(fileData.file); const tempVideo = document.createElement("video"); tempVideo.src = tempUrl; tempVideo.muted = tempVideo.playsInline = true; 
+                tempVideo.onloadeddata = () => { if (tempVideo.duration > 1) tempVideo.currentTime = 1; else tempVideo.currentTime = tempVideo.duration / 2; }; 
+                tempVideo.onseeked = () => { const canvas = document.createElement("canvas"); const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200)); canvas.width = (tempVideo.videoWidth || 200) * scaleFactor; canvas.height = (tempVideo.videoHeight || 150) * scaleFactor; canvas.getContext("2d").drawImage(tempVideo, 0, 0, canvas.width, canvas.height); fileData.thumbSrc = canvas.toDataURL("image/jpeg", 0.6); mediaElement.src = fileData.thumbSrc; URL.revokeObjectURL(tempUrl); mediaElement.dataset.loaded = "true"; }; 
+                tempVideo.onerror = () => { fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>"; mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; URL.revokeObjectURL(tempUrl); }; 
             } 
-
-            if (fileData.file.type.startsWith("image/")) generateThumbWithWorker(fileData.file, smartThumbWidth).then(blob => { fileData.thumbSrc = URL.createObjectURL(blob); mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; }).catch(() => { fileData.thumbSrc = URL.createObjectURL(fileData.file); mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; }); else if (fileData.file.type.startsWith("video/")) { const tempUrl = URL.createObjectURL(fileData.file); const tempVideo = document.createElement("video"); tempVideo.src = tempUrl; tempVideo.muted = tempVideo.playsInline = true; tempVideo.onloadeddata = () => { if (tempVideo.duration > 1) tempVideo.currentTime = 1; else tempVideo.currentTime = tempVideo.duration / 2; }; tempVideo.onseeked = () => { const canvas = document.createElement("canvas"); const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200)); canvas.width = (tempVideo.videoWidth || 200) * scaleFactor; canvas.height = (tempVideo.videoHeight || 150) * scaleFactor; canvas.getContext("2d").drawImage(tempVideo, 0, 0, canvas.width, canvas.height); fileData.thumbSrc = canvas.toDataURL("image/jpeg", 0.6); mediaElement.src = fileData.thumbSrc; URL.revokeObjectURL(tempUrl); mediaElement.dataset.loaded = "true"; }; tempVideo.onerror = () => { fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>"; mediaElement.src = fileData.thumbSrc; mediaElement.dataset.loaded = "true"; URL.revokeObjectURL(tempUrl); }; } 
-        } else if (mediaElement.dataset.loaded) { 
-            mediaElement.removeAttribute("src"); 
-            mediaElement.removeAttribute("data-loaded"); 
-        } 
+        } else if (mediaElement.dataset.loaded) { mediaElement.removeAttribute("src"); mediaElement.removeAttribute("data-loaded"); } 
     }); 
 };
 
 function renderGlobalSearch(searchTerm) { 
     triggerGalleryAnimation(); gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0; const state = getState();
-
     if (currentFilter === "favs" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
     else if (currentFilter === "folder" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
     else pathDisplay.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Resultados para: "${searchTerm}"`;
     
-    const backDiv = document.createElement("div"); backDiv.className = "item folder"; backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`; backDiv.onclick = () => { searchInput.value = ""; if (currentFilter === "favs" || currentFilter === "folder") { currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active'); } updateGalleryView(); }; gallery.appendChild(backDiv); const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
+    // Carpeta Back
+    gallery.innerHTML += `<div class="item folder" data-action="back" data-parent="search_back" tabindex="0" role="button" aria-label="Regresar a vista anterior"><div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div></div>`;
+    
+    const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
     
     if (currentFilter === "all" || currentFilter === "folder") { 
         let allFolders = Object.keys(state.foldersMap); 
         let foldersToRender = allFolders.filter(folderPath => { if (folderPath === state.rootFolderName) return false; const folderName = folderPath.split('/').pop().toLowerCase(); return folderName.includes(searchTerm); }); 
         foldersToRender.sort((a, b) => { const nameA = a.split('/').pop().toLowerCase(); const nameB = b.split('/').pop().toLowerCase(); return currentSortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA); }); 
         foldersToRender.forEach(folderPath => { 
-            const folderName = folderPath.split('/').pop(); const folderDiv = document.createElement("div"); folderDiv.className = "item folder"; const coverData = getFolderCoverData(folderPath); 
-            if (coverData) { folderDiv.innerHTML = `<img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>`; } else { folderDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${folderName}</div>`; } 
-            folderDiv.onclick = () => { searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active'); renderGallery(folderPath); }; gallery.appendChild(folderDiv); if (coverData) observer.observe(folderDiv.querySelector('.folder-cover')); 
+            const folderName = folderPath.split('/').pop(); const folderDiv = document.createElement("div"); 
+            folderDiv.className = "item folder"; folderDiv.setAttribute('data-action', 'open'); folderDiv.setAttribute('data-path', folderPath);
+            folderDiv.setAttribute('tabindex', '0'); folderDiv.setAttribute('role', 'button'); folderDiv.setAttribute('aria-label', `Abrir carpeta ${folderName}`);
+            const coverData = getFolderCoverData(folderPath); 
+            if (coverData) { folderDiv.innerHTML = `<img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>`; } 
+            else { folderDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${folderName}</div>`; } 
+            gallery.appendChild(folderDiv); if (coverData) observer.observe(folderDiv.querySelector('.folder-cover')); 
         }); 
     }
     
-    let filesToRender = state.allFiles.filter(fileData => fileData.name.toLowerCase().includes(searchTerm) && passesFilter(fileData)); filesToRender = sortFilesArray(filesToRender); filesToRender.forEach(fileData => { fileData.index = indexCounter; mediaFiles.push(fileData); createThumbElement(fileData, indexCounter, observer); indexCounter++; }); if (gallery.children.length === 1) gallery.innerHTML += "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados compatibles con tu búsqueda.</p>";
+    let filesToRender = state.allFiles.filter(fileData => fileData.name.toLowerCase().includes(searchTerm) && passesFilter(fileData)); filesToRender = sortFilesArray(filesToRender); filesToRender.forEach(fileData => { fileData.index = indexCounter; mediaFiles.push(fileData); createThumbElement(fileData, indexCounter, observer); indexCounter++; }); 
+    if (gallery.children.length === 1) gallery.innerHTML += "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados compatibles con tu búsqueda.</p>";
 }
 
 function renderGallery(folderPath) { 
-    const state = getState();
-    triggerGalleryAnimation(); state.currentPath = folderPath; gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0; const currentFolder = state.foldersMap[folderPath]; if (!currentFolder) return; 
+    const state = getState(); triggerGalleryAnimation(); state.currentPath = folderPath; gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0; const currentFolder = state.foldersMap[folderPath]; if (!currentFolder) return; 
     pathDisplay.innerHTML = (currentViewSource === 'drive' ? '<i class="fa-brands fa-google-drive" style="color: #6da235;"></i> ' : '<i class="fa-solid fa-folder-open"></i> ') + folderPath.replace(/\//g, ' / '); 
     const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
     
-    if (folderPath !== state.rootFolderName) { const parts = folderPath.split('/'); parts.pop(); const parentPath = parts.join('/'); const backDiv = document.createElement("div"); backDiv.className = "item folder"; backDiv.style.background = "#222"; backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`; backDiv.onclick = () => renderGallery(parentPath); gallery.appendChild(backDiv); }
+    if (folderPath !== state.rootFolderName) { 
+        const parts = folderPath.split('/'); parts.pop(); const parentPath = parts.join('/'); 
+        gallery.innerHTML += `<div class="item folder" style="background: #222;" data-action="back" data-parent="${parentPath}" tabindex="0" role="button" aria-label="Regresar a carpeta padre"><div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div></div>`;
+    }
     
-    Array.from(currentFolder.subfolders).sort().forEach(subfolderPath => { const folderName = subfolderPath.split('/').pop(); const folderDiv = document.createElement("div"); folderDiv.className = "item folder"; const coverData = getFolderCoverData(subfolderPath); if (coverData) folderDiv.innerHTML = `<img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>`; else folderDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${folderName}</div>`; folderDiv.onclick = () => renderGallery(subfolderPath); gallery.appendChild(folderDiv); if (coverData) observer.observe(folderDiv.querySelector('.folder-cover')); });
+    if (currentFilter === "all") {
+        Array.from(currentFolder.subfolders).sort().forEach(subfolderPath => { 
+            const folderName = subfolderPath.split('/').pop(); const folderDiv = document.createElement("div"); 
+            folderDiv.className = "item folder"; folderDiv.setAttribute('data-action', 'open'); folderDiv.setAttribute('data-path', subfolderPath);
+            folderDiv.setAttribute('tabindex', '0'); folderDiv.setAttribute('role', 'button'); folderDiv.setAttribute('aria-label', `Abrir carpeta ${folderName}`);
+            const coverData = getFolderCoverData(subfolderPath); 
+            if (coverData) folderDiv.innerHTML = `<img class="folder-cover skeleton" data-all-index="${coverData.index}" loading="lazy" onload="this.classList.remove('skeleton')"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${folderName}</div>`; 
+            else folderDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${folderName}</div>`; 
+            gallery.appendChild(folderDiv); if (coverData) observer.observe(folderDiv.querySelector('.folder-cover')); 
+        });
+    }
     
-    let filesToRender = currentFolder.files.filter(passesFilter); filesToRender = sortFilesArray(filesToRender); filesToRender.forEach(fileData => { fileData.index = indexCounter; mediaFiles.push(fileData); createThumbElement(fileData, indexCounter, observer); indexCounter++; });
+    let filesToRender = currentFolder.files.filter(passesFilter); 
+    filesToRender = sortFilesArray(filesToRender); 
+    filesToRender.forEach(fileData => { fileData.index = indexCounter; mediaFiles.push(fileData); createThumbElement(fileData, indexCounter, observer); indexCounter++; });
 }
 
-function createThumbElement(fileData, indexCounter, observer) { const div = document.createElement("div"); div.className = "item"; let mediaElement = document.createElement("img"); mediaElement.className = "thumb skeleton"; mediaElement.dataset.index = indexCounter; mediaElement.onload = () => mediaElement.classList.remove("skeleton"); mediaElement.ondragstart = () => false; mediaElement.onclick = () => openViewer(indexCounter); div.addEventListener('contextmenu', e => { e.preventDefault(); contextMenuTarget = { fileData, thumbDiv: div }; if (favorites.has(fileData.uniquePath)) { ctxFavIcon.className = "fa-solid fa-heart-crack icon"; ctxFavIcon.style.color = "#ff4d4d"; ctxFavText.textContent = "Quitar Fav"; } else { ctxFavIcon.className = "fa-regular fa-heart icon"; ctxFavIcon.style.color = "white"; ctxFavText.textContent = "Favorito"; } ctxMenu.style.display = "flex"; let x = e.pageX; let y = e.pageY; if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10; if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10; ctxMenu.style.left = `${x}px`; ctxMenu.style.top = `${y}px`; }); div.appendChild(mediaElement); if (fileData.file.type === "image/gif") div.appendChild(createBadge("film", "GIF")); else if (fileData.type === "video") div.appendChild(createBadge("play", "VIDEO")); if (favorites.has(fileData.uniquePath)) { const favBadge = document.createElement("span"); favBadge.className = "fav-badge"; favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; div.appendChild(favBadge); } if (currentViewSource === 'local' && (fileData.file.type === "image/gif" || fileData.type === "video")) { let previewVideo = null; let isHovering = false; const startPreview = () => { if (isHovering) return; isHovering = true; if (!fileData.src) fileData.src = URL.createObjectURL(fileData.file); if (fileData.file.type === "image/gif") mediaElement.src = fileData.src; else if (fileData.type === "video") { previewVideo = document.createElement("video"); previewVideo.src = fileData.src; previewVideo.muted = previewVideo.loop = previewVideo.playsInline = true; previewVideo.className = "preview-video"; div.appendChild(previewVideo); mediaElement.style.opacity = "0"; previewVideo.play().catch(e => console.log("Preview pausado")); } }; const stopPreview = () => { if (!isHovering) return; isHovering = false; if (fileData.file.type === "image/gif") mediaElement.src = fileData.thumbSrc; else if (previewVideo) { previewVideo.pause(); previewVideo.removeAttribute('src'); previewVideo.load(); previewVideo.remove(); previewVideo = null; mediaElement.style.opacity = "1"; } }; div.addEventListener('mouseenter', startPreview); div.addEventListener('mouseleave', stopPreview); div.addEventListener('touchstart', startPreview, { passive: true }); div.addEventListener('touchend', stopPreview); div.addEventListener('touchcancel', stopPreview); } gallery.appendChild(div); observer.observe(mediaElement); }
+function createThumbElement(fileData, indexCounter, observer) { 
+    const div = document.createElement("div"); div.className = "item"; 
+    div.setAttribute("data-type", "media"); div.setAttribute("data-index", indexCounter);
+    div.setAttribute("tabindex", "0"); div.setAttribute("role", "button"); div.setAttribute("aria-label", `Ver archivo ${fileData.name}`);
+
+    let mediaElement = document.createElement("img"); mediaElement.className = "thumb skeleton"; 
+    mediaElement.onload = () => mediaElement.classList.remove("skeleton"); 
+    
+    div.appendChild(mediaElement); 
+    if (fileData.file.type === "image/gif") div.appendChild(createBadge("film", "GIF")); else if (fileData.type === "video") div.appendChild(createBadge("play", "VIDEO")); 
+    if (favorites.has(fileData.uniquePath)) { const favBadge = document.createElement("span"); favBadge.className = "fav-badge"; favBadge.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; div.appendChild(favBadge); } 
+    gallery.appendChild(div); observer.observe(mediaElement); 
+}
+
 function createBadge(icon, text) { const badge = document.createElement("span"); badge.className = `media-badge badge-${text.toLowerCase()}`; badge.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${text}`; return badge; }
 function formatTime(seconds) { seconds = Math.floor(seconds); const m = Math.floor(seconds / 60); const s = seconds % 60; return `${m}:${s < 10 ? '0' : ''}${s}`; }
+
+// === DELEGACIÓN DE EVENTOS EN GALLERY ===
+
+gallery.addEventListener('click', e => {
+    const folderItem = e.target.closest('.item.folder');
+    if (folderItem) {
+        const action = folderItem.getAttribute('data-action');
+        if (action === 'back') {
+            const parent = folderItem.getAttribute('data-parent');
+            if (parent === "search_back") {
+                searchInput.value = "";
+                if (currentFilter === "favs" || currentFilter === "folder") {
+                    currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
+                    document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+                    document.querySelector('.filter-option[data-value="all"]').classList.add('active');
+                }
+                updateGalleryView();
+            } else renderGallery(parent);
+        } else if (action === 'open') {
+            const path = folderItem.getAttribute('data-path');
+            searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
+            document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+            document.querySelector('.filter-option[data-value="all"]').classList.add('active');
+            renderGallery(path);
+        }
+        return;
+    }
+
+    const mediaItem = e.target.closest('.item[data-type="media"]');
+    if (mediaItem) {
+        const index = parseInt(mediaItem.getAttribute('data-index'), 10);
+        openViewer(index);
+    }
+});
+
+gallery.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        const item = e.target.closest('.item');
+        if (item) item.click(); 
+    }
+});
+
+const ctxMenu = document.getElementById("customContextMenu"); const ctxFavIcon = document.getElementById("ctxFavIcon"); const ctxFavText = document.getElementById("ctxFavText"); let contextMenuTarget = null;
+gallery.addEventListener('contextmenu', e => {
+    const mediaItem = e.target.closest('.item[data-type="media"]');
+    if (!mediaItem) return;
+    e.preventDefault();
+    const index = parseInt(mediaItem.getAttribute('data-index'), 10);
+    const fileData = mediaFiles[index];
+    contextMenuTarget = { fileData, thumbDiv: mediaItem };
+    
+    if (favorites.has(fileData.uniquePath)) { ctxFavIcon.className = "fa-solid fa-heart-crack icon"; ctxFavIcon.style.color = "#ff4d4d"; ctxFavText.textContent = "Quitar Fav"; } 
+    else { ctxFavIcon.className = "fa-regular fa-heart icon"; ctxFavIcon.style.color = "white"; ctxFavText.textContent = "Favorito"; } 
+    
+    ctxMenu.style.display = "flex"; let x = e.pageX; let y = e.pageY; 
+    if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10; 
+    if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10; 
+    ctxMenu.style.left = `${x}px`; ctxMenu.style.top = `${y}px`;
+});
+
+function handlePreviewStart(e) {
+    if (currentViewSource !== 'local') return;
+    const item = e.target.closest('.item[data-type="media"]');
+    if (!item) return;
+    const fileData = mediaFiles[parseInt(item.getAttribute('data-index'), 10)];
+    if (!fileData || (fileData.file.type !== "image/gif" && fileData.type !== "video")) return;
+
+    if (fileData.isHovering) return;
+    fileData.isHovering = true;
+    const mediaElement = item.querySelector('img.thumb');
+    if (!fileData.src) fileData.src = URL.createObjectURL(fileData.file);
+
+    if (fileData.file.type === "image/gif") mediaElement.src = fileData.src; 
+    else if (fileData.type === "video") {
+        let previewVideo = document.createElement("video"); previewVideo.src = fileData.src; previewVideo.muted = previewVideo.loop = previewVideo.playsInline = true; previewVideo.className = "preview-video";
+        item.appendChild(previewVideo); mediaElement.style.opacity = "0"; previewVideo.play().catch(e => console.log("Preview pausado")); fileData.previewVideo = previewVideo;
+    }
+}
+
+function handlePreviewStop(e) {
+    if (currentViewSource !== 'local') return;
+    const item = e.target.closest('.item[data-type="media"]');
+    if (!item) return;
+    if (e.relatedTarget && item.contains(e.relatedTarget)) return;
+
+    const fileData = mediaFiles[parseInt(item.getAttribute('data-index'), 10)];
+    if (!fileData || !fileData.isHovering) return;
+
+    fileData.isHovering = false;
+    const mediaElement = item.querySelector('img.thumb');
+    if (fileData.file.type === "image/gif") mediaElement.src = fileData.thumbSrc; 
+    else if (fileData.previewVideo) {
+        fileData.previewVideo.pause(); fileData.previewVideo.removeAttribute('src'); fileData.previewVideo.load(); fileData.previewVideo.remove(); fileData.previewVideo = null; mediaElement.style.opacity = "1";
+    }
+}
+
+gallery.addEventListener('mouseover', handlePreviewStart);
+gallery.addEventListener('mouseout', handlePreviewStop);
+gallery.addEventListener('touchstart', handlePreviewStart, { passive: true });
+gallery.addEventListener('touchend', handlePreviewStop);
+gallery.addEventListener('touchcancel', handlePreviewStop);
+
+// Desactivar drag nativo
+gallery.addEventListener('dragstart', e => { if (e.target.tagName === 'IMG') e.preventDefault(); });
+
+// ==========================================
 
 let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
 
@@ -881,65 +919,57 @@ async function openViewer(index) {
     const vLoad = document.getElementById("viewerLoading");
     if(vLoad) vLoad.style.display = "flex"; 
     
-    const isFav = favorites.has(file.uniquePath); favBtn.className = isFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isFav ? "#ff4d4d" : "white";
-    favBtn.onclick = () => { if (favorites.has(file.uniquePath)) favorites.delete(file.uniquePath); else favorites.add(file.uniquePath); saveFavorites(); if(currentFilter === "favs") updateGalleryView(); else { const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`); if(targetImg) { const targetThumbDiv = targetImg.closest('.item'); const existingHeart = targetThumbDiv.querySelector('.fav-badge'); if (favorites.has(file.uniquePath) && !existingHeart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetThumbDiv.appendChild(fb); } else if (!favorites.has(file.uniquePath) && existingHeart) existingHeart.remove(); } } const isNowFav = favorites.has(file.uniquePath); favBtn.className = isNowFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; };
+    const isFav = favorites.has(file.uniquePath); 
+    favBtn.innerHTML = isFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>'; 
+    favBtn.style.color = isFav ? "#ff4d4d" : "white";
+    favBtn.onclick = () => { 
+        if (favorites.has(file.uniquePath)) favorites.delete(file.uniquePath); else favorites.add(file.uniquePath); saveFavorites(); 
+        if(currentFilter === "favs") updateGalleryView(); 
+        else { 
+            const targetItem = gallery.querySelector(`.item[data-index="${file.index}"]`); 
+            if(targetItem) { 
+                const existingHeart = targetItem.querySelector('.fav-badge'); 
+                if (favorites.has(file.uniquePath) && !existingHeart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetItem.appendChild(fb); } 
+                else if (!favorites.has(file.uniquePath) && existingHeart) existingHeart.remove(); 
+            } 
+        } 
+        const isNowFav = favorites.has(file.uniquePath); 
+        favBtn.innerHTML = isNowFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>'; 
+        favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; 
+    };
 
     let mediaUrl = "";
-
     if (currentViewSource === 'local') {
         if (!file.src) file.src = URL.createObjectURL(file.file);
-        mediaUrl = file.src;
-        if(vLoad) vLoad.style.display = "none";
-        renderViewerMedia(file, mediaUrl);
+        mediaUrl = file.src; if(vLoad) vLoad.style.display = "none"; renderViewerMedia(file, mediaUrl);
     } else if (currentViewSource === 'drive') {
         if (file.type === "video") {
             if(vLoad) vLoad.style.display = "none";
-            const iframe = document.createElement("iframe");
-            iframe.src = `https://drive.google.com/file/d/${file.id}/preview`;
-            iframe.className = "viewer-content";
-            iframe.style.border = "none";
-            iframe.style.width = "85vw";
-            iframe.style.height = "85vh";
-            iframe.style.maxWidth = "calc(100vw - 160px)";
-            iframe.style.borderRadius = "12px";
-            iframe.style.backgroundColor = "#000";
-            iframe.setAttribute('allowfullscreen', 'true');
-
+            const iframe = document.createElement("iframe"); iframe.src = `https://drive.google.com/file/d/${file.id}/preview`; iframe.className = "viewer-content"; iframe.style.border = "none"; iframe.style.width = "85vw"; iframe.style.height = "85vh"; iframe.style.maxWidth = "calc(100vw - 160px)"; iframe.style.borderRadius = "12px"; iframe.style.backgroundColor = "#000"; iframe.setAttribute('allowfullscreen', 'true');
             viewer.insertBefore(iframe, fileNameDisplay);
-
-            downloadBtn.href = file.downloadUrl || `https://drive.google.com/uc?id=${file.id}&export=download`;
-            downloadBtn.download = file.name;
+            downloadBtn.href = file.downloadUrl || `https://drive.google.com/uc?id=${file.id}&export=download`; downloadBtn.download = file.name;
         } else {
             const token = JSON.parse(localStorage.getItem('drive_token')).access_token;
-            if (file.blobSrc) {
-                mediaUrl = file.blobSrc;
-                if(vLoad) vLoad.style.display = "none";
-                renderViewerMedia(file, mediaUrl);
-            } else {
+            if (file.blobSrc) { mediaUrl = file.blobSrc; if(vLoad) vLoad.style.display = "none"; renderViewerMedia(file, mediaUrl); } 
+            else {
                 try {
                     const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, { headers: { 'Authorization': 'Bearer ' + token } });
                     if (!res.ok) throw new Error("Error HTTP");
-                    const blob = await res.blob();
-                    file.blobSrc = URL.createObjectURL(blob);
-                    mediaUrl = file.blobSrc;
+                    const blob = await res.blob(); file.blobSrc = URL.createObjectURL(blob); mediaUrl = file.blobSrc;
                     if(vLoad) vLoad.style.display = "none";
                     if (viewer.style.display === "flex" && mediaFiles[currentIndex] === file) renderViewerMedia(file, mediaUrl);
-                } catch(e) {
-                    if(vLoad) vLoad.innerHTML = "<i class='fa-solid fa-triangle-exclamation fa-2x'></i><span style='margin-top:15px;'>Error al descargar imagen</span>";
-                }
+                } catch(e) { if(vLoad) vLoad.innerHTML = "<i class='fa-solid fa-triangle-exclamation fa-2x'></i><span style='margin-top:15px;'>Error al descargar imagen</span>"; }
             }
         }
     }
 }
 
 function renderViewerMedia(file, mediaUrl) {
-    downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl;
-    downloadBtn.download = file.name;
-    
+    downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl; downloadBtn.download = file.name;
     const setupInteractive = targetEl => { targetEl.ondragstart = () => false; targetEl.style.willChange = 'transform'; targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`; let animationFrameId; targetEl.onpointerdown = e => { if (e.target.closest('.custom-controls')) return; initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; startClickX = e.clientX; startClickY = e.clientY; isMouseDown = true; isDragging = false; targetEl.setPointerCapture(e.pointerId); }; targetEl.onpointermove = e => { if (!isMouseDown) return; e.preventDefault(); if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) { isDragging = true; targetEl.classList.add('is-dragging'); } if (isDragging) { currentTranslateX = e.clientX - initialX; currentTranslateY = e.clientY - initialY; if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } }; const dragEnd = e => { if (!isMouseDown) return; isMouseDown = false; if (isDragging) { xOffset = currentTranslateX; yOffset = currentTranslateY; targetEl.classList.remove('is-dragging'); } if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId); }; targetEl.onpointerup = dragEnd; targetEl.onpointercancel = dragEnd; targetEl.onwheel = e => { if (e.target.closest('.custom-controls')) return; e.preventDefault(); scale += e.deltaY * -0.002; scale = Math.min(Math.max(0.5, scale), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); }; };
     
-    if (file.type === "image") { let element = document.createElement("img"); element.src = mediaUrl; element.className = "viewer-content"; viewer.insertBefore(element, fileNameDisplay); setupInteractive(element); element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; } 
-    else { const wrapper = document.createElement("div"); wrapper.className = "custom-video-wrapper paused"; const video = document.createElement("video"); video.src = mediaUrl; video.autoplay = true; video.controls = false; video.volume = globalVolume; video.muted = globalVolume === 0; const centerIcon = document.createElement("div"); centerIcon.className = "center-play-icon"; centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>'; const controlsDiv = document.createElement("div"); controlsDiv.className = "custom-controls"; controlsDiv.innerHTML = `<div class="progress-container" id="progContainer"><div class="progress-bar" id="progBar"></div><div class="progress-preview" id="progPreview"><canvas id="previewCanvas"></canvas><div class="progress-preview-time" id="previewTime">0:00</div></div></div><div class="controls-row"><button id="playBtn" title="Reproducir/Pausar"><i class="fa-solid fa-pause"></i></button><div class="volume-container"><button id="muteBtn" title="Silenciar"><i class="fa-solid fa-volume-high"></i></button><input type="range" id="volSlider" min="0" max="1" step="0.05" value="1"></div><div class="time-display"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div><div style="flex-grow: 1;"></div><button id="fullBtn" title="Pantalla Completa"><i class="fa-solid fa-expand"></i></button></div>`; wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); viewer.insertBefore(wrapper, fileNameDisplay); setupInteractive(wrapper); const playBtn = wrapper.querySelector('#playBtn'), muteBtn = wrapper.querySelector('#muteBtn'), fullBtn = wrapper.querySelector('#fullBtn'), progContainer = wrapper.querySelector('#progContainer'), progBar = wrapper.querySelector('#progBar'), currTimeEl = wrapper.querySelector('#currTime'), totTimeEl = wrapper.querySelector('#totTime'), volSlider = wrapper.querySelector('#volSlider'), progPreview = wrapper.querySelector('#progPreview'), previewCanvas = wrapper.querySelector('#previewCanvas'), previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true }), previewTimeEl = wrapper.querySelector('#previewTime'), thumbVideo = document.createElement('video'); thumbVideo.src = mediaUrl; thumbVideo.muted = true; thumbVideo.preload = 'auto'; let isSeekingPreview = false, pendingPreviewTime = null, lastRenderedTime = -1; thumbVideo.addEventListener('seeked', () => { if (thumbVideo.videoWidth > 0) { const videoW = thumbVideo.videoWidth, videoH = thumbVideo.videoHeight, isVertical = videoH > videoW; const maxVisualSize = 200; let visualW, visualH; if (isVertical) { visualH = maxVisualSize; visualW = maxVisualSize * (videoW / videoH); } else { visualW = maxVisualSize; visualH = maxVisualSize * (videoH / videoW); } const qualityScale = 0.5; previewCanvas.width = visualW * qualityScale; previewCanvas.height = visualH * qualityScale; previewCanvas.style.width = `${visualW}px`; previewCanvas.style.height = `${visualH}px`; previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height); } isSeekingPreview = false; if (pendingPreviewTime !== null) { const timeToSeek = pendingPreviewTime; pendingPreviewTime = null; setTimeout(() => triggerPreviewSeek(timeToSeek), 40); } }); const triggerPreviewSeek = time => { const roundedTime = Math.floor(time * 2) / 2; if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return; if (isSeekingPreview) { pendingPreviewTime = roundedTime; return; } isSeekingPreview = true; lastRenderedTime = roundedTime; thumbVideo.currentTime = roundedTime; }; progContainer.addEventListener('mousemove', e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); const hoverTime = pos * video.duration; let previewX = e.clientX - rect.left; const boxWidth = 170; if (previewX < boxWidth / 2) previewX = boxWidth / 2; if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2; progPreview.style.left = `${previewX}px`; progPreview.style.display = 'flex'; previewTimeEl.textContent = formatTime(hoverTime); triggerPreviewSeek(hoverTime); }); progContainer.addEventListener('mouseleave', () => { progPreview.style.display = 'none'; pendingPreviewTime = null; }); let idleTimeout; const resetIdleTimer = () => { wrapper.classList.remove('idle'); clearTimeout(idleTimeout); if (!video.paused) idleTimeout = setTimeout(() => wrapper.classList.add('idle'), 2500); }; wrapper.addEventListener('mousemove', resetIdleTimer); wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); }); const showCenterIcon = iconClass => { centerIcon.innerHTML = `<i class="fa-solid ${iconClass}"></i>`; wrapper.classList.add('show-center-icon'); setTimeout(() => wrapper.classList.remove('show-center-icon'), 500); }; const togglePlay = () => { if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); showCenterIcon('fa-play'); resetIdleTimer(); } else { video.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); showCenterIcon('fa-pause'); clearTimeout(idleTimeout); wrapper.classList.remove('idle'); } }; video.onclick = e => { if (!isDragging) togglePlay(); }; playBtn.onclick = togglePlay; video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; video.addEventListener('loadedmetadata', () => { totTimeEl.textContent = formatTime(video.duration); volSlider.value = globalVolume; muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; }); video.addEventListener('timeupdate', () => { currTimeEl.textContent = formatTime(video.currentTime); const percent = (video.currentTime / video.duration) * 100; progBar.style.width = `${percent}%`; }); video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); }); video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); }); let isScrubbing = false; const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; progContainer.addEventListener('mousedown', e => { isScrubbing = true; progContainer.classList.add('dragging'); scrub(e); video.pause(); }); document.addEventListener('mousemove', e => { if (isScrubbing) scrub(e); }); document.addEventListener('mouseup', () => { if (isScrubbing) { isScrubbing = false; progContainer.classList.remove('dragging'); if (playBtn.innerHTML.includes('pause')) video.play(); } }); const updateVolumeUI = () => { muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; if (video.muted) volSlider.value = 0; else volSlider.value = video.volume || 1; globalVolume = video.muted ? 0 : video.volume; localStorage.setItem('myGalleryVolume', globalVolume); }; muteBtn.addEventListener('click', () => { if (video.muted || video.volume === 0) { video.muted = false; video.volume = lastUnmutedVolume; } else { lastUnmutedVolume = video.volume; video.muted = true; video.volume = 0; } updateVolumeUI(); }); volSlider.addEventListener('input', e => { video.volume = parseFloat(e.target.value); video.muted = video.volume === 0; if (video.volume > 0) lastUnmutedVolume = video.volume; updateVolumeUI(); }); fullBtn.addEventListener('click', () => { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); }); }
+    if (file.type === "image") { let element = document.createElement("img"); element.src = mediaUrl; element.className = "viewer-content"; element.alt = file.name; viewer.insertBefore(element, fileNameDisplay); setupInteractive(element); element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; } 
+    else { const wrapper = document.createElement("div"); wrapper.className = "custom-video-wrapper paused"; const video = document.createElement("video"); video.src = mediaUrl; video.autoplay = true; video.controls = false; video.volume = globalVolume; video.muted = globalVolume === 0; const centerIcon = document.createElement("div"); centerIcon.className = "center-play-icon"; centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>'; const controlsDiv = document.createElement("div"); controlsDiv.className = "custom-controls"; controlsDiv.innerHTML = `<div class="progress-container" id="progContainer" role="slider" aria-label="Línea de tiempo" tabindex="0"><div class="progress-bar" id="progBar"></div><div class="progress-preview" id="progPreview"><canvas id="previewCanvas"></canvas><div class="progress-preview-time" id="previewTime">0:00</div></div></div><div class="controls-row"><button id="playBtn" aria-label="Reproducir o pausar"><i class="fa-solid fa-pause"></i></button><div class="volume-container"><button id="muteBtn" aria-label="Silenciar o reactivar sonido"><i class="fa-solid fa-volume-high"></i></button><input type="range" id="volSlider" aria-label="Control de volumen" min="0" max="1" step="0.05" value="1"></div><div class="time-display" aria-live="polite"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div><div style="flex-grow: 1;"></div><button id="fullBtn" aria-label="Activar pantalla completa"><i class="fa-solid fa-expand"></i></button></div>`; wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); viewer.insertBefore(wrapper, fileNameDisplay); setupInteractive(wrapper); const playBtn = wrapper.querySelector('#playBtn'), muteBtn = wrapper.querySelector('#muteBtn'), fullBtn = wrapper.querySelector('#fullBtn'), progContainer = wrapper.querySelector('#progContainer'), progBar = wrapper.querySelector('#progBar'), currTimeEl = wrapper.querySelector('#currTime'), totTimeEl = wrapper.querySelector('#totTime'), volSlider = wrapper.querySelector('#volSlider'), progPreview = wrapper.querySelector('#progPreview'), previewCanvas = wrapper.querySelector('#previewCanvas'), previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true }), previewTimeEl = wrapper.querySelector('#previewTime'), thumbVideo = document.createElement('video'); thumbVideo.src = mediaUrl; thumbVideo.muted = true; thumbVideo.preload = 'auto'; let isSeekingPreview = false, pendingPreviewTime = null, lastRenderedTime = -1; thumbVideo.addEventListener('seeked', () => { if (thumbVideo.videoWidth > 0) { const videoW = thumbVideo.videoWidth, videoH = thumbVideo.videoHeight, isVertical = videoH > videoW; const maxVisualSize = 200; let visualW, visualH; if (isVertical) { visualH = maxVisualSize; visualW = maxVisualSize * (videoW / videoH); } else { visualW = maxVisualSize; visualH = maxVisualSize * (videoH / videoW); } const qualityScale = 0.5; previewCanvas.width = visualW * qualityScale; previewCanvas.height = visualH * qualityScale; previewCanvas.style.width = `${visualW}px`; previewCanvas.style.height = `${visualH}px`; previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height); } isSeekingPreview = false; if (pendingPreviewTime !== null) { const timeToSeek = pendingPreviewTime; pendingPreviewTime = null; setTimeout(() => triggerPreviewSeek(timeToSeek), 40); } }); const triggerPreviewSeek = time => { const roundedTime = Math.floor(time * 2) / 2; if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return; if (isSeekingPreview) { pendingPreviewTime = roundedTime; return; } isSeekingPreview = true; lastRenderedTime = roundedTime; thumbVideo.currentTime = roundedTime; }; progContainer.addEventListener('mousemove', e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); const hoverTime = pos * video.duration; let previewX = e.clientX - rect.left; const boxWidth = 170; if (previewX < boxWidth / 2) previewX = boxWidth / 2; if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2; progPreview.style.left = `${previewX}px`; progPreview.style.display = 'flex'; previewTimeEl.textContent = formatTime(hoverTime); triggerPreviewSeek(hoverTime); }); progContainer.addEventListener('mouseleave', () => { progPreview.style.display = 'none'; pendingPreviewTime = null; }); let idleTimeout; const resetIdleTimer = () => { wrapper.classList.remove('idle'); clearTimeout(idleTimeout); if (!video.paused) idleTimeout = setTimeout(() => wrapper.classList.add('idle'), 2500); }; wrapper.addEventListener('mousemove', resetIdleTimer); wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); }); const showCenterIcon = iconClass => { centerIcon.innerHTML = `<i class="fa-solid ${iconClass}"></i>`; wrapper.classList.add('show-center-icon'); setTimeout(() => wrapper.classList.remove('show-center-icon'), 500); }; const togglePlay = () => { if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); showCenterIcon('fa-play'); resetIdleTimer(); } else { video.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); showCenterIcon('fa-pause'); clearTimeout(idleTimeout); wrapper.classList.remove('idle'); } }; video.onclick = e => { if (!isDragging) togglePlay(); }; playBtn.onclick = togglePlay; video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; video.addEventListener('loadedmetadata', () => { totTimeEl.textContent = formatTime(video.duration); volSlider.value = globalVolume; muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; }); video.addEventListener('timeupdate', () => { currTimeEl.textContent = formatTime(video.currentTime); const percent = (video.currentTime / video.duration) * 100; progBar.style.width = `${percent}%`; progContainer.setAttribute('aria-valuenow', percent); }); video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); }); video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); }); let isScrubbing = false; const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; progContainer.addEventListener('mousedown', e => { isScrubbing = true; progContainer.classList.add('dragging'); scrub(e); video.pause(); }); document.addEventListener('mousemove', e => { if (isScrubbing) scrub(e); }); document.addEventListener('mouseup', () => { if (isScrubbing) { isScrubbing = false; progContainer.classList.remove('dragging'); if (playBtn.innerHTML.includes('pause')) video.play(); } }); const updateVolumeUI = () => { muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; if (video.muted) volSlider.value = 0; else volSlider.value = video.volume || 1; globalVolume = video.muted ? 0 : video.volume; localStorage.setItem('myGalleryVolume', globalVolume); }; muteBtn.addEventListener('click', () => { if (video.muted || video.volume === 0) { video.muted = false; video.volume = lastUnmutedVolume; } else { lastUnmutedVolume = video.volume; video.muted = true; video.volume = 0; } updateVolumeUI(); }); volSlider.addEventListener('input', e => { video.volume = parseFloat(e.target.value); video.muted = video.volume === 0; if (video.volume > 0) lastUnmutedVolume = video.volume; updateVolumeUI(); }); fullBtn.addEventListener('click', () => { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); }); }
 }
 
 function navigate(direction) { currentIndex += direction; if(currentIndex >= mediaFiles.length) currentIndex = 0; if(currentIndex < 0) currentIndex = mediaFiles.length - 1; openViewer(currentIndex); }
@@ -968,64 +998,62 @@ document.addEventListener('keydown', e => {
     } 
 });
 
-const ctxMenu = document.getElementById("customContextMenu"); const ctxFavIcon = document.getElementById("ctxFavIcon"); const ctxFavText = document.getElementById("ctxFavText"); let contextMenuTarget = null;
 function closeContextMenu() { ctxMenu.style.display = "none"; contextMenuTarget = null; }
 document.addEventListener('click', closeContextMenu); document.addEventListener('scroll', closeContextMenu);
 
 document.getElementById('ctxCopy').addEventListener('click', async () => { 
-    if (!contextMenuTarget) return; 
-    const fileData = contextMenuTarget.fileData; 
+    if (!contextMenuTarget) return; const fileData = contextMenuTarget.fileData; 
     try { 
-        if (currentViewSource === 'drive') {
-            alert("Por políticas de seguridad de Google, las imágenes de Drive no se pueden copiar al portapapeles directamente. Por favor usa la opción 'Descargar'.");
-            return;
-        }
+        if (currentViewSource === 'drive') { alert("Por políticas de seguridad de Google, las imágenes de Drive no se pueden copiar al portapapeles directamente. Por favor usa la opción 'Descargar'."); return; }
         if (fileData.type === 'image') { 
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height;
-                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
-                canvas.toBlob(async blob => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); alert("¡Imagen copiada!"); } catch (err) { alert("Navegador no soporta copiar imágenes de esta forma."); } }, 'image/png');
-            };
+            const img = new Image(); img.crossOrigin = "Anonymous";
+            img.onload = () => { const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); alert("¡Imagen copiada!"); } catch (err) { alert("Navegador no soporta copiar imágenes de esta forma."); } }, 'image/png'); };
             img.src = fileData.src || URL.createObjectURL(fileData.file);
         } else alert("Solo imágenes."); 
     } catch(e) { console.error(e); } 
 });
 
 document.getElementById('ctxShare').addEventListener('click', async () => { 
-    if (!contextMenuTarget) return; 
-    const fd = contextMenuTarget.fileData; 
-    if (navigator.share) {
-        try { 
-            if (currentViewSource === 'drive') {
-                await navigator.share({ url: fd.downloadUrl, title: fd.name });
-            } else {
-                await navigator.share({ files: [fd.file], title: fd.name }); 
-            }
-        } catch (err) {} 
-    } else alert("PC share API no disponible."); 
+    if (!contextMenuTarget) return; const fd = contextMenuTarget.fileData; 
+    if (navigator.share) { try { if (currentViewSource === 'drive') await navigator.share({ url: fd.downloadUrl, title: fd.name }); else await navigator.share({ files: [fd.file], title: fd.name }); } catch (err) {} } else alert("PC share API no disponible."); 
 });
 
 document.getElementById('ctxDownload').addEventListener('click', () => { 
-    if (!contextMenuTarget) return; 
-    const fd = contextMenuTarget.fileData; 
-    let url;
-    if (currentViewSource === 'drive') {
-        url = fd.downloadUrl || `https://drive.google.com/uc?id=${fd.id}&export=download`;
-    } else {
-        url = fd.src || URL.createObjectURL(fd.file); 
-    }
-    const a = document.createElement('a'); a.href = url; a.download = fd.name; a.click(); 
-    if (currentViewSource === 'local' && !fd.src) URL.revokeObjectURL(url); 
+    if (!contextMenuTarget) return; const fd = contextMenuTarget.fileData; 
+    let url = currentViewSource === 'drive' ? (fd.downloadUrl || `https://drive.google.com/uc?id=${fd.id}&export=download`) : (fd.src || URL.createObjectURL(fd.file));
+    const a = document.createElement('a'); a.href = url; a.download = fd.name; a.click(); if (currentViewSource === 'local' && !fd.src) URL.revokeObjectURL(url); 
 });
 
-document.getElementById('ctxFav').addEventListener('click', () => { if (!contextMenuTarget) return; const { fileData, thumbDiv } = contextMenuTarget; if (favorites.has(fileData.uniquePath)) { favorites.delete(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (heart) heart.remove(); } else { favorites.add(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (!heart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; thumbDiv.appendChild(fb); } } saveFavorites(); if(currentFilter === "favs") updateGalleryView(); });
+document.getElementById('ctxFav').addEventListener('click', () => { 
+    if (!contextMenuTarget) return; const { fileData, thumbDiv } = contextMenuTarget; 
+    if (favorites.has(fileData.uniquePath)) { favorites.delete(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (heart) heart.remove(); } 
+    else { favorites.add(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (!heart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; thumbDiv.appendChild(fb); } } 
+    saveFavorites(); if(currentFilter === "favs") updateGalleryView(); 
+});
 
-window.onload = () => {
-    initGoogleServices();
-};
+gallery.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return; 
 
+    const items = gallery.querySelectorAll('.item');
+    if (items.length === 0) return; 
+
+    const firstItem = items[0];
+    const lastItem = items[items.length - 1];
+
+    if (e.shiftKey) { // Shift + Tab (navegación hacia atrás)
+        if (document.activeElement === firstItem) {
+            lastItem.focus();
+            e.preventDefault();
+        }
+    } else { 
+        if (document.activeElement === lastItem) {
+            firstItem.focus();
+            e.preventDefault(); 
+        }
+    }
+});
+
+window.onload = () => initGoogleServices();
 </script>
 </body>
 </html>
