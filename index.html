@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
 <style>
-/* SUPER IMPORTANTE: NO MODIFICAR EL RENDERIZADO DEL GRID O EL PERFORMANCE CAERÁ */
 body { background: #111; color: white; font-family: Arial; text-align: center; margin: 0; }
 body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 input, select { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
@@ -127,7 +126,6 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
 .copyright-link:hover .version-badge { background: rgba(255, 255, 255, 0.3); }
 
-/* --- NUEVOS ESTILOS PARA EL PERFIL DE GOOGLE --- */
 .google-profile-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: default; user-select: none; }
 #authBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight:bold; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; background: white; color: #111; border: none; }
 #authBtn:hover { background: #eee; }
@@ -317,7 +315,6 @@ const downloadBtn = document.getElementById("downloadBtn");
 const favBtn = document.getElementById("favBtn");
 
 const authBtn = document.getElementById('authBtn');
-// NUEVOS SELECTORES PARA EL MENÚ DE PERFIL
 const avatarWrapper = document.getElementById('googleAvatarWrapper');
 const profileMenu = document.getElementById('googleProfileMenu');
 const googleAvatarImg = document.getElementById('googleAvatarImg');
@@ -442,7 +439,6 @@ function initGoogleServices() {
     });
     authBtn.addEventListener('click', () => tokenClient.requestAccessToken());
     
-    // NUEVA LÓGICA PARA EL MENÚ DESPLEGABLE
     avatarWrapper.addEventListener('click', (e) => {
         e.stopPropagation();
         profileMenu.classList.toggle('show');
@@ -477,7 +473,7 @@ function handleAuthResponse(response) {
 }
 
 function handleSignout() {
-    profileMenu.classList.remove('show'); // Ocultar el menú al cerrar
+    profileMenu.classList.remove('show'); 
     const token = JSON.parse(localStorage.getItem('drive_token'));
     localStorage.removeItem('drive_auto_connect');
     if (token && token.access_token) {
@@ -501,16 +497,12 @@ function cleanupGoogleState() {
 function checkStoredToken() {
     const token = JSON.parse(localStorage.getItem('drive_token'));
     
-    // Si hay token guardado y aún no expira (Google da 1 hora)
     if (token && token.expires_in && token.issued_at && (Date.now() < (token.issued_at + token.expires_in * 1000))) {
         isGoogleConnected = true;
         updateGoogleUI(true);
         getUserProfile(); 
         if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
     } else {
-        // SOLUCIÓN AL BUG:
-        // Si el token expiró (ej. al día siguiente), simplemente limpiamos
-        // el estado y mostramos el botón de "Conectar Drive" de nuevo.
         cleanupGoogleState(); 
     }
 }
@@ -879,7 +871,6 @@ function formatTime(seconds) { seconds = Math.floor(seconds); const m = Math.flo
 
 let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
 
-/* SUPER IMPORTANTE: NUEVA ARQUITECTURA DE VISOR SEGURO Y EFICIENTE */
 async function openViewer(index) {
     if(mediaFiles.length === 0) return; currentIndex = index; const file = mediaFiles[currentIndex];
     viewer.querySelectorAll('.viewer-content, .custom-video-wrapper, iframe').forEach(el => el.remove());
@@ -981,7 +972,6 @@ const ctxMenu = document.getElementById("customContextMenu"); const ctxFavIcon =
 function closeContextMenu() { ctxMenu.style.display = "none"; contextMenuTarget = null; }
 document.addEventListener('click', closeContextMenu); document.addEventListener('scroll', closeContextMenu);
 
-/* SUPER IMPORTANTE: LOGICA DE DESCARGA Y COPIA SEGURA */
 document.getElementById('ctxCopy').addEventListener('click', async () => { 
     if (!contextMenuTarget) return; 
     const fileData = contextMenuTarget.fileData; 
