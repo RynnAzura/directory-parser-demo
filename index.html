@@ -185,10 +185,19 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 <div class="sticky-header">
     <div class="controls-container">
         
-        <select id="sourceSelect" class="control-select" style="background: rgba(255,255,255,0.1); border-color: transparent;">
-            <option value="local">📁 Archivos Locales</option>
-            <option value="drive">☁️ Mi Google Drive</option>
-        </select>
+        <div class="custom-dropdown" id="sourceDropdown">
+            <button class="dropdown-btn" id="sourceBtn" style="background: rgba(255,255,255,0.1); border-color: transparent;">
+                <span id="sourceBtnText">📁 Archivos Locales</span> <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
+            </button>
+            <div class="dropdown-menu" id="sourceMenu">
+                <div class="dropdown-item source-option active" data-value="local" data-label="📁 Archivos Locales">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> 📁 Archivos Locales
+                </div>
+                <div class="dropdown-item source-option" data-value="drive" data-label="☁️ Mi Google Drive">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> ☁️ Mi Google Drive
+                </div>
+            </div>
+        </div>
         
         <button id="fileInputBtn">
             <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
@@ -317,7 +326,11 @@ const userNameDisplay = document.getElementById('userName');
 const userEmailDisplay = document.getElementById('userEmail');
 const realSignoutBtn = document.getElementById('realSignoutBtn');
 
-const sourceSelect = document.getElementById('sourceSelect');
+const sourceBtn = document.getElementById('sourceBtn');
+const sourceBtnText = document.getElementById('sourceBtnText');
+const sourceMenu = document.getElementById('sourceMenu');
+const sourceOptions = document.querySelectorAll('.source-option');
+
 const fileInputBtn = document.getElementById('fileInputBtn');
 
 const sortBtn = document.getElementById('sortBtn');
@@ -369,33 +382,56 @@ fileInputBtn.addEventListener('click', () => {
     }
 });
 
-sourceSelect.addEventListener('change', () => {
-    currentViewSource = sourceSelect.value;
-    gallery.innerHTML = ""; 
-    searchInput.value = ""; 
+sourceBtn.addEventListener('click', (e) => { 
+    e.stopPropagation(); 
+    sourceMenu.classList.toggle('show'); 
+    sortMenu.classList.remove('show'); 
+    filterMenu.classList.remove('show'); 
+});
 
-    if (currentViewSource === 'local') {
-        fileInputBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta';
-        if (appState.local.loaded) {
-            updateUIState();
-        } else {
-            pathDisplay.innerHTML = 'Esperando carpeta...';
-            updateUIState();
+sourceOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newValue = option.getAttribute('data-value');
+        
+        if (currentViewSource === newValue) {
+            sourceMenu.classList.remove('show');
+            return; 
         }
-    } else if (currentViewSource === 'drive') {
-        fileInputBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Recargar Drive';
-        if (!isGoogleConnected) {
-            pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive"></i> Drive no conectado.';
-            gallery.innerHTML = "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-unlink'></i> Conecta tu Drive arriba a la derecha para ver tus archivos multimedia</p>";
-            updateUIState();
-        } else {
-            if (appState.drive.loaded) {
+
+        currentViewSource = newValue;
+        sourceBtnText.textContent = option.getAttribute('data-label');
+
+        document.querySelectorAll('.source-option').forEach(el => el.classList.remove('active'));
+        option.classList.add('active');
+        sourceMenu.classList.remove('show');
+
+        gallery.innerHTML = ""; 
+        searchInput.value = ""; 
+
+        if (currentViewSource === 'local') {
+            fileInputBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta';
+            if (appState.local.loaded) {
                 updateUIState();
             } else {
-                loadDriveMedia();
+                pathDisplay.innerHTML = 'Esperando carpeta...';
+                updateUIState();
+            }
+        } else if (currentViewSource === 'drive') {
+            fileInputBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Recargar Drive';
+            if (!isGoogleConnected) {
+                pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive"></i> Drive no conectado.';
+                gallery.innerHTML = "<p style='width: 100%; color: #888; font-size: 18px; margin-top: 50px;'><i class='fa-solid fa-unlink'></i> Conecta tu Drive arriba a la derecha para ver tus archivos multimedia</p>";
+                updateUIState();
+            } else {
+                if (appState.drive.loaded) {
+                    updateUIState();
+                } else {
+                    loadDriveMedia();
+                }
             }
         }
-    }
+    });
 });
 
 function initGoogleServices() {
@@ -452,8 +488,7 @@ function cleanupGoogleState() {
     authBtn.style.display = "flex";
     avatarWrapper.style.display = "none";
     if (currentViewSource === 'drive') {
-        sourceSelect.value = "local";
-        sourceSelect.dispatchEvent(new Event('change'));
+        document.querySelector('.source-option[data-value="local"]').click();
     }
 }
 
@@ -612,9 +647,14 @@ async function loadDriveMedia() {
     }
 }
 
-sortBtn.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('show'); filterMenu.classList.remove('show'); });
-filterBtn.addEventListener('click', (e) => { e.stopPropagation(); filterMenu.classList.toggle('show'); sortMenu.classList.remove('show'); });
-document.addEventListener('click', (e) => { if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) sortMenu.classList.remove('show'); if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.remove('show'); });
+sortBtn.addEventListener('click', (e) => { e.stopPropagation(); sortMenu.classList.toggle('show'); filterMenu.classList.remove('show'); sourceMenu.classList.remove('show'); });
+filterBtn.addEventListener('click', (e) => { e.stopPropagation(); filterMenu.classList.toggle('show'); sortMenu.classList.remove('show'); sourceMenu.classList.remove('show'); });
+
+document.addEventListener('click', (e) => { 
+    if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) sortMenu.classList.remove('show'); 
+    if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.remove('show'); 
+    if (!sourceBtn.contains(e.target) && !sourceMenu.contains(e.target)) sourceMenu.classList.remove('show');
+});
 
 sortOptions.forEach(option => {
     option.addEventListener('click', (e) => {
