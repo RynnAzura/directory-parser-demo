@@ -298,7 +298,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.3</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.3.1</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -460,7 +460,13 @@ function initGoogleServices() {
 }
 
 function handleAuthResponse(response) {
-    if (response.error !== undefined) throw response;
+    if (response.error !== undefined) {
+        // Si cerraste la ventana de Google sin iniciar sesión o hubo un error
+        console.warn("Autenticación cancelada:", response.error);
+        cleanupGoogleState(); 
+        return;
+    }
+    
     isGoogleConnected = true;
     response.issued_at = Date.now(); 
     localStorage.setItem('drive_token', JSON.stringify(response)); 
@@ -494,18 +500,18 @@ function cleanupGoogleState() {
 
 function checkStoredToken() {
     const token = JSON.parse(localStorage.getItem('drive_token'));
+    
+    // Si hay token guardado y aún no expira (Google da 1 hora)
     if (token && token.expires_in && token.issued_at && (Date.now() < (token.issued_at + token.expires_in * 1000))) {
         isGoogleConnected = true;
         updateGoogleUI(true);
         getUserProfile(); 
         if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
     } else {
-        const autoConnect = localStorage.getItem('drive_auto_connect');
-        if (autoConnect === 'true' && tokenClient) {
-            tokenClient.requestAccessToken({prompt: ''}); 
-        } else {
-            cleanupGoogleState(); 
-        }
+        // SOLUCIÓN AL BUG:
+        // Si el token expiró (ej. al día siguiente), simplemente limpiamos
+        // el estado y mostramos el botón de "Conectar Drive" de nuevo.
+        cleanupGoogleState(); 
     }
 }
 
