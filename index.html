@@ -6,211 +6,56 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
 <style>
+/* SUPER IMPORTANTE: NO MODIFICAR EL RENDERIZADO DEL GRID O EL PERFORMANCE CAERÁ */
 body { background: #111; color: white; font-family: Arial; text-align: center; margin: 0; }
+body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+input, select { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
+img, video { -webkit-user-drag: none; }
 
-body {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-input, select {
-    -webkit-user-select: auto;
-    -moz-user-select: auto;
-    -ms-user-select: auto;
-    user-select: auto;
-}
-
-img, video {
-    -webkit-user-drag: none;
-}
-
-.sticky-header {
-    position: sticky;
-    top: 0;
-    background: rgba(17, 17, 17, 0.85); /* Fondo oscuro semitransparente */
-    backdrop-filter: blur(15px); /* Efecto cristal / desenfoque al hacer scroll */
-    -webkit-backdrop-filter: blur(15px);
-    z-index: 100; /* Asegura que pase por encima de las fotos de la galería */
-    padding: 15px 0 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Línea divisoria muy sutil */
-    margin-bottom: 20px;
-}
-
-.controls-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin: 0 0 15px 0; /* Se ajustó para encajar perfecto en la barra */
-    flex-wrap: wrap; 
-    padding: 0 20px;
-}
-
-#currentPathDisplay { 
-    font-size: 18px; 
-    color: #ccc; 
-    margin-bottom: 5px; /* Se redujo el espacio inferior para que no estorbe */
-    font-weight: bold; 
-}
-
-button { 
-    padding: 10px 20px; 
-    border-radius: 8px; 
-    border: none; 
-    background: #444; 
-    color: white; 
-    cursor: pointer; 
-    transition: background 0.3s; 
-}
+.sticky-header { position: sticky; top: 0; background: rgba(17, 17, 17, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 100; padding: 15px 0 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 20px; }
+.controls-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 15px 0; flex-wrap: wrap; padding: 0 20px; }
+button { padding: 10px 20px; border-radius: 8px; border: none; background: #444; color: white; cursor: pointer; transition: background 0.3s; }
 button:hover { background: #666; }
+#searchInput { padding: 10px 15px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-size: 15px; transition: border-color 0.3s; width: 200px; }
+#searchInput:focus { outline: none; border-color: #888; }
+#searchInput:disabled { opacity: 0.5; cursor: not-allowed; }
+#currentPathDisplay { font-size: 18px; color: #ccc; margin-bottom: 5px; font-weight: bold; }
 
-#searchInput, .control-select {
-    padding: 10px 15px;
-    border-radius: 8px;
-    border: 1px solid #444;
-    background: #222;
-    color: white;
-    font-size: 15px;
-    transition: border-color 0.3s;
-}
-#searchInput { width: 200px; }
-.control-select { cursor: pointer; }
+.custom-dropdown { position: relative; display: inline-block; }
+.dropdown-btn { display: flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-size: 15px; cursor: pointer; transition: border-color 0.3s, background 0.3s; }
+.dropdown-btn:hover:not(:disabled) { background: #333; border-color: #888; }
+.dropdown-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.dropdown-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 1000; display: none; flex-direction: column; background: rgba(35, 35, 35, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); min-width: 180px; text-align: left; opacity: 0; transform: translateY(-10px); transition: opacity 0.2s ease, transform 0.2s ease; }
+.dropdown-menu.show { display: flex; opacity: 1; transform: translateY(0); }
+.dropdown-item { display: flex; align-items: center; padding: 8px 12px; border-radius: 6px; color: white; font-size: 14px; cursor: pointer; transition: background 0.15s; user-select: none; }
+.dropdown-item:hover { background: rgba(255, 255, 255, 0.1); }
+.dot-indicator { width: 20px; display: inline-block; font-size: 6px; color: transparent; transition: color 0.2s; text-align: center; margin-right: 5px; }
+.dropdown-item.active .dot-indicator { color: white; }
+.dropdown-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 6px 0; }
 
-#searchInput:focus, .control-select:focus { outline: none; border-color: #888; }
-#searchInput:disabled, .control-select:disabled { opacity: 0.5; cursor: not-allowed; }
-
-#currentPathDisplay { font-size: 18px; color: #ccc; margin-bottom: 20px; font-weight: bold; }
 .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 0 20px; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-}
-
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
 .item { margin: 0; position: relative; width: 200px; height: 150px; }
+img.thumb { width: 100%; height: 100%; border-radius: 10px; cursor: pointer; transition: transform 0.2s, opacity 0.2s; object-fit: cover; background-color: #222; display: block; }
+.item:hover img.thumb, .item:hover .preview-video { transform: scale(1.05); }
+.preview-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; z-index: 5; pointer-events: none; transition: transform 0.2s; }
 
-img.thumb { 
-    width: 100%; 
-    height: 100%; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    transition: transform 0.2s, opacity 0.2s; 
-    object-fit: cover; 
-    background-color: #222; 
-    display: block;
-}
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+.skeleton { animation: shimmer 1.5s infinite linear; background: linear-gradient(to right, #222 4%, #3a3a3a 25%, #222 36%); background-size: 800px 100%; }
 
-.item:hover img.thumb, .item:hover .preview-video { 
-    transform: scale(1.05); 
-}
-
-.preview-video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
-    z-index: 5;
-    pointer-events: none;
-    transition: transform 0.2s;
-}
-
-@keyframes shimmer {
-    0% { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
-}
-.skeleton {
-    animation: shimmer 1.5s infinite linear;
-    background: linear-gradient(to right, #222 4%, #3a3a3a 25%, #222 36%);
-    background-size: 800px 100%;
-}
-
-.media-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    color: #fff;
-    font-size: 12px;
-    font-weight: bold;
-    padding: 4px 8px;
-    border-radius: 5px;
-    pointer-events: none;
-    z-index: 10;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
+.media-badge { position: absolute; top: 8px; right: 8px; color: #fff; font-size: 12px; font-weight: bold; padding: 4px 8px; border-radius: 5px; pointer-events: none; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 .badge-gif { background: rgba(0,0,0,0.8); }
 .badge-video { background: rgba(220, 53, 69, 0.9); letter-spacing: 1px; }
+.fav-badge { position: absolute; bottom: 8px; right: 8px; font-size: 20px; pointer-events: none; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
 
-.fav-badge {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    font-size: 20px;
-    pointer-events: none;
-    z-index: 10;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
-}
-
-.folder { 
-    width: 200px; 
-    height: 150px; 
-    background: #2a2a2a; 
-    border-radius: 10px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    flex-direction: column; 
-    cursor: pointer; 
-    transition: transform 0.2s, border-color 0.3s, box-shadow 0.2s; 
-    color: white; 
-    border: 2px solid #444; 
-    box-sizing: border-box; 
-    user-select: none;
-    position: relative; 
-    overflow: hidden; 
-}
-.folder:hover { 
-    transform: scale(1.05); 
-    border-color: #888; 
-    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
-}
-.folder-cover {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    background-color: #222;
-}
-.folder-icon-fallback {
-    font-size: 50px;
-    margin-bottom: 15px; 
-}
-.folder-name-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px); 
-    -webkit-backdrop-filter: blur(4px);
-    padding: 8px 5px;
-    box-sizing: border-box;
-    font-size: 14px;
-    font-weight: bold;
-    text-align: center;
-    word-break: break-all;
-    text-shadow: 1px 1px 2px black;
-    pointer-events: none;
-}
+.folder { width: 200px; height: 150px; background: #2a2a2a; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: transform 0.2s, border-color 0.3s, box-shadow 0.2s; color: white; border: 2px solid #444; box-sizing: border-box; user-select: none; position: relative; overflow: hidden; }
+.folder:hover { transform: scale(1.05); border-color: #888; box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
+.folder-cover { width: 100%; height: 100%; object-fit: cover; background-color: #222; }
+.folder-icon-fallback { font-size: 50px; margin-bottom: 15px; }
+.folder-name-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 8px 5px; box-sizing: border-box; font-size: 14px; font-weight: bold; text-align: center; word-break: break-all; text-shadow: 1px 1px 2px black; pointer-events: none; }
 
 .viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; overflow: hidden; z-index: 1000; }
-
 .viewer-content { width: auto; height: auto; max-width: calc(100vw - 160px); max-height: 85vh; object-fit: contain; user-select: none; touch-action: none;}
 img.viewer-content { cursor: grab; }
 img.viewer-content.grabbing { cursor: grabbing !important; }
@@ -225,7 +70,6 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .custom-video-wrapper.idle:not(.paused) { cursor: none; }
 .custom-video-wrapper.idle:not(.paused) .custom-controls { opacity: 0; pointer-events: none; }
 
-/* Barra de progreso interactiva */
 .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.2); cursor: pointer; margin-bottom: 12px; position: relative; border-radius: 4px; transition: height 0.2s; }
 .progress-container:hover, .progress-container.dragging { height: 8px; }
 .progress-bar { height: 100%; background: #ff3b30; width: 0%; border-radius: 4px; position: relative; pointer-events: none; }
@@ -247,10 +91,8 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .close { position: absolute; top: 20px; right: 30px; font-size: 30px; cursor: pointer; z-index: 1001; }
 .download-btn { position: absolute; top: 22px; right: 80px; font-size: 26px; cursor: pointer; z-index: 1001; color: white; text-decoration: none; transition: transform 0.2s; }
 .download-btn:hover { transform: scale(1.1); }
-
 .fav-btn { position: absolute; top: 22px; right: 130px; font-size: 26px; cursor: pointer; z-index: 1001; user-select: none; transition: transform 0.2s; }
 .fav-btn:hover { transform: scale(1.1); }
-
 .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 40px; color: white; background: transparent; border: none; cursor: pointer; padding: 20px; z-index: 1001; user-select: none; }
 .nav-btn:hover { background: rgba(255,255,255,0.1); }
 .prev { left: 10px; }
@@ -265,133 +107,25 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     .copyright-link { font-size: 12px; bottom: 10px; right: 10px; } 
 }
 
-.custom-video-wrapper, .custom-video-wrapper video {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-}
+.custom-video-wrapper, .custom-video-wrapper video { backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(0); }
+.is-dragging { box-shadow: none !important; }
+.is-dragging * { pointer-events: none !important; }
 
-.is-dragging {
-    box-shadow: none !important;
-}
+.win11-context-menu { position: absolute; z-index: 10000; display: none; flex-direction: row; background: rgba(35, 35, 35, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); gap: 2px; user-select: none; }
+.menu-action { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 14px; cursor: pointer; border-radius: 8px; color: white; font-size: 13px; min-width: 55px; transition: background 0.15s, transform 0.1s; }
+.menu-action:hover { background: rgba(255, 255, 255, 0.1); }
+.menu-action:active { transform: scale(0.95); }
+.menu-action .icon { font-size: 20px; margin-bottom: 6px; pointer-events: none; transition: color 0.2s; }
 
-.is-dragging * {
-    pointer-events: none !important; 
-}
+.progress-preview { position: absolute; bottom: 15px; left: 0; transform: translateX(-50%); background: #111; border: 2px solid #444; border-radius: 8px; display: none; flex-direction: column; align-items: center; pointer-events: none; z-index: 20; box-shadow: 0 5px 20px rgba(0,0,0,0.8); padding: 4px; opacity: 0; transition: opacity 0.2s; }
+.progress-container:hover .progress-preview { opacity: 1; }
+.progress-preview canvas { background: #000; border-radius: 4px; }
+.progress-preview-time { color: white; font-size: 13px; margin-top: 5px; font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; }
 
-.win11-context-menu {
-    position: absolute;
-    z-index: 10000;
-    display: none; 
-    flex-direction: row;
-    background: rgba(35, 35, 35, 0.7);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 6px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    gap: 2px;
-    user-select: none;
-}
-
-.menu-action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 14px;
-    cursor: pointer;
-    border-radius: 8px;
-    color: white;
-    font-size: 13px;
-    min-width: 55px;
-    transition: background 0.15s, transform 0.1s;
-}
-
-.menu-action:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.menu-action:active {
-    transform: scale(0.95);
-}
-
-.menu-action .icon {
-    font-size: 20px;
-    margin-bottom: 6px;
-    pointer-events: none;
-    transition: color 0.2s;
-}
-
-.progress-preview {
-    position: absolute;
-    bottom: 15px; 
-    left: 0;
-    transform: translateX(-50%);
-    background: #111;
-    border: 2px solid #444;
-    border-radius: 8px;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: none; 
-    z-index: 20;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-    padding: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-.progress-container:hover .progress-preview {
-    opacity: 1;
-}
-
-.progress-preview canvas {
-    background: #000;
-    border-radius: 4px;
-}
-.progress-preview-time {
-    color: white;
-    font-size: 13px;
-    margin-top: 5px;
-    font-weight: bold;
-    font-family: 'Segoe UI', Arial, sans-serif;
-}
-
-.copyright-link {
-    position: fixed;
-    bottom: 15px;
-    right: 20px;
-    color: rgba(255, 255, 255, 0.3);
-    text-decoration: none;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    z-index: 500;
-    transition: color 0.3s ease, transform 0.2s ease;
-    user-select: none;
-}
-
-.copyright-link:hover {
-    color: rgba(255, 255, 255, 0.9);
-    transform: scale(1.05);
-}
-
-.version-badge {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    margin-left: 2px;
-    transition: background 0.3s ease;
-}
-
-.copyright-link:hover .version-badge {
-    background: rgba(255, 255, 255, 0.3);
-}
+.copyright-link { position: fixed; bottom: 15px; right: 20px; color: rgba(255, 255, 255, 0.3); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; z-index: 500; transition: color 0.3s ease, transform 0.2s ease; user-select: none; }
+.copyright-link:hover { color: rgba(255, 255, 255, 0.9); transform: scale(1.05); }
+.version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
+.copyright-link:hover .version-badge { background: rgba(255, 255, 255, 0.3); }
 
 </style>
 </head>
@@ -407,25 +141,57 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
             <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
         </button>
         
-        <select id="sortCriteria" class="control-select" disabled>
-            <option value="name">Ordenar por Nombre</option>
-            <option value="date">Ordenar por Fecha</option>
-            <option value="size">Ordenar por Tamaño</option>
-            <option value="type">Ordenar por Tipo</option>
-        </select>
+        <div class="custom-dropdown" id="sortDropdown">
+            <button class="dropdown-btn" id="sortBtn" disabled>
+                <i class="fa-solid fa-arrows-up-down"></i> Ordenar <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
+            </button>
+            <div class="dropdown-menu" id="sortMenu">
+                <div class="dropdown-item sort-option criteria active" data-type="criteria" data-value="name">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Nombre
+                </div>
+                <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="type">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Tipo
+                </div>
+                <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="size">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Tamaño
+                </div>
+                <div class="dropdown-item sort-option criteria" data-type="criteria" data-value="date">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Fecha
+                </div>
+                
+                <div class="dropdown-divider"></div>
+                
+                <div class="dropdown-item sort-option order active" data-type="order" data-value="asc">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Ascendente
+                </div>
+                <div class="dropdown-item sort-option order" data-type="order" data-value="desc">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Descendente
+                </div>
+            </div>
+        </div>
 
-        <select id="sortOrder" class="control-select" disabled>
-            <option value="asc">Ascendente (A-Z / Menor-Mayor)</option>
-            <option value="desc">Descendente (Z-A / Mayor-Menor)</option>
-        </select>
-
-        <select id="typeFilter" class="control-select" disabled>
-            <option value="all">Todos los archivos</option>
-            <option value="image">Solo Imágenes</option>
-            <option value="video">Solo Videos</option>
-            <option value="gif">Solo GIFs</option>
-            <option value="favs">Solo Favoritos</option>
-        </select>
+        <div class="custom-dropdown" id="filterDropdown">
+            <button class="dropdown-btn" id="filterBtn" disabled>
+                <span id="filterBtnText">Todos los archivos</span> <i class="fa-solid fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
+            </button>
+            <div class="dropdown-menu" id="filterMenu">
+                <div class="dropdown-item filter-option active" data-value="all" data-label="Todos los archivos">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Todos los archivos
+                </div>
+                <div class="dropdown-item filter-option" data-value="image" data-label="Solo Imágenes">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo Imágenes
+                </div>
+                <div class="dropdown-item filter-option" data-value="video" data-label="Solo Videos">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo Videos
+                </div>
+                <div class="dropdown-item filter-option" data-value="gif" data-label="Solo GIFs">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo GIFs
+                </div>
+                <div class="dropdown-item filter-option" data-value="favs" data-label="Solo Favoritos">
+                    <span class="dot-indicator"><i class="fa-solid fa-circle"></i></span> Solo Favoritos
+                </div>
+            </div>
+        </div>
 
         <input type="text" id="searchInput" placeholder="Buscar..." disabled>
     </div>
@@ -467,15 +233,12 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.4</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.6</span>
 </a>
 
 <script>
 const input = document.getElementById("fileInput");
 const searchInput = document.getElementById("searchInput");
-const typeFilter = document.getElementById("typeFilter"); 
-const sortCriteria = document.getElementById("sortCriteria"); 
-const sortOrder = document.getElementById("sortOrder"); 
 const gallery = document.getElementById("gallery");
 const viewer = document.getElementById("viewer");
 const fileNameDisplay = document.getElementById("fileName");
@@ -483,7 +246,69 @@ const pathDisplay = document.getElementById("currentPathDisplay");
 const downloadBtn = document.getElementById("downloadBtn"); 
 const favBtn = document.getElementById("favBtn");
 
-// --- BLOQUEAR MENÚ CONTEXTUAL NATIVO EN TODA LA PÁGINA ---
+let currentSortCriteria = "name";
+let currentSortOrder = "asc";
+let currentFilter = "all";
+
+const sortBtn = document.getElementById('sortBtn');
+const sortMenu = document.getElementById('sortMenu');
+const sortOptions = document.querySelectorAll('.sort-option');
+
+const filterBtn = document.getElementById('filterBtn');
+const filterBtnText = document.getElementById('filterBtnText');
+const filterMenu = document.getElementById('filterMenu');
+const filterOptions = document.querySelectorAll('.filter-option');
+
+sortBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sortMenu.classList.toggle('show');
+    filterMenu.classList.remove('show');
+});
+
+filterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    filterMenu.classList.toggle('show');
+    sortMenu.classList.remove('show');
+});
+
+document.addEventListener('click', (e) => {
+    if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) sortMenu.classList.remove('show');
+    if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.remove('show');
+});
+
+sortOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const type = option.getAttribute('data-type');
+        const value = option.getAttribute('data-value');
+
+        if (type === 'criteria') {
+            currentSortCriteria = value;
+            document.querySelectorAll('.sort-option.criteria').forEach(el => el.classList.remove('active'));
+        } else if (type === 'order') {
+            currentSortOrder = value;
+            document.querySelectorAll('.sort-option.order').forEach(el => el.classList.remove('active'));
+        }
+        
+        option.classList.add('active');
+        sortMenu.classList.remove('show'); 
+        updateGalleryView();
+    });
+});
+
+filterOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentFilter = option.getAttribute('data-value');
+        filterBtnText.textContent = option.getAttribute('data-label');
+        
+        document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+        option.classList.add('active');
+        filterMenu.classList.remove('show');
+        updateGalleryView();
+    });
+});
+
 document.addEventListener('contextmenu', event => event.preventDefault());
 
 let mediaFiles = []; 
@@ -493,18 +318,21 @@ let rootFolderName = "";
 let currentPath = ""; 
 let allFiles = []; 
 
-// SISTEMA DE FAVORITOS LOCALSTORAGE
+/* SUPER IMPORTANTE: GESTIÓN DE LOCALSTORAGE (FAVS Y VOLUMEN) */
 let favorites = new Set(JSON.parse(localStorage.getItem('myGalleryFavs')) || []);
 const saveFavorites = () => localStorage.setItem('myGalleryFavs', JSON.stringify([...favorites]));
 
+let globalVolume = parseFloat(localStorage.getItem('myGalleryVolume'));
+if (isNaN(globalVolume)) globalVolume = 1; 
+let lastUnmutedVolume = globalVolume > 0 ? globalVolume : 1; 
+
+/* SUPER IMPORTANTE: WEB WORKER PARA RENDERIZADO FLUIDO DE IMÁGENES */
 const workerCode = `
 self.onmessage = async function(e) {
     const { id, file, targetWidth } = e.data;
     try {
         const bitmap = await createImageBitmap(file);
         const scale = Math.min(1, targetWidth / bitmap.width);
-        
-        // LA SOLUCIÓN: Forzar números enteros para evitar el bug de renderizado
         const width = Math.round(bitmap.width * scale);
         const height = Math.round(bitmap.height * scale);
         
@@ -514,7 +342,6 @@ self.onmessage = async function(e) {
         
         const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 });
         self.postMessage({ id, success: true, blob });
-        
         bitmap.close();
     } catch (error) {
         self.postMessage({ id, success: false, error: error.message });
@@ -545,16 +372,12 @@ function generateThumbWithWorker(file, targetWidth) {
     });
 }
 
+/* SUPER IMPORTANTE: PREVENCIÓN DE FUGAS DE MEMORIA RAM */
 function cleanupMemory() {
     if (!allFiles || allFiles.length === 0) return;
-    
     allFiles.forEach(fileData => {
-        if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) {
-            URL.revokeObjectURL(fileData.thumbSrc);
-        }
-        if (fileData.src && fileData.src.startsWith('blob:')) {
-            URL.revokeObjectURL(fileData.src);
-        }
+        if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) URL.revokeObjectURL(fileData.thumbSrc);
+        if (fileData.src && fileData.src.startsWith('blob:')) URL.revokeObjectURL(fileData.src);
     });
     console.log("Memoria optimizada: URLs anteriores revocadas 🧹");
 }
@@ -604,14 +427,22 @@ input.addEventListener("change", function() {
 
     if (rootFolderName) {
         searchInput.disabled = false;
-        typeFilter.disabled = false;
-        sortCriteria.disabled = false; 
-        sortOrder.disabled = false;
+        filterBtn.disabled = false;
+        sortBtn.disabled = false; 
         
         searchInput.value = ""; 
-        typeFilter.value = "all";
-        sortCriteria.value = "name";
-        sortOrder.value = "asc";
+        currentFilter = "all";
+        filterBtnText.textContent = "Todos los archivos";
+        
+        currentSortCriteria = "name";
+        currentSortOrder = "asc";
+
+        document.querySelectorAll('.sort-option').forEach(el => el.classList.remove('active'));
+        document.querySelector('.sort-option.criteria[data-value="name"]').classList.add('active');
+        document.querySelector('.sort-option.order[data-value="asc"]').classList.add('active');
+        
+        document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+        document.querySelector('.filter-option[data-value="all"]').classList.add('active');
         
         renderGallery(rootFolderName);
     }
@@ -625,7 +456,7 @@ function triggerGalleryAnimation() {
 
 function updateGalleryView() {
     const searchTerm = searchInput.value.toLowerCase().trim();
-    if (searchTerm === "" && typeFilter.value !== "favs" && typeFilter.value !== "folder") {
+    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") {
         if (currentPath) renderGallery(currentPath);
     } else {
         renderGlobalSearch(searchTerm);
@@ -633,25 +464,21 @@ function updateGalleryView() {
 }
 
 searchInput.addEventListener("input", updateGalleryView);
-typeFilter.addEventListener("change", updateGalleryView);
-sortCriteria.addEventListener("change", updateGalleryView);
-sortOrder.addEventListener("change", updateGalleryView);
 
 function passesFilter(fileData) {
-    const filter = typeFilter.value;
-    if (filter === "folder") return false; 
-    if (filter === "favs") return favorites.has(fileData.uniquePath);
+    if (currentFilter === "folder") return false; 
+    if (currentFilter === "favs") return favorites.has(fileData.uniquePath);
     
-    if (filter === "all") return true;
-    if (filter === "video" && fileData.type === "video") return true;
-    if (filter === "gif" && fileData.file.type === "image/gif") return true;
-    if (filter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true;
+    if (currentFilter === "all") return true;
+    if (currentFilter === "video" && fileData.type === "video") return true;
+    if (currentFilter === "gif" && fileData.file.type === "image/gif") return true;
+    if (currentFilter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true;
     return false;
 }
 
 function sortFilesArray(filesArray) {
-    const criteria = sortCriteria.value;
-    const isAscending = sortOrder.value === "asc" ? 1 : -1;
+    const criteria = currentSortCriteria;
+    const isAscending = currentSortOrder === "asc" ? 1 : -1;
 
     return filesArray.sort((a, b) => {
         let valA, valB;
@@ -766,9 +593,9 @@ function renderGlobalSearch(searchTerm) {
     mediaFiles = [];
     let indexCounter = 0;
     
-    if (typeFilter.value === "favs" && searchTerm === "") {
+    if (currentFilter === "favs" && searchTerm === "") {
         pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
-    } else if (typeFilter.value === "folder" && searchTerm === "") {
+    } else if (currentFilter === "folder" && searchTerm === "") {
         pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
     } else {
         pathDisplay.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Resultados para: "${searchTerm}"`;
@@ -779,8 +606,11 @@ function renderGlobalSearch(searchTerm) {
     backDiv.innerHTML = `<div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div>`;
     backDiv.onclick = () => { 
         searchInput.value = ""; 
-        if (typeFilter.value === "favs" || typeFilter.value === "folder") {
-            typeFilter.value = "all";
+        if (currentFilter === "favs" || currentFilter === "folder") {
+            currentFilter = "all";
+            filterBtnText.textContent = "Todos los archivos";
+            document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+            document.querySelector('.filter-option[data-value="all"]').classList.add('active');
         }
         updateGalleryView(); 
     };
@@ -788,7 +618,7 @@ function renderGlobalSearch(searchTerm) {
 
     const observer = new IntersectionObserver(handleIntersection, { rootMargin: "1000px" });
 
-    if (typeFilter.value === "all" || typeFilter.value === "folder") {
+    if (currentFilter === "all" || currentFilter === "folder") {
         let allFolders = Object.keys(foldersMap);
         
         let foldersToRender = allFolders.filter(folderPath => {
@@ -800,7 +630,7 @@ function renderGlobalSearch(searchTerm) {
         foldersToRender.sort((a, b) => {
             const nameA = a.split('/').pop().toLowerCase();
             const nameB = b.split('/').pop().toLowerCase();
-            return sortOrder.value === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            return currentSortOrder === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         });
 
         foldersToRender.forEach(folderPath => {
@@ -824,7 +654,10 @@ function renderGlobalSearch(searchTerm) {
 
             folderDiv.onclick = () => {
                 searchInput.value = "";
-                typeFilter.value = "all";
+                currentFilter = "all";
+                filterBtnText.textContent = "Todos los archivos";
+                document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+                document.querySelector('.filter-option[data-value="all"]').classList.add('active');
                 renderGallery(folderPath);
             };
             gallery.appendChild(folderDiv);
@@ -1091,7 +924,7 @@ function openViewer(index) {
         }
         saveFavorites();
         
-        if(typeFilter.value === "favs") {
+        if(currentFilter === "favs") {
             updateGalleryView();
         } else {
             const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`);
@@ -1204,8 +1037,9 @@ function openViewer(index) {
         video.src = file.src; 
         video.autoplay = true;
         video.controls = false; 
+        video.volume = globalVolume;
+        video.muted = globalVolume === 0;
 
-        // Indicador central visual
         const centerIcon = document.createElement("div");
         centerIcon.className = "center-play-icon";
         centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -1262,7 +1096,7 @@ function openViewer(index) {
 
         let isSeekingPreview = false;
         let pendingPreviewTime = null;
-        let lastRenderedTime = -1;
+        let lastRenderedTime = -1; 
 
         thumbVideo.addEventListener('seeked', () => {
             if (thumbVideo.videoWidth > 0) {
@@ -1281,7 +1115,6 @@ function openViewer(index) {
                     visualH = maxVisualSize * (videoH / videoW);
                 }
 
-                // (Medium Quality)
                 const qualityScale = 0.5; 
                 previewCanvas.width = visualW * qualityScale;
                 previewCanvas.height = visualH * qualityScale;
@@ -1293,7 +1126,6 @@ function openViewer(index) {
             }
             isSeekingPreview = false;
             
-            // Throttling
             if (pendingPreviewTime !== null) {
                 const timeToSeek = pendingPreviewTime;
                 pendingPreviewTime = null;
@@ -1336,7 +1168,7 @@ function openViewer(index) {
 
         progContainer.addEventListener('mouseleave', () => {
             progPreview.style.display = 'none';
-            pendingPreviewTime = null; // Cancelar búsquedas pendientes
+            pendingPreviewTime = null; 
         });
 
         let idleTimeout;
@@ -1388,7 +1220,8 @@ function openViewer(index) {
 
         video.addEventListener('loadedmetadata', () => {
             totTimeEl.textContent = formatTime(video.duration);
-            volSlider.value = video.volume;
+            volSlider.value = globalVolume;
+            muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
         });
 
         video.addEventListener('timeupdate', () => {
@@ -1400,7 +1233,6 @@ function openViewer(index) {
         video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); });
         video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); });
 
-        // Sistema de Scrubbing (arrastrar progreso)
         let isScrubbing = false;
         const scrub = (e) => {
             const rect = progContainer.getBoundingClientRect();
@@ -1429,21 +1261,31 @@ function openViewer(index) {
             }
         });
 
-        // Controles de volumen
         const updateVolumeUI = () => {
-            muteBtn.innerHTML = video.muted || video.volume == 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+            muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
             if (video.muted) volSlider.value = 0;
             else volSlider.value = video.volume || 1;
+            
+            globalVolume = video.muted ? 0 : video.volume;
+            localStorage.setItem('myGalleryVolume', globalVolume);
         };
 
         muteBtn.addEventListener('click', () => {
-            video.muted = !video.muted;
+            if (video.muted || video.volume === 0) {
+                video.muted = false;
+                video.volume = lastUnmutedVolume; 
+            } else {
+                lastUnmutedVolume = video.volume; 
+                video.muted = true;
+                video.volume = 0;
+            }
             updateVolumeUI();
         });
         
         volSlider.addEventListener('input', (e) => {
-            video.volume = e.target.value;
-            video.muted = video.volume == 0;
+            video.volume = parseFloat(e.target.value);
+            video.muted = video.volume === 0;
+            if (video.volume > 0) lastUnmutedVolume = video.volume;
             updateVolumeUI();
         });
 
@@ -1484,7 +1326,6 @@ document.addEventListener('keydown', function(e) {
         if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
             const video = viewer.querySelector('video');
             
-            // Si hay un video abierto: atajos multimedia
             if (video) {
                 if(e.key === "ArrowRight") { 
                     e.preventDefault(); 
@@ -1498,21 +1339,32 @@ document.addEventListener('keydown', function(e) {
                     e.preventDefault(); 
                     video.volume = Math.min(1, video.volume + 0.1); 
                     video.muted = false;
+                    if (video.volume > 0) lastUnmutedVolume = video.volume;
+                    
                     const volSlider = viewer.querySelector('#volSlider');
                     if(volSlider) volSlider.value = video.volume;
                     const muteBtn = viewer.querySelector('#muteBtn');
                     if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+                    
+                    globalVolume = video.volume;
+                    localStorage.setItem('myGalleryVolume', globalVolume);
                 }
                 if(e.key === "ArrowDown") { 
                     e.preventDefault(); 
                     video.volume = Math.max(0, video.volume - 0.1); 
                     const volSlider = viewer.querySelector('#volSlider');
                     if(volSlider) volSlider.value = video.volume;
+                    
                     if(video.volume === 0) {
                         video.muted = true;
                         const muteBtn = viewer.querySelector('#muteBtn');
                         if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+                    } else {
+                        lastUnmutedVolume = video.volume;
                     }
+                    
+                    globalVolume = video.volume;
+                    localStorage.setItem('myGalleryVolume', globalVolume);
                 }
                 
                 if(e.code === "Space") {
@@ -1611,10 +1463,9 @@ document.getElementById('ctxFav').addEventListener('click', () => {
         }
     }
     saveFavorites();
-    if(typeFilter.value === "favs") updateGalleryView();
+    if(currentFilter === "favs") updateGalleryView();
 });
 
 </script>
-
 </body>
 </html>
