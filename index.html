@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
 <style>
-/* SUPER IMPORTANTE: NO MODIFICAR EL RENDERIZADO DEL GRID O EL PERFORMANCE CAERÁ */
 body { background: #111; color: white; font-family: Arial; text-align: center; margin: 0; }
 body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 input, select { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
@@ -127,7 +126,6 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
 .copyright-link:hover .version-badge { background: rgba(255, 255, 255, 0.3); }
 
-/* --- ESTILOS PARA EL PERFIL DE GOOGLE --- */
 .google-profile-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 101; cursor: default; user-select: none; }
 #authBtn, #signoutBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; }
 #authBtn { background: white; color: #111; border: none; }
@@ -136,9 +134,6 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 #signoutBtn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
 .google-avatar { width: 38px; height: 38px; border-radius: 50%; background: #222; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); display: none; }
 .google-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-/* NUEVO: Pantalla de carga del Visor */
-#viewerLoading { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; z-index: 2000; flex-direction: column; align-items: center; }
 </style>
 </head>
 <body>
@@ -239,11 +234,6 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     <button class="nav-btn prev" onclick="navigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
     <button class="nav-btn next" onclick="navigate(1)"><i class="fa-solid fa-chevron-right"></i></button>
     <div class="file-name" id="fileName"></div>
-    
-    <div id="viewerLoading">
-        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-        <span style="margin-top:15px;" id="viewerLoadingText">Descargando archivo seguro...</span>
-    </div>
 </div>
 
 <div id="customContextMenu" class="win11-context-menu">
@@ -266,7 +256,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.0</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.2</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -283,7 +273,6 @@ const fileNameDisplay = document.getElementById("fileName");
 const pathDisplay = document.getElementById("currentPathDisplay");
 const downloadBtn = document.getElementById("downloadBtn"); 
 const favBtn = document.getElementById("favBtn");
-const viewerLoading = document.getElementById("viewerLoading");
 
 const authBtn = document.getElementById('authBtn');
 const signoutBtn = document.getElementById('signoutBtn');
@@ -384,7 +373,9 @@ function initGoogleServices() {
 function handleAuthResponse(response) {
     if (response.error !== undefined) throw response;
     isGoogleConnected = true;
+    response.issued_at = Date.now(); 
     localStorage.setItem('drive_token', JSON.stringify(response)); 
+    localStorage.setItem('drive_auto_connect', 'true');
     updateGoogleUI(true);
     getUserProfile(); 
     if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
@@ -392,7 +383,8 @@ function handleAuthResponse(response) {
 
 function handleSignout() {
     const token = JSON.parse(localStorage.getItem('drive_token'));
-    if (token) {
+    localStorage.removeItem('drive_auto_connect');
+    if (token && token.access_token) {
         google.accounts.oauth2.revoke(token.access_token, () => {
             localStorage.removeItem('drive_token');
             cleanupGoogleState();
@@ -413,12 +405,19 @@ function cleanupGoogleState() {
 
 function checkStoredToken() {
     const token = JSON.parse(localStorage.getItem('drive_token'));
-    if (token && token.expires_in && (Date.now() < (new Date(token.issued_at).getTime() + token.expires_in * 1000))) {
+    if (token && token.expires_in && token.issued_at && (Date.now() < (token.issued_at + token.expires_in * 1000))) {
         isGoogleConnected = true;
         updateGoogleUI(true);
         getUserProfile(); 
         if (currentViewSource === 'drive' && !appState.drive.loaded) loadDriveMedia();
-    } else cleanupGoogleState(); 
+    } else {
+        const autoConnect = localStorage.getItem('drive_auto_connect');
+        if (autoConnect === 'true' && tokenClient) {
+            tokenClient.requestAccessToken({prompt: ''}); 
+        } else {
+            cleanupGoogleState(); 
+        }
+    }
 }
 
 function updateGoogleUI(connected) {
@@ -716,7 +715,7 @@ const handleIntersection = (entries, obs) => {
         
         if (entry.isIntersecting) { 
             
-            // SUPER IMPORTANTE: SOLUCIÓN A MINIATURAS ROTAS DE DRIVE
+            // Si es de Google Drive, no intentes hacer el WebWorker, usa el Thumbnail Oficial
             if (fileData.uniquePath && fileData.uniquePath.startsWith('drive_')) {
                 if (fileData.thumbSrc) {
                     mediaElement.src = fileData.thumbSrc;
@@ -784,55 +783,46 @@ function formatTime(seconds) { seconds = Math.floor(seconds); const m = Math.flo
 
 let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
 
-/* SUPER IMPORTANTE: NUEVA ARQUITECTURA DE CARGA DE VISOR PARA EVITAR PANTALLAS NEGRAS */
-async function openViewer(index) {
+/* SUPER IMPORTANTE: LÓGICA DE APERTURA DEL VISOR (DIFERENCIA ENTRE DRIVE Y LOCAL) */
+function openViewer(index) {
     if(mediaFiles.length === 0) return; currentIndex = index; const file = mediaFiles[currentIndex];
-    viewer.querySelectorAll('.viewer-content, .custom-video-wrapper').forEach(el => el.remove());
+    viewer.querySelectorAll('.viewer-content, .custom-video-wrapper, iframe').forEach(el => el.remove());
     viewer.style.display = "flex"; fileNameDisplay.textContent = file.name;
-    viewerLoading.style.display = "flex"; 
     
     scale = 1; currentTranslateX = currentTranslateY = xOffset = yOffset = 0; isDragging = false;
-    let mediaUrl = "";
-
-    if (currentViewSource === 'local') {
-        if (!file.src) file.src = URL.createObjectURL(file.file);
-        mediaUrl = file.src;
-        viewerLoading.style.display = "none";
-        renderViewerMedia(file, mediaUrl);
-    } else if (currentViewSource === 'drive') {
-        if (file.blobSrc) {
-            mediaUrl = file.blobSrc;
-            viewerLoading.style.display = "none";
-            renderViewerMedia(file, mediaUrl);
-        } else {
-            try {
-                const token = JSON.parse(localStorage.getItem('drive_token')).access_token;
-                const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (!res.ok) throw new Error("Error HTTP " + res.status);
-                const blob = await res.blob();
-                file.blobSrc = URL.createObjectURL(blob);
-                mediaUrl = file.blobSrc;
-                viewerLoading.style.display = "none";
-                if (viewer.style.display === "flex" && mediaFiles[currentIndex] === file) {
-                    renderViewerMedia(file, mediaUrl);
-                }
-            } catch(e) {
-                viewerLoading.innerHTML = "<i class='fa-solid fa-triangle-exclamation fa-2x'></i><span style='margin-top:15px;'>Error al descargar archivo de Google</span>";
-            }
-        }
-    }
-}
-
-function renderViewerMedia(file, mediaUrl) {
-    downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl;
-    downloadBtn.download = file.name;
+    
     const isFav = favorites.has(file.uniquePath); favBtn.className = isFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isFav ? "#ff4d4d" : "white";
     favBtn.onclick = () => { if (favorites.has(file.uniquePath)) favorites.delete(file.uniquePath); else favorites.add(file.uniquePath); saveFavorites(); if(currentFilter === "favs") updateGalleryView(); else { const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`); if(targetImg) { const targetThumbDiv = targetImg.closest('.item'); const existingHeart = targetThumbDiv.querySelector('.fav-badge'); if (favorites.has(file.uniquePath) && !existingHeart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetThumbDiv.appendChild(fb); } else if (!favorites.has(file.uniquePath) && existingHeart) existingHeart.remove(); } } const isNowFav = favorites.has(file.uniquePath); favBtn.className = isNowFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; };
+
+    if (currentViewSource === 'drive') {
+        // SUPER IMPORTANTE: REPRODUCTOR NATIVO DE GOOGLE PARA EVITAR LAG Y ERRORES DE CORS
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://drive.google.com/file/d/${file.id}/preview`;
+        iframe.className = "viewer-content";
+        iframe.style.border = "none";
+        iframe.style.width = "85vw";
+        iframe.style.height = "85vh";
+        iframe.style.maxWidth = "calc(100vw - 160px)";
+        iframe.style.borderRadius = "12px";
+        iframe.style.backgroundColor = "#000";
+        iframe.setAttribute('allowfullscreen', 'true');
+
+        viewer.insertBefore(iframe, fileNameDisplay);
+
+        downloadBtn.href = file.downloadUrl || `https://drive.google.com/uc?id=${file.id}&export=download`;
+        downloadBtn.download = file.name;
+        return; // Detenemos la ejecución aquí, no necesitamos el reproductor local
+    }
+
+    // --- LÓGICA LOCAL INTACTA (TU REPRODUCTOR PREMIUM) ---
+    if (!file.src) file.src = URL.createObjectURL(file.file);
+    let mediaUrl = file.src;
+
+    downloadBtn.href = mediaUrl;
+    downloadBtn.download = file.name;
     
     const setupInteractive = targetEl => { targetEl.ondragstart = () => false; targetEl.style.willChange = 'transform'; targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`; let animationFrameId; targetEl.onpointerdown = e => { if (e.target.closest('.custom-controls')) return; initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; startClickX = e.clientX; startClickY = e.clientY; isMouseDown = true; isDragging = false; targetEl.setPointerCapture(e.pointerId); }; targetEl.onpointermove = e => { if (!isMouseDown) return; e.preventDefault(); if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) { isDragging = true; targetEl.classList.add('is-dragging'); } if (isDragging) { currentTranslateX = e.clientX - initialX; currentTranslateY = e.clientY - initialY; if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } }; const dragEnd = e => { if (!isMouseDown) return; isMouseDown = false; if (isDragging) { xOffset = currentTranslateX; yOffset = currentTranslateY; targetEl.classList.remove('is-dragging'); } if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId); }; targetEl.onpointerup = dragEnd; targetEl.onpointercancel = dragEnd; targetEl.onwheel = e => { if (e.target.closest('.custom-controls')) return; e.preventDefault(); scale += e.deltaY * -0.002; scale = Math.min(Math.max(0.5, scale), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); }; };
-    // AQUI SE ENCUENTRA "const qualityScale"
+    
     if (file.type === "image") { let element = document.createElement("img"); element.src = mediaUrl; element.className = "viewer-content"; viewer.insertBefore(element, fileNameDisplay); setupInteractive(element); element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; } 
     else { const wrapper = document.createElement("div"); wrapper.className = "custom-video-wrapper paused"; const video = document.createElement("video"); video.src = mediaUrl; video.autoplay = true; video.controls = false; video.volume = globalVolume; video.muted = globalVolume === 0; const centerIcon = document.createElement("div"); centerIcon.className = "center-play-icon"; centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>'; const controlsDiv = document.createElement("div"); controlsDiv.className = "custom-controls"; controlsDiv.innerHTML = `<div class="progress-container" id="progContainer"><div class="progress-bar" id="progBar"></div><div class="progress-preview" id="progPreview"><canvas id="previewCanvas"></canvas><div class="progress-preview-time" id="previewTime">0:00</div></div></div><div class="controls-row"><button id="playBtn" title="Reproducir/Pausar"><i class="fa-solid fa-pause"></i></button><div class="volume-container"><button id="muteBtn" title="Silenciar"><i class="fa-solid fa-volume-high"></i></button><input type="range" id="volSlider" min="0" max="1" step="0.05" value="1"></div><div class="time-display"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div><div style="flex-grow: 1;"></div><button id="fullBtn" title="Pantalla Completa"><i class="fa-solid fa-expand"></i></button></div>`; wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); viewer.insertBefore(wrapper, fileNameDisplay); setupInteractive(wrapper); const playBtn = wrapper.querySelector('#playBtn'), muteBtn = wrapper.querySelector('#muteBtn'), fullBtn = wrapper.querySelector('#fullBtn'), progContainer = wrapper.querySelector('#progContainer'), progBar = wrapper.querySelector('#progBar'), currTimeEl = wrapper.querySelector('#currTime'), totTimeEl = wrapper.querySelector('#totTime'), volSlider = wrapper.querySelector('#volSlider'), progPreview = wrapper.querySelector('#progPreview'), previewCanvas = wrapper.querySelector('#previewCanvas'), previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true }), previewTimeEl = wrapper.querySelector('#previewTime'), thumbVideo = document.createElement('video'); thumbVideo.src = mediaUrl; thumbVideo.muted = true; thumbVideo.preload = 'auto'; let isSeekingPreview = false, pendingPreviewTime = null, lastRenderedTime = -1; thumbVideo.addEventListener('seeked', () => { if (thumbVideo.videoWidth > 0) { const videoW = thumbVideo.videoWidth, videoH = thumbVideo.videoHeight, isVertical = videoH > videoW; const maxVisualSize = 200; let visualW, visualH; if (isVertical) { visualH = maxVisualSize; visualW = maxVisualSize * (videoW / videoH); } else { visualW = maxVisualSize; visualH = maxVisualSize * (videoH / videoW); } const qualityScale = 0.5; previewCanvas.width = visualW * qualityScale; previewCanvas.height = visualH * qualityScale; previewCanvas.style.width = `${visualW}px`; previewCanvas.style.height = `${visualH}px`; previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height); } isSeekingPreview = false; if (pendingPreviewTime !== null) { const timeToSeek = pendingPreviewTime; pendingPreviewTime = null; setTimeout(() => triggerPreviewSeek(timeToSeek), 40); } }); const triggerPreviewSeek = time => { const roundedTime = Math.floor(time * 2) / 2; if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return; if (isSeekingPreview) { pendingPreviewTime = roundedTime; return; } isSeekingPreview = true; lastRenderedTime = roundedTime; thumbVideo.currentTime = roundedTime; }; progContainer.addEventListener('mousemove', e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); const hoverTime = pos * video.duration; let previewX = e.clientX - rect.left; const boxWidth = 170; if (previewX < boxWidth / 2) previewX = boxWidth / 2; if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2; progPreview.style.left = `${previewX}px`; progPreview.style.display = 'flex'; previewTimeEl.textContent = formatTime(hoverTime); triggerPreviewSeek(hoverTime); }); progContainer.addEventListener('mouseleave', () => { progPreview.style.display = 'none'; pendingPreviewTime = null; }); let idleTimeout; const resetIdleTimer = () => { wrapper.classList.remove('idle'); clearTimeout(idleTimeout); if (!video.paused) idleTimeout = setTimeout(() => wrapper.classList.add('idle'), 2500); }; wrapper.addEventListener('mousemove', resetIdleTimer); wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); }); const showCenterIcon = iconClass => { centerIcon.innerHTML = `<i class="fa-solid ${iconClass}"></i>`; wrapper.classList.add('show-center-icon'); setTimeout(() => wrapper.classList.remove('show-center-icon'), 500); }; const togglePlay = () => { if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); showCenterIcon('fa-play'); resetIdleTimer(); } else { video.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); showCenterIcon('fa-pause'); clearTimeout(idleTimeout); wrapper.classList.remove('idle'); } }; video.onclick = e => { if (!isDragging) togglePlay(); }; playBtn.onclick = togglePlay; video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; video.addEventListener('loadedmetadata', () => { totTimeEl.textContent = formatTime(video.duration); volSlider.value = globalVolume; muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; }); video.addEventListener('timeupdate', () => { currTimeEl.textContent = formatTime(video.currentTime); const percent = (video.currentTime / video.duration) * 100; progBar.style.width = `${percent}%`; }); video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); }); video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); }); let isScrubbing = false; const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; progContainer.addEventListener('mousedown', e => { isScrubbing = true; progContainer.classList.add('dragging'); scrub(e); video.pause(); }); document.addEventListener('mousemove', e => { if (isScrubbing) scrub(e); }); document.addEventListener('mouseup', () => { if (isScrubbing) { isScrubbing = false; progContainer.classList.remove('dragging'); if (playBtn.innerHTML.includes('pause')) video.play(); } }); const updateVolumeUI = () => { muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; if (video.muted) volSlider.value = 0; else volSlider.value = video.volume || 1; globalVolume = video.muted ? 0 : video.volume; localStorage.setItem('myGalleryVolume', globalVolume); }; muteBtn.addEventListener('click', () => { if (video.muted || video.volume === 0) { video.muted = false; video.volume = lastUnmutedVolume; } else { lastUnmutedVolume = video.volume; video.muted = true; video.volume = 0; } updateVolumeUI(); }); volSlider.addEventListener('input', e => { video.volume = parseFloat(e.target.value); video.muted = video.volume === 0; if (video.volume > 0) lastUnmutedVolume = video.volume; updateVolumeUI(); }); fullBtn.addEventListener('click', () => { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); }); }
 }
@@ -840,23 +830,41 @@ function renderViewerMedia(file, mediaUrl) {
 function navigate(direction) { currentIndex += direction; if(currentIndex >= mediaFiles.length) currentIndex = 0; if(currentIndex < 0) currentIndex = mediaFiles.length - 1; openViewer(currentIndex); }
 function closeViewer() { 
     viewer.style.display = "none"; 
-    viewer.querySelectorAll('.viewer-content, .custom-video-wrapper').forEach(el => el.remove()); 
-    viewerLoading.style.display = "none";
-    viewerLoading.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x"></i><span style="margin-top:15px;" id="viewerLoadingText">Descargando archivo seguro...</span>`;
+    viewer.querySelectorAll('.viewer-content, .custom-video-wrapper, iframe').forEach(el => el.remove()); 
 }
 viewer.addEventListener('click', e => { if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) { if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) closeViewer(); } });
-document.addEventListener('keydown', e => { if(viewer.style.display === "flex") { if(e.key === "Escape") closeViewer(); if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') { const video = viewer.querySelector('video'); if (video) { if(e.key === "ArrowRight") { e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 5); } if(e.key === "ArrowLeft") { e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 5); } if(e.key === "ArrowUp") { e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); video.muted = false; if (video.volume > 0) lastUnmutedVolume = video.volume; const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; const muteBtn = viewer.querySelector('#muteBtn'); if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; globalVolume = video.volume; localStorage.setItem('myGalleryVolume', globalVolume); } if(e.key === "ArrowDown") { e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; if(video.volume === 0) { video.muted = true; const muteBtn = viewer.querySelector('#muteBtn'); if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; } else lastUnmutedVolume = video.volume; globalVolume = video.volume; localStorage.setItem('myGalleryVolume', globalVolume); } if(e.code === "Space") { e.preventDefault(); if (video.paused) video.play(); else video.pause(); } } else { if(e.key === "ArrowRight") navigate(1); if(e.key === "ArrowLeft") navigate(-1); } } } });
+document.addEventListener('keydown', e => { 
+    if(viewer.style.display === "flex") { 
+        if(e.key === "Escape") closeViewer(); 
+        if(document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') { 
+            const video = viewer.querySelector('video'); 
+            if (video) { 
+                if(e.key === "ArrowRight") { e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 5); } 
+                if(e.key === "ArrowLeft") { e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 5); } 
+                if(e.key === "ArrowUp") { e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); video.muted = false; if (video.volume > 0) lastUnmutedVolume = video.volume; const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; const muteBtn = viewer.querySelector('#muteBtn'); if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; globalVolume = video.volume; localStorage.setItem('myGalleryVolume', globalVolume); } 
+                if(e.key === "ArrowDown") { e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; if(video.volume === 0) { video.muted = true; const muteBtn = viewer.querySelector('#muteBtn'); if(muteBtn) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; } else lastUnmutedVolume = video.volume; globalVolume = video.volume; localStorage.setItem('myGalleryVolume', globalVolume); } 
+                if(e.code === "Space") { e.preventDefault(); if (video.paused) video.play(); else video.pause(); } 
+            } else { 
+                if(e.key === "ArrowRight") navigate(1); if(e.key === "ArrowLeft") navigate(-1); 
+            } 
+        } 
+    } 
+});
 
 const ctxMenu = document.getElementById("customContextMenu"); const ctxFavIcon = document.getElementById("ctxFavIcon"); const ctxFavText = document.getElementById("ctxFavText"); let contextMenuTarget = null;
 function closeContextMenu() { ctxMenu.style.display = "none"; contextMenuTarget = null; }
 document.addEventListener('click', closeContextMenu); document.addEventListener('scroll', closeContextMenu);
 
-/* SUPER IMPORTANTE: LOGICA DE DESCARGA Y COPIA SEGURA PARA DRIVE */
+/* SUPER IMPORTANTE: LOGICA DE DESCARGA Y COPIA SEGURA */
 document.getElementById('ctxCopy').addEventListener('click', async () => { 
     if (!contextMenuTarget) return; 
-    const file = contextMenuTarget.fileData; 
+    const fileData = contextMenuTarget.fileData; 
     try { 
-        if (file.type === 'image') { 
+        if (currentViewSource === 'drive') {
+            alert("Por políticas de seguridad de Google, las imágenes de Drive no se pueden copiar al portapapeles directamente. Por favor usa la opción 'Descargar'.");
+            return;
+        }
+        if (fileData.type === 'image') { 
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.onload = () => {
@@ -864,12 +872,7 @@ document.getElementById('ctxCopy').addEventListener('click', async () => {
                 const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
                 canvas.toBlob(async blob => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); alert("¡Imagen copiada!"); } catch (err) { alert("Navegador no soporta copiar imágenes de esta forma."); } }, 'image/png');
             };
-            if (currentViewSource === 'drive') {
-                const token = JSON.parse(localStorage.getItem('drive_token')).access_token;
-                img.src = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&access_token=${token}`;
-            } else {
-                img.src = file.src || URL.createObjectURL(file.file);
-            }
+            img.src = fileData.src || URL.createObjectURL(fileData.file);
         } else alert("Solo imágenes."); 
     } catch(e) { console.error(e); } 
 });
@@ -893,7 +896,7 @@ document.getElementById('ctxDownload').addEventListener('click', () => {
     const fd = contextMenuTarget.fileData; 
     let url;
     if (currentViewSource === 'drive') {
-        url = fd.downloadUrl || `https://www.googleapis.com/drive/v3/files/${fd.id}?alt=media&access_token=${JSON.parse(localStorage.getItem('drive_token')).access_token}`;
+        url = fd.downloadUrl || `https://drive.google.com/uc?id=${fd.id}&export=download`;
     } else {
         url = fd.src || URL.createObjectURL(fd.file); 
     }
