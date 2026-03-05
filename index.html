@@ -26,14 +26,33 @@ img, video {
     -webkit-user-drag: none;
 }
 
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background: rgba(17, 17, 17, 0.85); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(15px); /* Efecto cristal / desenfoque al hacer scroll */
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 100; /* Asegura que pase por encima de las fotos de la galería */
+    padding: 15px 0 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Línea divisoria muy sutil */
+    margin-bottom: 20px;
+}
+
 .controls-container {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    margin: 20px 0;
+    margin: 0 0 15px 0; /* Se ajustó para encajar perfecto en la barra */
     flex-wrap: wrap; 
     padding: 0 20px;
+}
+
+#currentPathDisplay { 
+    font-size: 18px; 
+    color: #ccc; 
+    margin-bottom: 5px; /* Se redujo el espacio inferior para que no estorbe */
+    font-weight: bold; 
 }
 
 button { 
@@ -382,35 +401,37 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 
 <input type="file" id="fileInput" webkitdirectory multiple hidden>
 
-<div class="controls-container">
-    <button onclick="document.getElementById('fileInput').click()">
-        <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
-    </button>
-    
-    <select id="sortCriteria" class="control-select" disabled>
-        <option value="name">Ordenar por Nombre</option>
-        <option value="date">Ordenar por Fecha</option>
-        <option value="size">Ordenar por Tamaño</option>
-        <option value="type">Ordenar por Tipo</option>
-    </select>
+<div class="sticky-header">
+    <div class="controls-container">
+        <button onclick="document.getElementById('fileInput').click()">
+            <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
+        </button>
+        
+        <select id="sortCriteria" class="control-select" disabled>
+            <option value="name">Ordenar por Nombre</option>
+            <option value="date">Ordenar por Fecha</option>
+            <option value="size">Ordenar por Tamaño</option>
+            <option value="type">Ordenar por Tipo</option>
+        </select>
 
-    <select id="sortOrder" class="control-select" disabled>
-        <option value="asc">Ascendente (A-Z / Menor-Mayor)</option>
-        <option value="desc">Descendente (Z-A / Mayor-Menor)</option>
-    </select>
+        <select id="sortOrder" class="control-select" disabled>
+            <option value="asc">Ascendente (A-Z / Menor-Mayor)</option>
+            <option value="desc">Descendente (Z-A / Mayor-Menor)</option>
+        </select>
 
-    <select id="typeFilter" class="control-select" disabled>
-        <option value="all">Todos los archivos</option>
-        <option value="image">Solo Imágenes</option>
-        <option value="video">Solo Videos</option>
-        <option value="gif">Solo GIFs</option>
-        <option value="favs">Solo Favoritos</option>
-    </select>
+        <select id="typeFilter" class="control-select" disabled>
+            <option value="all">Todos los archivos</option>
+            <option value="image">Solo Imágenes</option>
+            <option value="video">Solo Videos</option>
+            <option value="gif">Solo GIFs</option>
+            <option value="favs">Solo Favoritos</option>
+        </select>
 
-    <input type="text" id="searchInput" placeholder="Buscar..." disabled>
+        <input type="text" id="searchInput" placeholder="Buscar..." disabled>
+    </div>
+
+    <div id="currentPathDisplay">Esperando carpeta...</div>
 </div>
-
-<div id="currentPathDisplay">Esperando carpeta...</div>
 
 <div class="grid" id="gallery"></div>
 
@@ -446,7 +467,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.3</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v1.4</span>
 </a>
 
 <script>
