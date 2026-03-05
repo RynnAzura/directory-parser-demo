@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
 <style>
+/* SUPER IMPORTANTE: NO MODIFICAR EL RENDERIZADO DEL GRID O EL PERFORMANCE CAERÁ */
 body { background: #111; color: white; font-family: Arial; text-align: center; margin: 0; }
 body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 input, select { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
@@ -126,14 +127,25 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
 .copyright-link:hover .version-badge { background: rgba(255, 255, 255, 0.3); }
 
-.google-profile-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 101; cursor: default; user-select: none; }
-#authBtn, #signoutBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; }
-#authBtn { background: white; color: #111; border: none; }
+/* --- NUEVOS ESTILOS PARA EL PERFIL DE GOOGLE --- */
+.google-profile-container { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: default; user-select: none; }
+#authBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight:bold; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; background: white; color: #111; border: none; }
 #authBtn:hover { background: #eee; }
-#signoutBtn { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.1); }
-#signoutBtn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
-.google-avatar { width: 38px; height: 38px; border-radius: 50%; background: #222; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); display: none; }
+.google-avatar-wrapper { position: relative; cursor: pointer; border-radius: 50%; transition: transform 0.2s; }
+.google-avatar-wrapper:hover { transform: scale(1.05); }
+.google-avatar { width: 40px; height: 40px; border-radius: 50%; background: #222; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); display: block; }
 .google-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.google-profile-menu { position: absolute; top: calc(100% + 15px); right: 0; z-index: 1000; display: none; flex-direction: column; background: rgba(35, 35, 35, 0.95); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); min-width: 250px; text-align: center; opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; cursor: default; }
+.google-profile-menu.show { display: flex; opacity: 1; transform: translateY(0); }
+.google-profile-menu::before { content: ''; position: absolute; top: -8px; right: 15px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 8px solid rgba(35, 35, 35, 0.95); }
+.menu-user-info { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; }
+.menu-big-avatar { width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.1); overflow: hidden; }
+.menu-big-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-details { display: flex; flex-direction: column; gap: 2px; }
+.user-name { font-size: 16px; font-weight: bold; color: white; margin:0;}
+.user-email { font-size: 13px; color: #aaa; margin:0;}
+.menu-signout-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #ff6b6b; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.3s, border-color 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.menu-signout-btn:hover { background: rgba(255, 77, 77, 0.1); border-color: rgba(255, 77, 77, 0.2); }
 </style>
 </head>
 <body>
@@ -142,12 +154,28 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     <button id="authBtn" style="display: none;">
         <i class="fa-brands fa-google"></i> Conectar Drive
     </button>
-    <div class="google-avatar" id="googleAvatar">
-        <img src="" alt="Avatar">
+    
+    <div class="google-avatar-wrapper" id="googleAvatarWrapper" style="display: none;">
+        <div class="google-avatar" id="googleAvatar">
+            <img src="" alt="Avatar" id="googleAvatarImg">
+        </div>
+        
+        <div class="google-profile-menu" id="googleProfileMenu">
+            <div class="menu-user-info">
+                <div class="menu-big-avatar">
+                    <img src="" alt="Big Avatar" id="menuBigAvatar">
+                </div>
+                <div class="user-details">
+                    <p class="user-name" id="userName">Cargando...</p>
+                    <p class="user-email" id="userEmail"></p>
+                </div>
+            </div>
+            <div class="dropdown-divider" style="margin: 0 0 15px 0;"></div>
+            <button class="menu-signout-btn" id="realSignoutBtn">
+                <i class="fa-solid fa-power-off"></i> Cerrar sesión
+            </button>
+        </div>
     </div>
-    <button id="signoutBtn" style="display: none; padding: 6px 10px;" title="Cerrar sesión">
-        <i class="fa-solid fa-power-off"></i>
-    </button>
 </div>
 
 <h1>Mi Galería Local</h1>
@@ -234,6 +262,11 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     <button class="nav-btn prev" onclick="navigate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
     <button class="nav-btn next" onclick="navigate(1)"><i class="fa-solid fa-chevron-right"></i></button>
     <div class="file-name" id="fileName"></div>
+
+    <div id="viewerLoading" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; z-index: 2000; flex-direction: column; align-items: center;">
+        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+        <span style="margin-top:15px;" id="viewerLoadingText">Cargando archivo seguro...</span>
+    </div>
 </div>
 
 <div id="customContextMenu" class="win11-context-menu">
@@ -256,14 +289,14 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" title="Ver en GitHub">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.2</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge">v2.3</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script>
 const CLIENT_ID = '731434427932-cnghf0huo1fsi27mg64dssl5q9mno82p.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile';
+const SCOPES = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 
 const input = document.getElementById("fileInput");
 const searchInput = document.getElementById("searchInput");
@@ -275,9 +308,15 @@ const downloadBtn = document.getElementById("downloadBtn");
 const favBtn = document.getElementById("favBtn");
 
 const authBtn = document.getElementById('authBtn');
-const signoutBtn = document.getElementById('signoutBtn');
-const googleAvatar = document.getElementById('googleAvatar');
-const googleAvatarImg = googleAvatar.querySelector('img');
+// NUEVOS SELECTORES PARA EL MENÚ DE PERFIL
+const avatarWrapper = document.getElementById('googleAvatarWrapper');
+const profileMenu = document.getElementById('googleProfileMenu');
+const googleAvatarImg = document.getElementById('googleAvatarImg');
+const menuBigAvatar = document.getElementById('menuBigAvatar');
+const userNameDisplay = document.getElementById('userName');
+const userEmailDisplay = document.getElementById('userEmail');
+const realSignoutBtn = document.getElementById('realSignoutBtn');
+
 const sourceSelect = document.getElementById('sourceSelect');
 const fileInputBtn = document.getElementById('fileInputBtn');
 
@@ -366,7 +405,21 @@ function initGoogleServices() {
         callback: handleAuthResponse,
     });
     authBtn.addEventListener('click', () => tokenClient.requestAccessToken());
-    signoutBtn.addEventListener('click', handleSignout);
+    
+    // NUEVA LÓGICA PARA EL MENÚ DESPLEGABLE
+    avatarWrapper.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!avatarWrapper.contains(e.target) && profileMenu.classList.contains('show')) {
+            profileMenu.classList.remove('show');
+        }
+    });
+    
+    realSignoutBtn.addEventListener('click', handleSignout);
+
     checkStoredToken(); 
 }
 
@@ -382,6 +435,7 @@ function handleAuthResponse(response) {
 }
 
 function handleSignout() {
+    profileMenu.classList.remove('show'); // Ocultar el menú al cerrar
     const token = JSON.parse(localStorage.getItem('drive_token'));
     localStorage.removeItem('drive_auto_connect');
     if (token && token.access_token) {
@@ -396,7 +450,7 @@ function cleanupGoogleState() {
     isGoogleConnected = false;
     appState.drive.loaded = false;
     authBtn.style.display = "flex";
-    googleAvatar.style.display = signoutBtn.style.display = "none";
+    avatarWrapper.style.display = "none";
     if (currentViewSource === 'drive') {
         sourceSelect.value = "local";
         sourceSelect.dispatchEvent(new Event('change'));
@@ -423,10 +477,10 @@ function checkStoredToken() {
 function updateGoogleUI(connected) {
     if (connected) {
         authBtn.style.display = "none";
-        googleAvatar.style.display = signoutBtn.style.display = "flex";
+        avatarWrapper.style.display = "block"; 
     } else {
         authBtn.style.display = "flex";
-        googleAvatar.style.display = signoutBtn.style.display = "none";
+        avatarWrapper.style.display = "none";
     }
 }
 
@@ -438,8 +492,10 @@ async function getUserProfile() {
         const profile = await response.json();
         if (profile.picture) {
             googleAvatarImg.src = profile.picture;
-            googleAvatar.title = profile.name || "";
+            menuBigAvatar.src = profile.picture;
         }
+        userNameDisplay.textContent = profile.name || "Usuario";
+        userEmailDisplay.textContent = profile.email || "";
     } catch (e) {}
 }
 
@@ -714,14 +770,9 @@ const handleIntersection = (entries, obs) => {
         if (!fileData) return; 
         
         if (entry.isIntersecting) { 
-            
-            // Si es de Google Drive, no intentes hacer el WebWorker, usa el Thumbnail Oficial
             if (fileData.uniquePath && fileData.uniquePath.startsWith('drive_')) {
-                if (fileData.thumbSrc) {
-                    mediaElement.src = fileData.thumbSrc;
-                } else {
-                    mediaElement.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='14'>Sin Vista Previa</text></svg>";
-                }
+                if (fileData.thumbSrc) mediaElement.src = fileData.thumbSrc;
+                else mediaElement.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='14'>Sin Vista Previa</text></svg>";
                 mediaElement.dataset.loaded = "true";
                 return;
             }
@@ -741,8 +792,7 @@ const handleIntersection = (entries, obs) => {
 };
 
 function renderGlobalSearch(searchTerm) { 
-    triggerGalleryAnimation(); gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0;
-    const state = getState();
+    triggerGalleryAnimation(); gallery.innerHTML = ""; mediaFiles = []; let indexCounter = 0; const state = getState();
 
     if (currentFilter === "favs" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
     else if (currentFilter === "folder" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
@@ -783,42 +833,70 @@ function formatTime(seconds) { seconds = Math.floor(seconds); const m = Math.flo
 
 let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
 
-/* SUPER IMPORTANTE: LÓGICA DE APERTURA DEL VISOR (DIFERENCIA ENTRE DRIVE Y LOCAL) */
-function openViewer(index) {
+/* SUPER IMPORTANTE: NUEVA ARQUITECTURA DE VISOR SEGURO Y EFICIENTE */
+async function openViewer(index) {
     if(mediaFiles.length === 0) return; currentIndex = index; const file = mediaFiles[currentIndex];
     viewer.querySelectorAll('.viewer-content, .custom-video-wrapper, iframe').forEach(el => el.remove());
     viewer.style.display = "flex"; fileNameDisplay.textContent = file.name;
     
     scale = 1; currentTranslateX = currentTranslateY = xOffset = yOffset = 0; isDragging = false;
     
+    const vLoad = document.getElementById("viewerLoading");
+    if(vLoad) vLoad.style.display = "flex"; 
+    
     const isFav = favorites.has(file.uniquePath); favBtn.className = isFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isFav ? "#ff4d4d" : "white";
     favBtn.onclick = () => { if (favorites.has(file.uniquePath)) favorites.delete(file.uniquePath); else favorites.add(file.uniquePath); saveFavorites(); if(currentFilter === "favs") updateGalleryView(); else { const targetImg = gallery.querySelector(`img.thumb[data-index="${file.index}"]`); if(targetImg) { const targetThumbDiv = targetImg.closest('.item'); const existingHeart = targetThumbDiv.querySelector('.fav-badge'); if (favorites.has(file.uniquePath) && !existingHeart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetThumbDiv.appendChild(fb); } else if (!favorites.has(file.uniquePath) && existingHeart) existingHeart.remove(); } } const isNowFav = favorites.has(file.uniquePath); favBtn.className = isNowFav ? "fav-btn fa-solid fa-heart" : "fav-btn fa-regular fa-heart"; favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; };
 
-    if (currentViewSource === 'drive') {
-        // SUPER IMPORTANTE: REPRODUCTOR NATIVO DE GOOGLE PARA EVITAR LAG Y ERRORES DE CORS
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://drive.google.com/file/d/${file.id}/preview`;
-        iframe.className = "viewer-content";
-        iframe.style.border = "none";
-        iframe.style.width = "85vw";
-        iframe.style.height = "85vh";
-        iframe.style.maxWidth = "calc(100vw - 160px)";
-        iframe.style.borderRadius = "12px";
-        iframe.style.backgroundColor = "#000";
-        iframe.setAttribute('allowfullscreen', 'true');
+    let mediaUrl = "";
 
-        viewer.insertBefore(iframe, fileNameDisplay);
+    if (currentViewSource === 'local') {
+        if (!file.src) file.src = URL.createObjectURL(file.file);
+        mediaUrl = file.src;
+        if(vLoad) vLoad.style.display = "none";
+        renderViewerMedia(file, mediaUrl);
+    } else if (currentViewSource === 'drive') {
+        if (file.type === "video") {
+            if(vLoad) vLoad.style.display = "none";
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://drive.google.com/file/d/${file.id}/preview`;
+            iframe.className = "viewer-content";
+            iframe.style.border = "none";
+            iframe.style.width = "85vw";
+            iframe.style.height = "85vh";
+            iframe.style.maxWidth = "calc(100vw - 160px)";
+            iframe.style.borderRadius = "12px";
+            iframe.style.backgroundColor = "#000";
+            iframe.setAttribute('allowfullscreen', 'true');
 
-        downloadBtn.href = file.downloadUrl || `https://drive.google.com/uc?id=${file.id}&export=download`;
-        downloadBtn.download = file.name;
-        return; // Detenemos la ejecución aquí, no necesitamos el reproductor local
+            viewer.insertBefore(iframe, fileNameDisplay);
+
+            downloadBtn.href = file.downloadUrl || `https://drive.google.com/uc?id=${file.id}&export=download`;
+            downloadBtn.download = file.name;
+        } else {
+            const token = JSON.parse(localStorage.getItem('drive_token')).access_token;
+            if (file.blobSrc) {
+                mediaUrl = file.blobSrc;
+                if(vLoad) vLoad.style.display = "none";
+                renderViewerMedia(file, mediaUrl);
+            } else {
+                try {
+                    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, { headers: { 'Authorization': 'Bearer ' + token } });
+                    if (!res.ok) throw new Error("Error HTTP");
+                    const blob = await res.blob();
+                    file.blobSrc = URL.createObjectURL(blob);
+                    mediaUrl = file.blobSrc;
+                    if(vLoad) vLoad.style.display = "none";
+                    if (viewer.style.display === "flex" && mediaFiles[currentIndex] === file) renderViewerMedia(file, mediaUrl);
+                } catch(e) {
+                    if(vLoad) vLoad.innerHTML = "<i class='fa-solid fa-triangle-exclamation fa-2x'></i><span style='margin-top:15px;'>Error al descargar imagen</span>";
+                }
+            }
+        }
     }
+}
 
-    // --- LÓGICA LOCAL INTACTA (TU REPRODUCTOR PREMIUM) ---
-    if (!file.src) file.src = URL.createObjectURL(file.file);
-    let mediaUrl = file.src;
-
-    downloadBtn.href = mediaUrl;
+function renderViewerMedia(file, mediaUrl) {
+    downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl;
     downloadBtn.download = file.name;
     
     const setupInteractive = targetEl => { targetEl.ondragstart = () => false; targetEl.style.willChange = 'transform'; targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`; let animationFrameId; targetEl.onpointerdown = e => { if (e.target.closest('.custom-controls')) return; initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; startClickX = e.clientX; startClickY = e.clientY; isMouseDown = true; isDragging = false; targetEl.setPointerCapture(e.pointerId); }; targetEl.onpointermove = e => { if (!isMouseDown) return; e.preventDefault(); if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) { isDragging = true; targetEl.classList.add('is-dragging'); } if (isDragging) { currentTranslateX = e.clientX - initialX; currentTranslateY = e.clientY - initialY; if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } }; const dragEnd = e => { if (!isMouseDown) return; isMouseDown = false; if (isDragging) { xOffset = currentTranslateX; yOffset = currentTranslateY; targetEl.classList.remove('is-dragging'); } if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId); }; targetEl.onpointerup = dragEnd; targetEl.onpointercancel = dragEnd; targetEl.onwheel = e => { if (e.target.closest('.custom-controls')) return; e.preventDefault(); scale += e.deltaY * -0.002; scale = Math.min(Math.max(0.5, scale), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); }; };
@@ -831,6 +909,8 @@ function navigate(direction) { currentIndex += direction; if(currentIndex >= med
 function closeViewer() { 
     viewer.style.display = "none"; 
     viewer.querySelectorAll('.viewer-content, .custom-video-wrapper, iframe').forEach(el => el.remove()); 
+    const vLoad = document.getElementById("viewerLoading");
+    if (vLoad) { vLoad.style.display = "none"; vLoad.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x"></i><span style="margin-top:15px;" id="viewerLoadingText">Cargando archivo seguro...</span>`; }
 }
 viewer.addEventListener('click', e => { if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) { if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) closeViewer(); } });
 document.addEventListener('keydown', e => { 
