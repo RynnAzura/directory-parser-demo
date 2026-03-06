@@ -374,7 +374,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" aria-label="Visitar el perfil de GitHub de RynnAzura" title="Ver en GitHub" tabindex="-1">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v2.4</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v2.4.1</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1026,8 +1026,92 @@ async function openViewer(index) {
 
 function renderViewerMedia(file, mediaUrl) {
     downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl; downloadBtn.download = file.name;
-    const setupInteractive = targetEl => { targetEl.ondragstart = () => false; targetEl.style.willChange = 'transform'; targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`; let animationFrameId; targetEl.onpointerdown = e => { if (e.target.closest('.custom-controls')) return; initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; startClickX = e.clientX; startClickY = e.clientY; isMouseDown = true; isDragging = false; targetEl.setPointerCapture(e.pointerId); }; targetEl.onpointermove = e => { if (!isMouseDown) return; e.preventDefault(); if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) { isDragging = true; targetEl.classList.add('is-dragging'); } if (isDragging) { currentTranslateX = e.clientX - initialX; currentTranslateY = e.clientY - initialY; if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } }; const dragEnd = e => { if (!isMouseDown) return; isMouseDown = false; if (isDragging) { xOffset = currentTranslateX; yOffset = currentTranslateY; targetEl.classList.remove('is-dragging'); } if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId); }; targetEl.onpointerup = dragEnd; targetEl.onpointercancel = dragEnd; targetEl.onwheel = e => { if (e.target.closest('.custom-controls')) return; e.preventDefault(); scale += e.deltaY * -0.002; scale = Math.min(Math.max(0.5, scale), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); }; };
-    
+    const setupInteractive = targetEl => {
+        targetEl.ondragstart = () => false;
+        targetEl.style.willChange = 'transform';
+        targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`;
+        let animationFrameId;
+
+        targetEl.onpointerdown = e => {
+            if (e.target.closest('.custom-controls')) return;
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            startClickX = e.clientX;
+            startClickY = e.clientY;
+            isMouseDown = true;
+            isDragging = false;
+            targetEl.setPointerCapture(e.pointerId);
+        };
+
+        targetEl.onpointermove = e => {
+            if (!isMouseDown) return;
+            e.preventDefault();
+            if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) {
+                isDragging = true;
+                targetEl.classList.add('is-dragging');
+            }
+            if (isDragging) {
+                currentTranslateX = e.clientX - initialX;
+                currentTranslateY = e.clientY - initialY;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`);
+            }
+        };
+
+        const dragEnd = e => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            if (isDragging) {
+                xOffset = currentTranslateX;
+                yOffset = currentTranslateY;
+                targetEl.classList.remove('is-dragging');
+            }
+            if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId);
+        };
+
+        targetEl.onpointerup = dragEnd;
+        targetEl.onpointercancel = dragEnd;
+
+        targetEl.onwheel = e => {
+            if (e.target.closest('.custom-controls')) return;
+            e.preventDefault();
+            scale += e.deltaY * -0.002;
+            scale = Math.min(Math.max(0.5, scale), 5); // Límite de zoom
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`);
+        };
+
+        let initialDistance = 0;
+        let initialScale = 1;
+
+        targetEl.addEventListener('touchstart', e => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                isMouseDown = false;
+                initialDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                initialScale = scale;
+            }
+        }, { passive: false });
+
+        targetEl.addEventListener('touchmove', e => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+
+                const distanceRatio = currentDistance / initialDistance;
+                scale = Math.min(Math.max(0.5, initialScale * distanceRatio), 5);
+
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`);
+            }
+        }, { passive: false });
+    };
     if (file.type === "image") { let element = document.createElement("img"); element.src = mediaUrl; element.className = "viewer-content"; element.alt = file.name; viewer.insertBefore(element, fileNameDisplay); setupInteractive(element); element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; } 
     else { const wrapper = document.createElement("div"); wrapper.className = "custom-video-wrapper paused"; const video = document.createElement("video"); video.src = mediaUrl; video.autoplay = true; video.controls = false; video.volume = globalVolume; video.muted = globalVolume === 0; const centerIcon = document.createElement("div"); centerIcon.className = "center-play-icon"; centerIcon.innerHTML = '<i class="fa-solid fa-play"></i>'; const controlsDiv = document.createElement("div"); controlsDiv.className = "custom-controls"; controlsDiv.innerHTML = `<div class="progress-container" id="progContainer" role="slider" aria-label="Línea de tiempo" tabindex="0"><div class="progress-bar" id="progBar"></div><div class="progress-preview" id="progPreview"><canvas id="previewCanvas"></canvas><div class="progress-preview-time" id="previewTime">0:00</div></div></div><div class="controls-row"><button id="playBtn" aria-label="Reproducir o pausar"><i class="fa-solid fa-pause"></i></button><div class="volume-container"><button id="muteBtn" aria-label="Silenciar o reactivar sonido"><i class="fa-solid fa-volume-high"></i></button><input type="range" id="volSlider" aria-label="Control de volumen" min="0" max="1" step="0.05" value="1"></div><div class="time-display" aria-live="polite"><span id="currTime">0:00</span> / <span id="totTime">0:00</span></div><div style="flex-grow: 1;"></div><button id="fullBtn" aria-label="Activar pantalla completa"><i class="fa-solid fa-expand"></i></button></div>`; wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); viewer.insertBefore(wrapper, fileNameDisplay); setupInteractive(wrapper); const playBtn = wrapper.querySelector('#playBtn'), muteBtn = wrapper.querySelector('#muteBtn'), fullBtn = wrapper.querySelector('#fullBtn'), progContainer = wrapper.querySelector('#progContainer'), progBar = wrapper.querySelector('#progBar'), currTimeEl = wrapper.querySelector('#currTime'), totTimeEl = wrapper.querySelector('#totTime'), volSlider = wrapper.querySelector('#volSlider'), progPreview = wrapper.querySelector('#progPreview'), previewCanvas = wrapper.querySelector('#previewCanvas'), previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true }), previewTimeEl = wrapper.querySelector('#previewTime'), thumbVideo = document.createElement('video'); thumbVideo.src = mediaUrl; thumbVideo.muted = true; thumbVideo.preload = 'auto'; let isSeekingPreview = false, pendingPreviewTime = null, lastRenderedTime = -1; thumbVideo.addEventListener('seeked', () => { if (thumbVideo.videoWidth > 0) { const videoW = thumbVideo.videoWidth, videoH = thumbVideo.videoHeight, isVertical = videoH > videoW; const maxVisualSize = 200; let visualW, visualH; if (isVertical) { visualH = maxVisualSize; visualW = maxVisualSize * (videoW / videoH); } else { visualW = maxVisualSize; visualH = maxVisualSize * (videoH / videoW); } const qualityScale = 0.5; previewCanvas.width = visualW * qualityScale; previewCanvas.height = visualH * qualityScale; previewCanvas.style.width = `${visualW}px`; previewCanvas.style.height = `${visualH}px`; previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height); } isSeekingPreview = false; if (pendingPreviewTime !== null) { const timeToSeek = pendingPreviewTime; pendingPreviewTime = null; setTimeout(() => triggerPreviewSeek(timeToSeek), 40); } }); const triggerPreviewSeek = time => { const roundedTime = Math.floor(time * 2) / 2; if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return; if (isSeekingPreview) { pendingPreviewTime = roundedTime; return; } isSeekingPreview = true; lastRenderedTime = roundedTime; thumbVideo.currentTime = roundedTime; }; progContainer.addEventListener('mousemove', e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); const hoverTime = pos * video.duration; let previewX = e.clientX - rect.left; const boxWidth = 170; if (previewX < boxWidth / 2) previewX = boxWidth / 2; if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2; progPreview.style.left = `${previewX}px`; progPreview.style.display = 'flex'; previewTimeEl.textContent = formatTime(hoverTime); triggerPreviewSeek(hoverTime); }); progContainer.addEventListener('mouseleave', () => { progPreview.style.display = 'none'; pendingPreviewTime = null; }); let idleTimeout; const resetIdleTimer = () => { wrapper.classList.remove('idle'); clearTimeout(idleTimeout); if (!video.paused) idleTimeout = setTimeout(() => wrapper.classList.add('idle'), 2500); }; wrapper.addEventListener('mousemove', resetIdleTimer); wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); }); const showCenterIcon = iconClass => { centerIcon.innerHTML = `<i class="fa-solid ${iconClass}"></i>`; wrapper.classList.add('show-center-icon'); setTimeout(() => wrapper.classList.remove('show-center-icon'), 500); }; const togglePlay = () => { if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); showCenterIcon('fa-play'); resetIdleTimer(); } else { video.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); showCenterIcon('fa-pause'); clearTimeout(idleTimeout); wrapper.classList.remove('idle'); } }; video.onclick = e => { if (!isDragging) togglePlay(); }; playBtn.onclick = togglePlay; video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; video.addEventListener('loadedmetadata', () => { totTimeEl.textContent = formatTime(video.duration); volSlider.value = globalVolume; muteBtn.innerHTML = globalVolume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; }); video.addEventListener('timeupdate', () => { currTimeEl.textContent = formatTime(video.currentTime); const percent = (video.currentTime / video.duration) * 100; progBar.style.width = `${percent}%`; progContainer.setAttribute('aria-valuenow', percent); }); video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); }); video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); }); let isScrubbing = false; const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; progContainer.addEventListener('mousedown', e => { isScrubbing = true; progContainer.classList.add('dragging'); scrub(e); video.pause(); }); document.addEventListener('mousemove', e => { if (isScrubbing) scrub(e); }); document.addEventListener('mouseup', () => { if (isScrubbing) { isScrubbing = false; progContainer.classList.remove('dragging'); if (playBtn.innerHTML.includes('pause')) video.play(); } }); const updateVolumeUI = () => { muteBtn.innerHTML = video.muted || video.volume === 0 ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; if (video.muted) volSlider.value = 0; else volSlider.value = video.volume || 1; globalVolume = video.muted ? 0 : video.volume; localStorage.setItem('myGalleryVolume', globalVolume); }; muteBtn.addEventListener('click', () => { if (video.muted || video.volume === 0) { video.muted = false; video.volume = lastUnmutedVolume; } else { lastUnmutedVolume = video.volume; video.muted = true; video.volume = 0; } updateVolumeUI(); }); volSlider.addEventListener('input', e => { video.volume = parseFloat(e.target.value); video.muted = video.volume === 0; if (video.volume > 0) lastUnmutedVolume = video.volume; updateVolumeUI(); }); fullBtn.addEventListener('click', () => { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); }); }
 }
