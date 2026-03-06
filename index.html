@@ -183,6 +183,13 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     .copyright-link { font-size: 12px; bottom: 10px; right: 10px; } 
 }
 
+@media (max-width: 600px) {
+    .item { 
+        width: calc(50vw - 28px) !important; /* Calcula la mitad de la pantalla exacta */
+        height: 120px !important; /* Ajusta la altura para mantener proporción */
+    }
+}
+
 .yt-player, .yt-player video { backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(0); }
 .is-dragging { box-shadow: none !important; }
 .is-dragging * { pointer-events: none !important; }
@@ -795,7 +802,8 @@ function buildHTMLRows(filesToRender, includeBackBtn = false, backParent = null,
     });
 
     const containerWidth = scrollArea.clientWidth || window.innerWidth;
-    const itemsPerRow = Math.max(1, Math.floor((containerWidth - 40) / 215)); 
+    // Si la pantalla es de celular (<600px), fuerza 2 columnas. Si es PC, calcula en base a 215px.
+    const itemsPerRow = containerWidth <= 600 ? 2 : Math.max(1, Math.floor((containerWidth - 40) / 215));
     
     let rows = [];
     let currentRow = [];
