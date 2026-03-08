@@ -8,13 +8,17 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.19.0/clusterize.min.css">
 
 <style>
-/* === ESTILOS GLOBALES === */
+/* ========================================================================= */
+/* === 1. ESTILOS GLOBALES Y CONTENEDORES PRINCIPALES                    === */
+/* ========================================================================= */
 body { background: #0a0a0a; color: white; font-family: Arial, sans-serif; text-align: center; margin: 0; overflow: hidden; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 input, select { -webkit-user-select: auto; -moz-user-select: auto; -ms-user-select: auto; user-select: auto; }
 img, video { -webkit-user-drag: none; }
 #scrollArea { height: 100vh; width: 100%; position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; }
 
-/* === OVERLAY DRAG & DROP Y EMPTY STATE === */
+/* ========================================================================= */
+/* === 2. OVERLAYS, TOASTS Y EMPTY STATES                                === */
+/* ========================================================================= */
 #dragOverlay { position: fixed; inset: 0; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(10px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; border: 4px dashed #4da6ff; pointer-events: none; transition: all 0.2s ease; }
 #dragOverlay.active { display: flex; animation: pulseBorder 2s infinite; }
 #dragOverlay i { font-size: 80px; color: #4da6ff; margin-bottom: 20px; }
@@ -27,7 +31,6 @@ img, video { -webkit-user-drag: none; }
 .empty-state h2 { font-size: 26px; margin: 0 0 10px 0; font-weight: bold; color: rgba(255,255,255,0.7); }
 .empty-state p { font-size: 15px; margin: 0; }
 
-/* Nuevo diseño de botón Reabrir */
 .restore-btn { margin-bottom: 30px; font-size: 18px; font-weight: bold; padding: 15px 35px; background: linear-gradient(135deg, rgba(77, 166, 255, 0.15), rgba(77, 166, 255, 0.05)) !important; border: 1px solid rgba(77, 166, 255, 0.4) !important; color: #4da6ff; border-radius: 50px; cursor: pointer; transition: all 0.3s ease !important; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); display: inline-flex; align-items: center; gap: 12px; }
 .restore-btn i { font-size: 22px; color: #4da6ff; margin: 0 !important; transition: transform 0.3s; }
 .restore-btn:hover { background: linear-gradient(135deg, rgba(77, 166, 255, 0.25), rgba(77, 166, 255, 0.1)) !important; border-color: #4da6ff !important; transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 30px rgba(77, 166, 255, 0.2); }
@@ -37,29 +40,27 @@ img, video { -webkit-user-drag: none; }
 .empty-state-divider::before, .empty-state-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.3); }
 .empty-state-divider span { padding: 0 15px; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: white; font-weight: bold; }
 
-/* === MODO SELECCIÓN DE MINIATURA === */
 #selectionBanner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(77, 166, 255, 0.95); color: white; padding: 12px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: none; align-items: center; gap: 15px; z-index: 10000; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); font-size: 15px; animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); user-select: none; }
 @keyframes popUp { from { opacity: 0; transform: translate(-50%, 30px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .cancel-selection-btn { background: rgba(0,0,0,0.3); border: none; color: white; padding: 6px 14px; border-radius: 15px; cursor: pointer; transition: background 0.2s, transform 0.1s; font-weight: bold; }
 .cancel-selection-btn:hover { background: rgba(0,0,0,0.5); transform: scale(1.05); }
 
-/* === NOTIFICACIÓN DE SUBIDA (TOAST) === */
 #uploadToast { position: fixed; bottom: 30px; left: 30px; background: rgba(25, 25, 25, 0.9); border: 1px solid rgba(77, 166, 255, 0.4); padding: 15px 20px; border-radius: 12px; z-index: 10000; display: none; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); animation: popIn 0.3s ease; }
 #uploadToast i { color: #4da6ff; font-size: 24px; }
 .toast-content { display: flex; flex-direction: column; text-align: left; }
 .toast-title { font-size: 14px; font-weight: bold; color: white; margin-bottom: 2px; }
 .toast-desc { font-size: 12px; color: #ccc; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* === BARRA SUPERIOR === */
+/* ========================================================================= */
+/* === 3. BARRA DE NAVEGACIÓN Y CONTROLES SUPERIORES                     === */
+/* ========================================================================= */
 .main-title-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px 5px 25px; position: relative; z-index: 150; text-align: left; }
 h1 { margin: 0; font-size: 26px; font-weight: bold; letter-spacing: 1px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); }
 
-/* === BARRA FLOTANTE (STICKY) === */
 .sticky-header { position: sticky; top: 0; width: 100%; z-index: 100; padding: 10px 0 25px 0; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
 .sticky-header::before { content: ''; position: absolute; inset: 0; background: rgba(10, 10, 10, 0.65); backdrop-filter: blur(25px) saturate(180%); -webkit-backdrop-filter: blur(25px) saturate(180%); -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 25px), transparent 100%); mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 25px), transparent 100%); z-index: -1; pointer-events: none; }
 .sticky-header > * { pointer-events: auto; }
 
-/* === CONTROLES Y DROPDOWNS === */
 button { font-family: inherit; }
 .controls-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 10px 0; flex-wrap: wrap; padding: 0 20px; }
 button, .dropdown-btn { padding: 10px 18px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.05); color: white; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.3s, border-color 0.3s, transform 0.1s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
@@ -85,7 +86,9 @@ button:active, .dropdown-btn:active { transform: scale(0.97); }
 .dropdown-item.active .dot-indicator { color: white; }
 .dropdown-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 6px 0; }
 
-/* === GALERÍA === */
+/* ========================================================================= */
+/* === 4. GALERÍA Y COMPONENTES DE ITEMS                                 === */
+/* ========================================================================= */
 .clusterize-content { outline: none; padding: 0 20px; box-sizing: border-box; padding-bottom: 40px; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -104,14 +107,15 @@ img.thumb { width: 100%; height: 100%; border-radius: 10px; transition: opacity 
 .badge-video { background: rgba(220, 53, 69, 0.85); letter-spacing: 1px; }
 .fav-badge { position: absolute; bottom: 8px; right: 8px; font-size: 20px; pointer-events: none; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
 
-/* === CARPETAS === */
 .folder { background: #222; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; box-sizing: border-box; user-select: none; overflow: hidden; }
 .folder:hover, .folder:focus-visible { border-color: rgba(255,255,255,0.2); }
 .folder-cover { width: 100%; height: 100%; object-fit: cover; background-color: #222; pointer-events: none; }
 .folder-icon-fallback { font-size: 50px; margin-bottom: 15px; pointer-events: none; opacity: 0.7; }
 .folder-name-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0,0,0,0.5) 70%, transparent 100%); padding: 12px 5px 8px 5px; box-sizing: border-box; font-size: 13px; font-weight: bold; text-align: center; word-break: break-all; text-shadow: 1px 1px 2px black; pointer-events: none; z-index: 10; }
 
-/* === VISOR MULTIMEDIA === */
+/* ========================================================================= */
+/* === 5. VISOR MULTIMEDIA Y REPRODUCTOR YT                              === */
+/* ========================================================================= */
 .viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; overflow: hidden; z-index: 1000; }
 .viewer-content { width: auto; height: auto; max-width: calc(100vw - 160px); max-height: 85vh; object-fit: contain; user-select: none; touch-action: none;}
 img.viewer-content { cursor: grab; }
@@ -163,7 +167,9 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .progress-preview canvas { background: #000; border-radius: 4px; }
 .progress-preview-time { color: white; font-size: 13px; margin-top: 5px; font-weight: bold; }
 
-/* === MENÚ CONTEXTUAL (GLASSMORPHISM) === */
+/* ========================================================================= */
+/* === 6. MENÚ CONTEXTUAL Y PERFIL DE GOOGLE                             === */
+/* ========================================================================= */
 .win11-context-menu { position: absolute; z-index: 10000; display: none; flex-direction: column; background: rgba(20, 20, 20, 0.65); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 160px; user-select: none; transform-origin: top left; animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); gap: 2px; }
 @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .menu-action { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 10px 14px; cursor: pointer; border-radius: 8px; color: #e0e0e0; font-size: 14px; font-weight: 500; transition: background 0.2s ease, color 0.2s ease; background: transparent !important; border: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; width: 100%; box-sizing: border-box; }
@@ -173,7 +179,6 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .menu-action:hover .icon { transform: scale(1.15); }
 .menu-action span { pointer-events: none; }
 
-/* === PERFIL DE GOOGLE === */
 .google-profile-container { position: relative; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: default; user-select: none; }
 #authBtn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight:bold; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.3s; background: white; color: #111; border: none; }
 #authBtn:hover, #authBtn:focus-visible { background: #eee; outline: 2px solid #4da6ff; }
@@ -193,13 +198,14 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 .menu-signout-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #ff6b6b; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.3s, border-color 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .menu-signout-btn:hover, .menu-signout-btn:focus-visible { background: rgba(255, 77, 77, 0.1); border-color: rgba(255, 77, 77, 0.2); outline: none; }
 
-/* === OTROS ELEMENTOS UI === */
 .copyright-link { position: fixed; bottom: 15px; right: 20px; color: rgba(255, 255, 255, 0.3); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; z-index: 500; transition: color 0.3s ease, transform 0.2s ease; user-select: none; }
 .copyright-link:hover { color: rgba(255, 255, 255, 0.9); transform: scale(1.05); }
 .version-badge { background: rgba(255, 255, 255, 0.15); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; margin-left: 2px; transition: background 0.3s ease; }
 .copyright-link:hover .version-badge { background: rgba(255, 255, 255, 0.3); }
 
-/* === MEDIA QUERIES === */
+/* ========================================================================= */
+/* === 7. MEDIA QUERIES Y REGLAS ESPECIALES                              === */
+/* ========================================================================= */
 @media (max-width: 800px) {
     .main-title-bar { padding: 15px 15px 5px 15px; }
     h1 { font-size: 22px; }
@@ -418,7 +424,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" aria-label="Visitar el perfil de GitHub de RynnAzura" title="Ver en GitHub" tabindex="-1">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v4.4</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v4.4.1</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -426,10 +432,12 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 
 <script>
 // =========================================================================
-// VARIABLES Y ESTADO GLOBAL
+//  SECCIÓN 1: VARIABLES Y ESTADO GLOBAL
 // =========================================================================
 const CLIENT_ID = '731434427932-cnghf0huo1fsi27mg64dssl5q9mno82p.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+
+const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+
 const VOL_KEY = 'myGallerySavedVolume'; 
 
 const input = document.getElementById("fileInput");
@@ -476,7 +484,6 @@ let mediaFiles = [];
 let currentIndex = 0;
 let clusterize;
 let currentViewerUrl = null; 
-
 let currentGridOffset = 0; 
 
 let persistentVolume = parseFloat(localStorage.getItem(VOL_KEY));
@@ -495,7 +502,7 @@ const appState = {
 const getState = () => appState[currentViewSource];
 
 // =========================================================================
-// INDEXED DB (MOTOR ROBUSTO CON PROMESAS Y SIN ERRORES DE VERSIÓN)
+//  SECCIÓN 2: BASE DE DATOS LOCAL (INDEXED DB)
 // =========================================================================
 const dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open("AzuraMediaDB", 4); 
@@ -510,22 +517,11 @@ const dbPromise = new Promise((resolve, reject) => {
         }
     };
 
-    request.onsuccess = (e) => {
-        const db = e.target.result;
-        resolve(db);
-    };
-
-    request.onerror = (e) => {
-        console.warn("Error al abrir IndexedDB", e);
-        reject(e);
-    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => { console.warn("Error al abrir IndexedDB", e); reject(e); };
 });
 
-dbPromise.then(db => {
-    if (clusterize && !getState().loaded) {
-        updateUIState();
-    }
-}).catch(() => {});
+dbPromise.then(db => { if (clusterize && !getState().loaded) updateUIState(); }).catch(() => {});
 
 async function saveThumbToDB(id, dataUrl) {
     try {
@@ -572,19 +568,11 @@ async function getDirectoryHandle() {
 }
 
 // =========================================================================
-// SANITIZACIÓN XSS
+//  SECCIÓN 3: UTILIDADES Y UI
 // =========================================================================
 function escapeHTML(str) {
     if (!str) return "";
-    return str.replace(/[&<>'"]/g, 
-        tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag] || tag)
-    );
+    return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
 
 async function updateUIState() {
@@ -628,11 +616,8 @@ async function updateUIState() {
                     if (restoreBtn && lastHandle) {
                         restoreBtn.addEventListener('click', async () => {
                             const hasPermission = await verifyPermission(lastHandle, false);
-                            if (hasPermission) {
-                                await loadFromDirectoryHandle(lastHandle);
-                            } else {
-                                alert("No se otorgaron permisos para leer la carpeta.");
-                            }
+                            if (hasPermission) await loadFromDirectoryHandle(lastHandle);
+                            else alert("No se otorgaron permisos para leer la carpeta.");
                         });
                     }
                 }, 50);
@@ -643,21 +628,6 @@ async function updateUIState() {
         }
     }
 }
-
-fileInputBtn.addEventListener('click', async () => {
-    if (currentViewSource === 'local') {
-        try {
-            const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
-            await saveDirectoryHandle(dirHandle);
-            await loadFromDirectoryHandle(dirHandle);
-        } catch (err) {
-            console.log("Selección de directorio cancelada", err);
-        }
-    } else {
-        if (isGoogleConnected) { initDrive(); } 
-        else alert("Por favor conecta tu cuenta de Google arriba a la derecha primero.");
-    }
-});
 
 const toggleDropdown = (menu, btn) => {
     const isExpanded = btn.getAttribute('aria-expanded') === 'true';
@@ -674,7 +644,6 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 sourceOptions.forEach(option => {
     const handleSourceSelection = (e) => {
         e.stopPropagation();
-        
         originalPathBeforeSelection = null; 
         if(typeof cancelSelectionMode === 'function') cancelSelectionMode();
         
@@ -710,9 +679,7 @@ sourceOptions.forEach(option => {
 function cancelSelectionMode() {
     selectingCoverForPath = null;
     document.getElementById('selectionBanner').style.display = 'none';
-    
-    searchInput.value = ""; 
-    currentFilter = "all"; 
+    searchInput.value = ""; currentFilter = "all"; 
     filterBtnText.textContent = "Todos los archivos";
     document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
     const allFilterOpt = document.querySelector('.filter-option[data-value="all"]');
@@ -726,7 +693,7 @@ function cancelSelectionMode() {
 }
 
 // =========================================================================
-// INTEGRACIÓN CON GOOGLE DRIVE Y AUTH
+//  SECCIÓN 4: GOOGLE DRIVE - AUTENTICACIÓN
 // =========================================================================
 function initGoogleServices() {
     tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: handleAuthResponse });
@@ -793,10 +760,8 @@ async function fetchWithDriveToken(url, options = {}) {
             const originalCallback = tokenClient.callback;
             tokenClient.callback = async (response) => {
                 tokenClient.callback = originalCallback; 
-                if (response.error) {
-                    cleanupGoogleState();
-                    reject(new Error("No se pudo refrescar la sesión de Drive."));
-                } else {
+                if (response.error) { cleanupGoogleState(); reject(new Error("No se pudo refrescar la sesión de Drive.")); } 
+                else {
                     response.issued_at = Date.now();
                     localStorage.setItem('drive_token', JSON.stringify(response));
                     options.headers['Authorization'] = 'Bearer ' + response.access_token;
@@ -819,7 +784,7 @@ async function getUserProfile() {
 }
 
 // =========================================================================
-// DRIVE - MOTOR DE SUBIDA (EN COLA + PREVENCIÓN DE DUPLICADOS)
+//  SECCIÓN 5: GOOGLE DRIVE - SUBIDA DE ARCHIVOS
 // =========================================================================
 async function findDriveItem(name, parentId, isFolder) {
     const mimeQuery = isFolder ? "mimeType='application/vnd.google-apps.folder'" : "mimeType!='application/vnd.google-apps.folder'";
@@ -863,12 +828,7 @@ async function uploadFileToDrive(file, parentId = null) {
     if (!initRes.ok) throw new Error("No se pudo iniciar la subida");
     const uploadUrl = initRes.headers.get('Location');
 
-    const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file
-    });
-
+    const uploadRes = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
     if (!uploadRes.ok) throw new Error("Fallo al subir el archivo");
     return uploadRes.json();
 }
@@ -877,16 +837,10 @@ let driveUploadQueue = [];
 let isProcessingDriveUploads = false;
 
 function queueUploadToDrive(target) {
-    if (!isGoogleConnected) {
-        alert("Para subir archivos, primero conecta tu cuenta de Google Drive en la esquina superior derecha.");
-        return;
-    }
-    
+    if (!isGoogleConnected) { alert("Para subir archivos, conecta tu cuenta de Google Drive arriba."); return; }
     driveUploadQueue.push(target);
-    
     if (isProcessingDriveUploads) {
-        const toastText = document.getElementById('uploadToastText');
-        toastText.innerText = `Añadido a la cola. (${driveUploadQueue.length} tareas pendientes)`;
+        document.getElementById('uploadToastText').innerText = `Añadido a la cola. (${driveUploadQueue.length} pendientes)`;
     } else {
         processDriveUploadQueue();
     }
@@ -899,13 +853,11 @@ async function processDriveUploadQueue() {
     const toast = document.getElementById('uploadToast');
     const toastText = document.getElementById('uploadToastText');
     const toastIcon = toast.querySelector('i');
-    
     toast.style.display = 'flex';
 
     while (driveUploadQueue.length > 0) {
         const target = driveUploadQueue.shift();
-        toastIcon.className = "fa-solid fa-cloud-arrow-up fa-bounce";
-        toastIcon.style.color = "#4da6ff";
+        toastIcon.className = "fa-solid fa-cloud-arrow-up fa-bounce"; toastIcon.style.color = "#4da6ff";
 
         try {
             if (!target.isFolder) {
@@ -924,25 +876,18 @@ async function processDriveUploadQueue() {
                 
                 if (filesToUpload.length === 0) {
                     toastText.innerText = `Carpeta vacía saltada: ${escapeHTML(folderName)}`;
-                    await new Promise(r => setTimeout(r, 1500));
-                    continue;
+                    await new Promise(r => setTimeout(r, 1500)); continue;
                 }
 
                 toastText.innerText = `Verificando/Creando carpeta "${escapeHTML(folderName)}"...`;
                 let rootFolderId = await findDriveItem(folderName, null, true);
-                if (!rootFolderId) {
-                    const rootFolderRes = await createDriveFolder(folderName);
-                    rootFolderId = rootFolderRes.id;
-                }
+                if (!rootFolderId) { const rootFolderRes = await createDriveFolder(folderName); rootFolderId = rootFolderRes.id; }
                 const folderIdMap = { [folderPath]: rootFolderId };
                 
-                let uploadedCount = 0;
-                let skippedCount = 0;
+                let uploadedCount = 0; let skippedCount = 0;
                 
                 for (const f of filesToUpload) {
-                    let currentPath = folderPath;
-                    let currentParentId = rootFolderId;
-                    
+                    let currentPath = folderPath; let currentParentId = rootFolderId;
                     const relativeSub = f.parentFolder.substring(folderPath.length); 
                     if (relativeSub && relativeSub.startsWith('/')) {
                         const parts = relativeSub.substring(1).split('/');
@@ -950,14 +895,10 @@ async function processDriveUploadQueue() {
                             const nextPath = currentPath + '/' + part;
                             if (!folderIdMap[nextPath]) {
                                 let subId = await findDriveItem(part, currentParentId, true);
-                                if (!subId) {
-                                    const newFolder = await createDriveFolder(part, currentParentId);
-                                    subId = newFolder.id;
-                                }
+                                if (!subId) { const newFolder = await createDriveFolder(part, currentParentId); subId = newFolder.id; }
                                 folderIdMap[nextPath] = subId;
                             }
-                            currentPath = nextPath;
-                            currentParentId = folderIdMap[nextPath];
+                            currentPath = nextPath; currentParentId = folderIdMap[nextPath];
                         }
                     }
                     
@@ -974,29 +915,20 @@ async function processDriveUploadQueue() {
             }
         } catch(e) {
             console.error("Error en subida:", e);
-            toastIcon.className = "fa-solid fa-circle-exclamation";
-            toastIcon.style.color = "#ff4d4d";
+            toastIcon.className = "fa-solid fa-circle-exclamation"; toastIcon.style.color = "#ff4d4d";
             toastText.innerText = `Error al subir: ${target.isFolder ? target.path.split('/').pop() : target.fileData.name}`;
             await new Promise(r => setTimeout(r, 3000)); 
         }
     }
 
-    toastIcon.className = "fa-solid fa-circle-check";
-    toastIcon.style.color = "#4dff88";
+    toastIcon.className = "fa-solid fa-circle-check"; toastIcon.style.color = "#4dff88";
     toastText.innerText = "¡Todas las tareas finalizadas!";
-    
-    appState.drive.loaded = false;
-
-    isProcessingDriveUploads = false; 
-    setTimeout(() => {
-        if (!isProcessingDriveUploads) {
-            toast.style.display = 'none';
-        }
-    }, 4000);
+    appState.drive.loaded = false; isProcessingDriveUploads = false; 
+    setTimeout(() => { if (!isProcessingDriveUploads) toast.style.display = 'none'; }, 4000);
 }
 
 // =========================================================================
-// DRIVE MEDIA-FIRST SYNC
+//  SECCIÓN 6: GOOGLE DRIVE - LECTURA Y SINCRONIZACIÓN
 // =========================================================================
 async function initDrive() {
     const state = appState.drive;
@@ -1011,8 +943,7 @@ async function initDrive() {
     if(clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-spinner fa-spin fa-3x' style='margin-bottom: 15px;'></i><br><p style='font-size: 18px;' id='driveSyncText'>1/3 Mapeando estructura de carpetas...</p></div>"]);
     
     try {
-        let fetchedFolders = [];
-        let folderPageToken = null;
+        let fetchedFolders = []; let folderPageToken = null;
         do {
             const urlFolders = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("mimeType='application/vnd.google-apps.folder' and trashed=false")}&fields=nextPageToken,files(id,name,parents)&pageSize=1000${folderPageToken ? '&pageToken=' + folderPageToken : ''}`;
             const resF = await fetchWithDriveToken(urlFolders);
@@ -1046,8 +977,7 @@ async function initDrive() {
         const syncText = document.getElementById('driveSyncText');
         if (syncText) syncText.innerText = "2/3 Descargando catálogo multimedia...";
 
-        let fetchedMedia = [];
-        let mediaPageToken = null;
+        let fetchedMedia = []; let mediaPageToken = null;
         const qMedia = `(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false`;
         
         do {
@@ -1056,15 +986,13 @@ async function initDrive() {
             const dataMedia = await resMedia.json(); 
             if(dataMedia.files) fetchedMedia.push(...dataMedia.files); 
             mediaPageToken = dataMedia.nextPageToken;
-            
             if (syncText) syncText.innerText = `2/3 Descargando catálogo... (${fetchedMedia.length} encontrados)`;
         } while (mediaPageToken);
 
         if (fetchedMedia.length === 0) {
             state.loaded = true; state.currentPath = "root";
             if(clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-box-open'></i> No se encontraron imágenes o videos en tu Drive.</div>"]);
-            searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
-            return;
+            searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false; return;
         }
 
         if (syncText) syncText.innerText = "3/3 Organizando carpetas...";
@@ -1085,31 +1013,24 @@ async function initDrive() {
             };
             
             if(!state.foldersMap[pId]) state.foldersMap[pId] = { files: [], subfolders: new Set() };
-            state.foldersMap[pId].files.push(fileData); 
-            state.allFiles.push(fileData);
+            state.foldersMap[pId].files.push(fileData); state.allFiles.push(fileData);
         });
 
         function pruneEmptyFolders(folderId) {
             const folder = state.foldersMap[folderId];
             if (!folder) return false;
             let hasMedia = folder.files.length > 0;
-            
             const subfoldersArray = Array.from(folder.subfolders);
             for (const subId of subfoldersArray) {
                 const subHasMedia = pruneEmptyFolders(subId);
-                if (subHasMedia) {
-                    hasMedia = true;
-                } else {
-                    folder.subfolders.delete(subId);
-                }
+                if (subHasMedia) hasMedia = true;
+                else folder.subfolders.delete(subId);
             }
             return hasMedia;
         }
         pruneEmptyFolders("root");
 
-        state.loaded = true;
-        state.currentPath = "root";
-        renderGallery("root");
+        state.loaded = true; state.currentPath = "root"; renderGallery("root");
 
     } catch (e) { 
         if(clusterize) clusterize.update([`<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-circle-exclamation'></i> Error: ${escapeHTML(e.message) || "Fallo de conexión"}</div>`]); 
@@ -1117,66 +1038,15 @@ async function initDrive() {
 }
 
 function buildDriveBreadcrumb(folderId) {
-    let pathArr = [];
-    let curr = folderId;
+    let pathArr = []; let curr = folderId;
     while(curr && appState.drive.folderMetadata[curr]) {
-        pathArr.unshift(appState.drive.folderMetadata[curr].name);
-        curr = appState.drive.folderMetadata[curr].parentId;
+        pathArr.unshift(appState.drive.folderMetadata[curr].name); curr = appState.drive.folderMetadata[curr].parentId;
     }
     return pathArr.join(' / ');
 }
 
 // =========================================================================
-// ORDENAMIENTO Y FILTROS
-// =========================================================================
-sortOptions.forEach(option => {
-    const handleSort = (e) => {
-        e.stopPropagation();
-        const type = option.getAttribute('data-type'); const value = option.getAttribute('data-value');
-        if (type === 'criteria') { currentSortCriteria = value; document.querySelectorAll('.sort-option.criteria').forEach(el => el.classList.remove('active')); } 
-        else if (type === 'order') { currentSortOrder = value; document.querySelectorAll('.sort-option.order').forEach(el => el.classList.remove('active')); }
-        option.classList.add('active'); sortMenu.classList.remove('show'); sortBtn.setAttribute('aria-expanded', 'false'); updateGalleryView();
-    };
-    option.addEventListener('click', handleSort);
-    option.addEventListener('keydown', e => { if (e.key === 'Enter') handleSort(e); });
-});
-
-filterOptions.forEach(option => {
-    const handleFilter = (e) => {
-        e.stopPropagation(); currentFilter = option.getAttribute('data-value'); filterBtnText.textContent = option.getAttribute('data-label');
-        document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-        option.classList.add('active'); filterMenu.classList.remove('show'); filterBtn.setAttribute('aria-expanded', 'false'); updateGalleryView();
-    };
-    option.addEventListener('click', handleFilter);
-    option.addEventListener('keydown', e => { if (e.key === 'Enter') handleFilter(e); });
-});
-
-let favorites = new Set(JSON.parse(localStorage.getItem('myGalleryFavs')) || []);
-const saveFavorites = () => localStorage.setItem('myGalleryFavs', JSON.stringify([...favorites]));
-
-// =========================================================================
-// WEB WORKERS Y GENERACIÓN DE MINIATURAS LOCALES
-// =========================================================================
-const workerCode = `
-self.onmessage = async function(e) {
-    const { id, file, targetWidth } = e.data;
-    try { const bitmap = await createImageBitmap(file); const scale = Math.min(1, targetWidth / bitmap.width); const width = Math.round(bitmap.width * scale); const height = Math.round(bitmap.height * scale); const canvas = new OffscreenCanvas(width, height); const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0, width, height); const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 }); self.postMessage({ id, success: true, blob }); bitmap.close(); } 
-    catch (error) { self.postMessage({ id, success: false, error: error.message }); }
-};`;
-const workerBlob = new Blob([workerCode], { type: 'application/javascript' }); const imageWorker = new Worker(URL.createObjectURL(workerBlob));
-const pendingTasks = new Map(); let taskIdCounter = 0;
-imageWorker.onmessage = function(e) { const { id, success, blob, error } = e.data; if (pendingTasks.has(id)) { const { resolve, reject } = pendingTasks.get(id); pendingTasks.delete(id); if (success) resolve(blob); else reject(error); } };
-function generateThumbWithWorker(file, targetWidth) { return new Promise((resolve, reject) => { const id = taskIdCounter++; pendingTasks.set(id, { resolve, reject }); imageWorker.postMessage({ id, file, targetWidth }); }); }
-
-function cleanupLocalMemory() { 
-    if (!appState.local.allFiles || appState.local.allFiles.length === 0) return; 
-    appState.local.allFiles.forEach(fileData => { 
-        if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) URL.revokeObjectURL(fileData.thumbSrc); 
-    }); 
-}
-
-// =========================================================================
-// INICIO: MANEJO DE ARCHIVOS LOCALES (INPUT + DRAG&DROP + API)
+//  SECCIÓN 7: ARCHIVOS LOCALES (LECTURA Y DRAG & DROP)
 // =========================================================================
 async function verifyPermission(fileHandle, readWrite) {
     const options = { mode: readWrite ? 'readwrite' : 'read' };
@@ -1204,16 +1074,23 @@ async function loadFromDirectoryHandle(dirHandle) {
     if (clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-spinner fa-spin fa-3x' style='margin-bottom: 15px;'></i><br><p style='font-size: 18px;'>Leyendo archivos locales...</p></div>"]);
     try {
         const files = await getFilesFromDirectoryHandle(dirHandle, dirHandle.name + "/");
-        if (files.length > 0) {
-            processLocalFiles(files);
-        } else {
-            if (clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> Carpeta vacía o sin archivos válidos.</div>"]);
-        }
+        if (files.length > 0) processLocalFiles(files);
+        else if (clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> Carpeta vacía o sin archivos válidos.</div>"]);
     } catch (e) {
-        console.error("Error leyendo directorio:", e);
         if (clusterize) clusterize.update([`<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-circle-exclamation'></i> Error al leer archivos.</div>`]);
     }
 }
+
+fileInputBtn.addEventListener('click', async () => {
+    if (currentViewSource === 'local') {
+        try {
+            const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+            await saveDirectoryHandle(dirHandle); await loadFromDirectoryHandle(dirHandle);
+        } catch (err) { console.log("Selección de directorio cancelada", err); }
+    } else {
+        if (isGoogleConnected) { initDrive(); } else alert("Por favor conecta tu cuenta de Google arriba a la derecha primero.");
+    }
+});
 
 function processLocalFiles(fileListOrArray) {
     const state = appState.local; cleanupLocalMemory(); state.foldersMap = {}; state.rootFolderName = ""; state.allFiles = []; 
@@ -1231,7 +1108,6 @@ function processLocalFiles(fileListOrArray) {
                 if (i > 0) { let parentPath = pathParts.slice(0, i).join('/'); state.foldersMap[parentPath].subfolders.add(folderPath); }
             }
             let finalFolderPath = pathParts.join('/');
-            
             const cacheKey = relativePath + "_" + file.lastModified;
 
             const fileData = { type: isImage ? "image" : "video", file: file, name: fileName, src: null, thumbSrc: null, parentFolder: finalFolderPath, uniquePath: relativePath, cacheKey: cacheKey };
@@ -1249,249 +1125,166 @@ function processLocalFiles(fileListOrArray) {
         document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
         document.querySelector('.filter-option[data-value="all"]').classList.add('active');
         
-        if (currentViewSource !== 'local') {
-            document.querySelector('.source-option[data-value="local"]').click();
-        } else updateUIState();
+        if (currentViewSource !== 'local') document.querySelector('.source-option[data-value="local"]').click();
+        else updateUIState();
     }
 }
 
 input.addEventListener("change", function() { processLocalFiles(this.files); });
 
-let dragCounter = 0;
-const dragOverlay = document.getElementById('dragOverlay');
-
+let dragCounter = 0; const dragOverlay = document.getElementById('dragOverlay');
 document.body.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; dragOverlay.classList.add('active'); });
 document.body.addEventListener('dragleave', e => { e.preventDefault(); dragCounter--; if(dragCounter === 0) dragOverlay.classList.remove('active'); });
 document.body.addEventListener('dragover', e => e.preventDefault());
 document.body.addEventListener('drop', async e => {
     e.preventDefault(); dragCounter = 0; dragOverlay.classList.remove('active');
-    
-    const items = e.dataTransfer.items;
-    if(!items) return;
+    const items = e.dataTransfer.items; if(!items) return;
 
     if(clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-spinner fa-spin fa-3x' style='margin-bottom: 15px;'></i><br><p style='font-size: 18px;'>Leyendo archivos locales...</p></div>"]);
 
     let extractedFiles = [];
-    
-    const readAllEntries = async (dirReader) => {
-        let allEntries = [];
-        let entries;
-        do {
-            entries = await new Promise(resolve => { dirReader.readEntries(e => resolve(e)); });
-            allEntries = allEntries.concat(entries);
-        } while (entries.length > 0);
-        return allEntries;
-    };
-
+    const readAllEntries = async (dirReader) => { let allEntries = []; let entries; do { entries = await new Promise(resolve => { dirReader.readEntries(e => resolve(e)); }); allEntries = allEntries.concat(entries); } while (entries.length > 0); return allEntries; };
     const readEntry = async (entry, path = "") => {
-        if (entry.isFile) {
-            return new Promise(resolve => {
-                entry.file(f => {
-                    Object.defineProperty(f, 'customPath', { value: path + f.name });
-                    extractedFiles.push(f);
-                    resolve();
-                });
-            });
-        } else if (entry.isDirectory) {
-            const dirReader = entry.createReader();
-            const entries = await readAllEntries(dirReader);
-            for(let subEntry of entries) await readEntry(subEntry, path + entry.name + "/");
-        }
+        if (entry.isFile) { return new Promise(resolve => { entry.file(f => { Object.defineProperty(f, 'customPath', { value: path + f.name }); extractedFiles.push(f); resolve(); }); }); } 
+        else if (entry.isDirectory) { const dirReader = entry.createReader(); const entries = await readAllEntries(dirReader); for(let subEntry of entries) await readEntry(subEntry, path + entry.name + "/"); }
     };
 
-    for (let i = 0; i < items.length; i++) {
-        const entry = items[i].webkitGetAsEntry();
-        if (entry) await readEntry(entry);
-    }
-    
+    for (let i = 0; i < items.length; i++) { const entry = items[i].webkitGetAsEntry(); if (entry) await readEntry(entry); }
     if(extractedFiles.length > 0) processLocalFiles(extractedFiles);
     else if(clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> No se encontraron archivos válidos en la carpeta soltada.</div>"]);
 });
 
 // =========================================================================
-// RENDERIZADO Y LÓGICA DE GALERÍA
+// ⚙️ SECCIÓN 8: WORKERS Y GENERACIÓN DE MINIATURAS
 // =========================================================================
-function triggerGalleryAnimation() { 
-    gallery.classList.remove('fade-in'); 
-    requestAnimationFrame(() => requestAnimationFrame(() => gallery.classList.add('fade-in')));
-}
+const workerCode = `
+self.onmessage = async function(e) {
+    const { id, file, targetWidth } = e.data;
+    try { const bitmap = await createImageBitmap(file); const scale = Math.min(1, targetWidth / bitmap.width); const width = Math.round(bitmap.width * scale); const height = Math.round(bitmap.height * scale); const canvas = new OffscreenCanvas(width, height); const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0, width, height); const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.6 }); self.postMessage({ id, success: true, blob }); bitmap.close(); } 
+    catch (error) { self.postMessage({ id, success: false, error: error.message }); }
+};`;
+const workerBlob = new Blob([workerCode], { type: 'application/javascript' }); const imageWorker = new Worker(URL.createObjectURL(workerBlob));
+const pendingTasks = new Map(); let taskIdCounter = 0;
+imageWorker.onmessage = function(e) { const { id, success, blob, error } = e.data; if (pendingTasks.has(id)) { const { resolve, reject } = pendingTasks.get(id); pendingTasks.delete(id); if (success) resolve(blob); else reject(error); } };
+function generateThumbWithWorker(file, targetWidth) { return new Promise((resolve, reject) => { const id = taskIdCounter++; pendingTasks.set(id, { resolve, reject }); imageWorker.postMessage({ id, file, targetWidth }); }); }
 
-let searchTimeout;
-searchInput.addEventListener("input", () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(updateGalleryView, 400); 
-});
-
-function passesFilter(fileData) { if (currentFilter === "folder") return false; if (currentFilter === "favs") return favorites.has(fileData.uniquePath); if (currentFilter === "all") return true; if (currentFilter === "video" && fileData.type === "video") return true; if (currentFilter === "gif" && fileData.file.type === "image/gif") return true; if (currentFilter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true; return false; }
-function sortFilesArray(filesArray) { const criteria = currentSortCriteria; const isAscending = currentSortOrder === "asc" ? 1 : -1; return filesArray.sort((a, b) => { let valA, valB; if (criteria === "name") { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if (criteria === "date") { valA = a.file.lastModified; valB = b.file.lastModified; } else if (criteria === "size") { valA = a.file.size; valB = b.file.size; } else if (criteria === "type") { valA = a.file.type; valB = b.file.type; } if (valA < valB) return -1 * isAscending; if (valA > valB) return 1 * isAscending; return 0; }); }
-
-function getFolderCoverData(folderPath) { 
-    const state = getState();
-
-    if (customFolderCovers[folderPath]) {
-        const targetUniquePath = customFolderCovers[folderPath];
-        const customIndex = state.allFiles.findIndex(f => f.uniquePath === targetUniquePath);
-        if (customIndex !== -1) {
-            return { data: state.allFiles[customIndex], index: customIndex };
-        }
-    }
-
-    let possibleCovers = []; 
-    const descendantIds = new Set([folderPath]);
-    
-    function addDescendants(fId) {
-        if(state.foldersMap[fId]) {
-            state.foldersMap[fId].subfolders.forEach(subId => {
-                if (!descendantIds.has(subId)) {
-                    descendantIds.add(subId);
-                    addDescendants(subId);
-                }
-            });
-        }
-    }
-    addDescendants(folderPath);
-
-    for (let i = 0; i < state.allFiles.length; i++) { 
-        const f = state.allFiles[i]; 
-        if (descendantIds.has(f.parentFolder) || (currentViewSource === 'local' && f.parentFolder.startsWith(folderPath + '/'))) {
-            possibleCovers.push({ data: f, index: i }); 
-            if (possibleCovers.length > 2) break; 
-        }
-    }
-    
-    if (possibleCovers.length === 0) return null; 
-    possibleCovers.sort((a, b) => a.data.name.toLowerCase().localeCompare(b.data.name.toLowerCase())); 
-    return possibleCovers[0]; 
+function cleanupLocalMemory() { 
+    if (!appState.local.allFiles || appState.local.allFiles.length === 0) return; 
+    appState.local.allFiles.forEach(fileData => { if (fileData.thumbSrc && fileData.thumbSrc.startsWith('blob:')) URL.revokeObjectURL(fileData.thumbSrc); }); 
 }
 
 const smartThumbWidth = 200 * (window.devicePixelRatio || 1);
-let imagePriorityQueue = [];
-let isProcessingQueue = false;
-let galleryObserver;
+let imagePriorityQueue = []; let isProcessingQueue = false; let galleryObserver;
 
 async function processImagePriorityQueue() {
     if (isProcessingQueue) return;
     isProcessingQueue = true;
 
     while (imagePriorityQueue.length > 0) {
-        const task = imagePriorityQueue.pop(); 
-        const { fileData, img } = task;
-
+        const task = imagePriorityQueue.pop(); const { fileData, img } = task;
         if (!document.body.contains(img)) continue;
 
         if (fileData.uniquePath && fileData.uniquePath.startsWith('drive_')) {
             img.src = fileData.thumbSrc || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>";
-            img.classList.remove('skeleton');
-            continue;
+            img.classList.remove('skeleton'); continue;
         }
 
-        if (fileData.thumbSrc) {
-            img.src = fileData.thumbSrc;
-            img.classList.remove('skeleton');
-            continue;
-        }
+        if (fileData.thumbSrc) { img.src = fileData.thumbSrc; img.classList.remove('skeleton'); continue; }
 
         const cachedUrl = await getThumbFromDB(fileData.cacheKey);
-        if (cachedUrl) {
-            fileData.thumbSrc = cachedUrl;
-            if (document.body.contains(img)) { img.src = cachedUrl; img.classList.remove('skeleton'); }
-            continue;
-        }
+        if (cachedUrl) { fileData.thumbSrc = cachedUrl; if (document.body.contains(img)) { img.src = cachedUrl; img.classList.remove('skeleton'); } continue; }
 
         if (fileData.file.type.startsWith("image/")) {
             try {
                 const blob = await generateThumbWithWorker(fileData.file, smartThumbWidth);
-                const objUrl = URL.createObjectURL(blob);
-                fileData.thumbSrc = objUrl;
-                
-                const reader = new FileReader();
-                reader.onloadend = () => saveThumbToDB(fileData.cacheKey, reader.result);
-                reader.readAsDataURL(blob);
-
+                const objUrl = URL.createObjectURL(blob); fileData.thumbSrc = objUrl;
+                const reader = new FileReader(); reader.onloadend = () => saveThumbToDB(fileData.cacheKey, reader.result); reader.readAsDataURL(blob);
                 if (document.body.contains(img)) { img.src = objUrl; img.classList.remove('skeleton'); }
-            } catch(e) {
-                fileData.thumbSrc = URL.createObjectURL(fileData.file);
-                if (document.body.contains(img)) { img.src = fileData.thumbSrc; img.classList.remove('skeleton'); }
-            }
+            } catch(e) { fileData.thumbSrc = URL.createObjectURL(fileData.file); if (document.body.contains(img)) { img.src = fileData.thumbSrc; img.classList.remove('skeleton'); } }
         } else if (fileData.file.type.startsWith("video/")) {
             await new Promise(resolve => {
-                const tempUrl = URL.createObjectURL(fileData.file); 
-                const tempVideo = document.createElement("video"); 
-                tempVideo.src = tempUrl; tempVideo.muted = true; tempVideo.playsInline = true; 
-                
-                tempVideo.onloadeddata = () => { 
-                    setTimeout(() => {
-                        if (tempVideo.duration > 1) tempVideo.currentTime = 1; else tempVideo.currentTime = tempVideo.duration / 2; 
-                    }, 0);
-                }; 
-                
-                tempVideo.onseeked = () => { 
-                    requestAnimationFrame(() => {
-                        const canvas = document.createElement("canvas"); 
-                        const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200)); 
-                        canvas.width = (tempVideo.videoWidth || 200) * scaleFactor; canvas.height = (tempVideo.videoHeight || 150) * scaleFactor; 
-                        canvas.getContext("2d").drawImage(tempVideo, 0, 0, canvas.width, canvas.height); 
-                        
-                        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
-                        fileData.thumbSrc = dataUrl; 
-                        saveThumbToDB(fileData.cacheKey, dataUrl); 
-                        
-                        if (document.body.contains(img)) { img.src = dataUrl; img.classList.remove('skeleton'); }
-                        URL.revokeObjectURL(tempUrl); 
-                        resolve();
-                    });
-                }; 
-                tempVideo.onerror = () => { 
-                    fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>"; 
-                    if (document.body.contains(img)) { img.src = fileData.thumbSrc; img.classList.remove('skeleton'); }
-                    URL.revokeObjectURL(tempUrl); resolve();
-                }; 
+                const tempUrl = URL.createObjectURL(fileData.file); const tempVideo = document.createElement("video"); tempVideo.src = tempUrl; tempVideo.muted = true; tempVideo.playsInline = true; 
+                tempVideo.onloadeddata = () => { setTimeout(() => { if (tempVideo.duration > 1) tempVideo.currentTime = 1; else tempVideo.currentTime = tempVideo.duration / 2; }, 0); }; 
+                tempVideo.onseeked = () => { requestAnimationFrame(() => { const canvas = document.createElement("canvas"); const scaleFactor = Math.min(1, smartThumbWidth / (tempVideo.videoWidth || 200)); canvas.width = (tempVideo.videoWidth || 200) * scaleFactor; canvas.height = (tempVideo.videoHeight || 150) * scaleFactor; canvas.getContext("2d").drawImage(tempVideo, 0, 0, canvas.width, canvas.height); const dataUrl = canvas.toDataURL("image/jpeg", 0.6); fileData.thumbSrc = dataUrl; saveThumbToDB(fileData.cacheKey, dataUrl); if (document.body.contains(img)) { img.src = dataUrl; img.classList.remove('skeleton'); } URL.revokeObjectURL(tempUrl); resolve(); }); }; 
+                tempVideo.onerror = () => { fileData.thumbSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='150'><rect width='200' height='150' fill='%23333'/></svg>"; if (document.body.contains(img)) { img.src = fileData.thumbSrc; img.classList.remove('skeleton'); } URL.revokeObjectURL(tempUrl); resolve(); }; 
             });
         }
     }
     isProcessingQueue = false;
 }
 
+// =========================================================================
+//  SECCIÓN 9: GALERÍA Y RENDERIZADO
+// =========================================================================
+sortOptions.forEach(option => {
+    const handleSort = (e) => {
+        e.stopPropagation();
+        const type = option.getAttribute('data-type'); const value = option.getAttribute('data-value');
+        if (type === 'criteria') { currentSortCriteria = value; document.querySelectorAll('.sort-option.criteria').forEach(el => el.classList.remove('active')); } 
+        else if (type === 'order') { currentSortOrder = value; document.querySelectorAll('.sort-option.order').forEach(el => el.classList.remove('active')); }
+        option.classList.add('active'); sortMenu.classList.remove('show'); sortBtn.setAttribute('aria-expanded', 'false'); updateGalleryView();
+    };
+    option.addEventListener('click', handleSort); option.addEventListener('keydown', e => { if (e.key === 'Enter') handleSort(e); });
+});
+
+filterOptions.forEach(option => {
+    const handleFilter = (e) => {
+        e.stopPropagation(); currentFilter = option.getAttribute('data-value'); filterBtnText.textContent = option.getAttribute('data-label');
+        document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+        option.classList.add('active'); filterMenu.classList.remove('show'); filterBtn.setAttribute('aria-expanded', 'false'); updateGalleryView();
+    };
+    option.addEventListener('click', handleFilter); option.addEventListener('keydown', e => { if (e.key === 'Enter') handleFilter(e); });
+});
+
+let favorites = new Set(JSON.parse(localStorage.getItem('myGalleryFavs')) || []);
+const saveFavorites = () => localStorage.setItem('myGalleryFavs', JSON.stringify([...favorites]));
+
+function triggerGalleryAnimation() { gallery.classList.remove('fade-in'); requestAnimationFrame(() => requestAnimationFrame(() => gallery.classList.add('fade-in'))); }
+function passesFilter(fileData) { if (currentFilter === "folder") return false; if (currentFilter === "favs") return favorites.has(fileData.uniquePath); if (currentFilter === "all") return true; if (currentFilter === "video" && fileData.type === "video") return true; if (currentFilter === "gif" && fileData.file.type === "image/gif") return true; if (currentFilter === "image" && fileData.type === "image" && fileData.file.type !== "image/gif") return true; return false; }
+function sortFilesArray(filesArray) { const criteria = currentSortCriteria; const isAscending = currentSortOrder === "asc" ? 1 : -1; return filesArray.sort((a, b) => { let valA, valB; if (criteria === "name") { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if (criteria === "date") { valA = a.file.lastModified; valB = b.file.lastModified; } else if (criteria === "size") { valA = a.file.size; valB = b.file.size; } else if (criteria === "type") { valA = a.file.type; valB = b.file.type; } if (valA < valB) return -1 * isAscending; if (valA > valB) return 1 * isAscending; return 0; }); }
+
+function getFolderCoverData(folderPath) { 
+    const state = getState();
+    if (customFolderCovers[folderPath]) {
+        const targetUniquePath = customFolderCovers[folderPath];
+        const customIndex = state.allFiles.findIndex(f => f.uniquePath === targetUniquePath);
+        if (customIndex !== -1) return { data: state.allFiles[customIndex], index: customIndex };
+    }
+    let possibleCovers = []; const descendantIds = new Set([folderPath]);
+    function addDescendants(fId) { if(state.foldersMap[fId]) { state.foldersMap[fId].subfolders.forEach(subId => { if (!descendantIds.has(subId)) { descendantIds.add(subId); addDescendants(subId); } }); } }
+    addDescendants(folderPath);
+
+    for (let i = 0; i < state.allFiles.length; i++) { 
+        const f = state.allFiles[i]; 
+        if (descendantIds.has(f.parentFolder) || (currentViewSource === 'local' && f.parentFolder.startsWith(folderPath + '/'))) {
+            possibleCovers.push({ data: f, index: i }); if (possibleCovers.length > 2) break; 
+        }
+    }
+    if (possibleCovers.length === 0) return null; 
+    possibleCovers.sort((a, b) => a.data.name.toLowerCase().localeCompare(b.data.name.toLowerCase())); 
+    return possibleCovers[0]; 
+}
+
 function buildHTMLRows(filesToRender, includeBackBtn = false, backParent = null, foldersToRender = []) {
     currentGridOffset = (includeBackBtn ? 1 : 0) + foldersToRender.length;
     let items = [];
-    
-    if (includeBackBtn) {
-        items.push(`<div class="item folder" data-action="back" data-parent="${escapeHTML(backParent)}" tabindex="0" role="button" aria-label="Regresar" style="background:#1a1a1a"><div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div></div>`);
-    }
-
+    if (includeBackBtn) { items.push(`<div class="item folder" data-action="back" data-parent="${escapeHTML(backParent)}" tabindex="0" role="button" aria-label="Regresar" style="background:#1a1a1a"><div class="folder-icon-fallback"><i class="fa-solid fa-arrow-left"></i></div><div class="folder-name-overlay">Regresar</div></div>`); }
     foldersToRender.forEach(folder => {
-        let coverImg = "";
-        const safeName = escapeHTML(folder.name);
-        const safePath = escapeHTML(folder.path);
-        let coverIndexAttr = "";
-        
-        if (folder.coverData) {
-            coverImg = `<img data-all-index="${folder.coverData.index}" class="folder-cover skeleton" loading="lazy"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${safeName}</div>`;
-            coverIndexAttr = `data-cover-index="${folder.coverData.index}"`; 
-        }
-        else {
-            coverImg = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${safeName}</div>`;
-        }
-        
+        let coverImg = ""; const safeName = escapeHTML(folder.name); const safePath = escapeHTML(folder.path); let coverIndexAttr = "";
+        if (folder.coverData) { coverImg = `<img data-all-index="${folder.coverData.index}" class="folder-cover skeleton" loading="lazy"><div class="folder-name-overlay"><i class="fa-solid fa-folder"></i> ${safeName}</div>`; coverIndexAttr = `data-cover-index="${folder.coverData.index}"`; }
+        else { coverImg = `<div class="folder-icon-fallback"><i class="fa-solid fa-folder"></i></div><div class="folder-name-overlay">${safeName}</div>`; }
         items.push(`<div class="item folder" data-action="open" data-path="${safePath}" ${coverIndexAttr} tabindex="0" role="button" aria-label="Abrir ${safeName}">${coverImg}</div>`);
     });
 
     filesToRender.forEach(fileData => {
-        const safeName = escapeHTML(fileData.name);
-        let favBadge = favorites.has(fileData.uniquePath) ? `<span class="fav-badge"><i class="fa-solid fa-heart" style="color: #ff4d4d;"></i></span>` : '';
-        let typeBadge = '';
-        if (fileData.file.type === "image/gif") typeBadge = `<span class="media-badge badge-gif"><i class="fa-solid fa-film"></i> GIF</span>`;
-        else if (fileData.type === "video") typeBadge = `<span class="media-badge badge-video"><i class="fa-solid fa-play"></i> VIDEO</span>`;
-        
+        const safeName = escapeHTML(fileData.name); let favBadge = favorites.has(fileData.uniquePath) ? `<span class="fav-badge"><i class="fa-solid fa-heart" style="color: #ff4d4d;"></i></span>` : ''; let typeBadge = '';
+        if (fileData.file.type === "image/gif") typeBadge = `<span class="media-badge badge-gif"><i class="fa-solid fa-film"></i> GIF</span>`; else if (fileData.type === "video") typeBadge = `<span class="media-badge badge-video"><i class="fa-solid fa-play"></i> VIDEO</span>`;
         items.push(`<div class="item" data-type="media" data-index="${fileData.index}" tabindex="0" role="button" aria-label="Ver ${safeName}"><img class="thumb skeleton">${typeBadge}${favBadge}</div>`);
     });
 
     const containerWidth = scrollArea.clientWidth || window.innerWidth;
     const itemsPerRow = containerWidth <= 600 ? 2 : Math.max(1, Math.floor((containerWidth - 40) / 215));
-    
-    let rows = [];
-    let currentRow = [];
+    let rows = []; let currentRow = [];
     
     for (let i = 0; i < items.length; i++) {
         currentRow.push(items[i]);
@@ -1503,27 +1296,23 @@ function buildHTMLRows(filesToRender, includeBackBtn = false, backParent = null,
     return rows;
 }
 
+let searchTimeout;
+searchInput.addEventListener("input", () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(updateGalleryView, 400); });
+
 function updateGalleryView() { 
     const searchTerm = searchInput.value.toLowerCase().trim(); 
-    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") { 
-        if (getState().currentPath) renderGallery(getState().currentPath); 
-    } else { 
-        renderGlobalSearch(searchTerm); 
-    } 
+    if (searchTerm === "" && currentFilter !== "favs" && currentFilter !== "folder") { if (getState().currentPath) renderGallery(getState().currentPath); } 
+    else { renderGlobalSearch(searchTerm); } 
 }
 
 function renderGlobalSearch(searchTerm) { 
-    triggerGalleryAnimation(); 
-    mediaFiles = []; 
-    let indexCounter = 0; 
-    const state = getState();
+    triggerGalleryAnimation(); mediaFiles = []; let indexCounter = 0; const state = getState();
 
     if (currentFilter === "favs" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-star" style="color: gold;"></i> Todos tus Favoritos';
     else if (currentFilter === "folder" && searchTerm === "") pathDisplay.innerHTML = '<i class="fa-solid fa-folder-tree" style="color: #4da6ff;"></i> Todas las Carpetas';
     else pathDisplay.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Resultados para: "${escapeHTML(searchTerm)}"`;
     
     let foldersToRender = [];
-    
     if ((currentFilter === "all" || currentFilter === "folder") && searchTerm !== "") { 
         let allFolders = Object.keys(state.foldersMap); 
         if (currentViewSource === 'local') {
@@ -1537,11 +1326,8 @@ function renderGlobalSearch(searchTerm) {
         }
     } else if (currentFilter === "folder" && searchTerm === "") {
          let allFolders = Object.keys(state.foldersMap); 
-         if (currentViewSource === 'local') {
-             foldersToRender = allFolders.filter(f => f !== state.rootFolderName).map(path => ({ path, name: path.split('/').pop(), coverData: getFolderCoverData(path) }));
-         } else {
-             foldersToRender = allFolders.filter(fId => fId !== 'root').map(fId => ({ path: fId, name: state.folderMetadata[fId].name, coverData: getFolderCoverData(fId) }));
-         }
+         if (currentViewSource === 'local') { foldersToRender = allFolders.filter(f => f !== state.rootFolderName).map(path => ({ path, name: path.split('/').pop(), coverData: getFolderCoverData(path) })); } 
+         else { foldersToRender = allFolders.filter(fId => fId !== 'root').map(fId => ({ path: fId, name: state.folderMetadata[fId].name, coverData: getFolderCoverData(fId) })); }
          foldersToRender.sort((a,b) => currentSortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
     }
     
@@ -1551,26 +1337,17 @@ function renderGlobalSearch(searchTerm) {
     
     const rows = buildHTMLRows(filesToRender, true, "search_back", foldersToRender);
     clusterize.update(rows);
-    
     if (rows.length === 0) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados.</div>"]);
-
     scrollArea.scrollTop = 0;
 }
 
 function renderGallery(folderPath) { 
-    triggerGalleryAnimation(); 
-    const state = getState();
-    state.currentPath = folderPath; 
-    mediaFiles = []; 
-    let indexCounter = 0; 
+    triggerGalleryAnimation(); const state = getState(); state.currentPath = folderPath; mediaFiles = []; let indexCounter = 0; 
     const currentFolder = state.foldersMap[folderPath]; 
     if (!currentFolder) { clusterize.update([]); return; } 
     
-    if (currentViewSource === 'drive') {
-        pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive" style="color: #6da235;"></i> ' + escapeHTML(buildDriveBreadcrumb(folderPath));
-    } else {
-        pathDisplay.innerHTML = '<i class="fa-solid fa-folder-open"></i> ' + escapeHTML(folderPath.replace(/\//g, ' / ')); 
-    }
+    if (currentViewSource === 'drive') pathDisplay.innerHTML = '<i class="fa-brands fa-google-drive" style="color: #6da235;"></i> ' + escapeHTML(buildDriveBreadcrumb(folderPath));
+    else pathDisplay.innerHTML = '<i class="fa-solid fa-folder-open"></i> ' + escapeHTML(folderPath.replace(/\//g, ' / ')); 
     
     let foldersToRender = [];
     if (currentFilter === "all") {
@@ -1586,13 +1363,11 @@ function renderGallery(folderPath) {
     filesToRender = sortFilesArray(filesToRender); 
     filesToRender.forEach(fileData => { fileData.index = indexCounter++; mediaFiles.push(fileData); });
 
-    let includeBackBtn = false;
-    let backParent = null;
+    let includeBackBtn = false; let backParent = null;
 
     if (currentViewSource === 'drive') {
         includeBackBtn = folderPath !== "root";
-        if (folderPath === "search_results") backParent = "search_back";
-        else backParent = state.folderMetadata[folderPath] ? state.folderMetadata[folderPath].parentId : null;
+        if (folderPath === "search_results") backParent = "search_back"; else backParent = state.folderMetadata[folderPath] ? state.folderMetadata[folderPath].parentId : null;
     } else {
         includeBackBtn = folderPath !== state.rootFolderName;
         backParent = includeBackBtn ? folderPath.substring(0, folderPath.lastIndexOf('/')) : null;
@@ -1601,238 +1376,43 @@ function renderGallery(folderPath) {
     const rows = buildHTMLRows(filesToRender, includeBackBtn, backParent, foldersToRender);
     clusterize.update(rows);
     searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
-
     scrollArea.scrollTop = 0;
 }
 
-// =========================================================================
-// EVENTOS EN GALERÍA Y MENÚ CONTEXTUAL
-// =========================================================================
-gallery.addEventListener('click', async e => {
-    const folderItem = e.target.closest('.item.folder');
-    if (folderItem) {
-        const action = folderItem.getAttribute('data-action');
-        const path = folderItem.getAttribute('data-path') || folderItem.getAttribute('data-parent');
-        
-        if (action === 'back' && path === "search_back") {
-            searchInput.value = "";
-            if (currentFilter === "favs" || currentFilter === "folder") {
-                currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
-                document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-                document.querySelector('.filter-option[data-value="all"]').classList.add('active');
-            }
-            if(currentViewSource === 'local') updateGalleryView();
-            else renderGallery(appState.drive.rootFolderName);
-            return;
-        }
-
-        searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
-        document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-        document.querySelector('.filter-option[data-value="all"]').classList.add('active');
-
-        renderGallery(path);
-        return;
-    }
-
-    const mediaItem = e.target.closest('.item[data-type="media"]');
-    if (mediaItem) {
-        const index = parseInt(mediaItem.getAttribute('data-index'), 10);
-        
-        if (selectingCoverForPath) {
-            const fileData = mediaFiles[index];
-            customFolderCovers[selectingCoverForPath] = fileData.uniquePath;
-            saveCustomCovers();
-            cancelSelectionMode();
-            return;
-        }
-
-        openViewer(index);
-    }
-});
-
-gallery.addEventListener('keydown', e => { if (e.key === 'Enter') { const item = e.target.closest('.item'); if (item) item.click(); } });
-
-const ctxMenu = document.getElementById("customContextMenu"); 
-const ctxFavIcon = document.getElementById("ctxFavIcon"); 
-const ctxFavText = document.getElementById("ctxFavText"); 
-const ctxChangeCover = document.getElementById("ctxChangeCover");
-const ctxUploadDrive = document.getElementById("ctxUploadDrive");
-const ctxUploadDriveText = document.getElementById("ctxUploadDriveText");
-
-let contextMenuTarget = null;
-
-gallery.addEventListener('contextmenu', e => {
-    const mediaItem = e.target.closest('.item[data-type="media"]');
-    const folderItem = e.target.closest('.item.folder');
-    
-    if (!mediaItem && !folderItem) return;
-    e.preventDefault();
-    
-    if (folderItem && folderItem.getAttribute('data-action') === 'open') {
-        const folderPath = folderItem.getAttribute('data-path');
-        contextMenuTarget = { isFolder: true, path: folderPath };
-        
-        document.getElementById('ctxCopy').style.display = 'none';
-        document.getElementById('ctxShare').style.display = 'none';
-        document.getElementById('ctxDownload').style.display = 'none';
-        document.getElementById('ctxFav').style.display = 'none';
-        ctxChangeCover.style.display = 'flex';
-        
-        if (currentViewSource === 'local') {
-            ctxUploadDrive.style.display = 'flex';
-            ctxUploadDriveText.innerText = "Subir carpeta a Drive";
-        } else {
-            ctxUploadDrive.style.display = 'none';
-        }
-        
-    } else if (mediaItem) {
-        const index = parseInt(mediaItem.getAttribute('data-index'), 10);
-        const fileData = mediaFiles[index];
-        contextMenuTarget = { isFolder: false, fileData, thumbDiv: mediaItem };
-        
-        if (favorites.has(fileData.uniquePath)) { ctxFavIcon.className = "fa-solid fa-heart-crack icon"; ctxFavIcon.style.color = "#ff4d4d"; ctxFavText.textContent = "Quitar Fav"; } 
-        else { ctxFavIcon.className = "fa-regular fa-heart icon"; ctxFavIcon.style.color = "white"; ctxFavText.textContent = "Favorito"; } 
-        
-        document.getElementById('ctxCopy').style.display = 'flex';
-        document.getElementById('ctxShare').style.display = 'flex';
-        document.getElementById('ctxDownload').style.display = 'flex';
-        document.getElementById('ctxFav').style.display = 'flex';
-        ctxChangeCover.style.display = 'none';
-
-        if (currentViewSource === 'local') {
-            ctxUploadDrive.style.display = 'flex';
-            ctxUploadDriveText.innerText = "Subir archivo a Drive";
-        } else {
-            ctxUploadDrive.style.display = 'none';
-        }
-    } else {
-        return;
-    }
-    
-    ctxMenu.style.display = "flex"; let x = e.pageX; let y = e.pageY; 
-    if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10; 
-    if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10; 
-    ctxMenu.style.left = `${x}px`; ctxMenu.style.top = `${y}px`;
-});
-
-document.getElementById('ctxChangeCover').addEventListener('click', () => {
-    if (!contextMenuTarget || !contextMenuTarget.isFolder) return;
-    
-    selectingCoverForPath = contextMenuTarget.path;
-    originalPathBeforeSelection = getState().currentPath; 
-    
-    const banner = document.getElementById('selectionBanner');
-    const bannerText = document.getElementById('selectionBannerText');
-    const state = getState();
-    const folderName = currentViewSource === 'drive' && state.folderMetadata[selectingCoverForPath] ? state.folderMetadata[selectingCoverForPath].name : selectingCoverForPath.split('/').pop();
-    
-    bannerText.innerHTML = `Elegir miniatura para: <b style="color:#0a0a0a;">${escapeHTML(folderName)}</b>`;
-    banner.style.display = 'flex';
-    
-    searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos";
-    document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
-    document.querySelector('.filter-option[data-value="all"]').classList.add('active');
-    
-    renderGallery(selectingCoverForPath);
-});
-
-document.getElementById('ctxUploadDrive').addEventListener('click', () => {
-    if (!contextMenuTarget) return;
-    queueUploadToDrive(contextMenuTarget);
-});
-
 function handlePreviewStart(e) {
     if (currentViewSource !== 'local') return;
+    const mediaItem = e.target.closest('.item[data-type="media"]'); const folderItem = e.target.closest('.item.folder');
+    let item = null; let fileData = null; let mediaElement = null;
 
-    const mediaItem = e.target.closest('.item[data-type="media"]');
-    const folderItem = e.target.closest('.item.folder');
-
-    let item = null;
-    let fileData = null;
-    let mediaElement = null;
-
-    if (mediaItem) {
-        item = mediaItem;
-        fileData = mediaFiles[parseInt(item.getAttribute('data-index'), 10)];
-        mediaElement = item.querySelector('img.thumb');
-    } else if (folderItem) {
-        item = folderItem;
-        const coverIndex = item.getAttribute('data-cover-index');
-        if (coverIndex !== null && coverIndex !== "") {
-            fileData = getState().allFiles[parseInt(coverIndex, 10)];
-            mediaElement = item.querySelector('img.folder-cover');
-        }
-    }
+    if (mediaItem) { item = mediaItem; fileData = mediaFiles[parseInt(item.getAttribute('data-index'), 10)]; mediaElement = item.querySelector('img.thumb'); } 
+    else if (folderItem) { item = folderItem; const coverIndex = item.getAttribute('data-cover-index'); if (coverIndex !== null && coverIndex !== "") { fileData = getState().allFiles[parseInt(coverIndex, 10)]; mediaElement = item.querySelector('img.folder-cover'); } }
 
     if (!fileData || !item || !mediaElement) return;
     if (fileData.file.type !== "image/gif" && fileData.type !== "video") return;
-
-    if (fileData.isHovering) return;
-    fileData.isHovering = true;
-    
+    if (fileData.isHovering) return; fileData.isHovering = true;
     if (!fileData.hoverUrl) fileData.hoverUrl = URL.createObjectURL(fileData.file);
 
-    if (fileData.file.type === "image/gif") {
-        mediaElement.src = fileData.hoverUrl; 
-    } 
+    if (fileData.file.type === "image/gif") { mediaElement.src = fileData.hoverUrl; } 
     else if (fileData.type === "video") {
-        let previewVideo = document.createElement("video"); 
-        previewVideo.src = fileData.hoverUrl; 
-        previewVideo.muted = true; 
-        previewVideo.loop = true; 
-        previewVideo.playsInline = true; 
-        previewVideo.className = "preview-video";
-        item.appendChild(previewVideo); 
-        mediaElement.style.opacity = "0"; 
-        previewVideo.play().catch(e => console.log("Preview pausado")); 
-        fileData.previewVideo = previewVideo;
+        let previewVideo = document.createElement("video"); previewVideo.src = fileData.hoverUrl; previewVideo.muted = true; previewVideo.loop = true; previewVideo.playsInline = true; previewVideo.className = "preview-video";
+        item.appendChild(previewVideo); mediaElement.style.opacity = "0"; previewVideo.play().catch(e => console.log("Preview pausado")); fileData.previewVideo = previewVideo;
     }
 }
 
 function handlePreviewStop(e) {
     if (currentViewSource !== 'local') return;
-    
-    const mediaItem = e.target.closest('.item[data-type="media"]');
-    const folderItem = e.target.closest('.item.folder');
+    const mediaItem = e.target.closest('.item[data-type="media"]'); const folderItem = e.target.closest('.item.folder');
+    let item = null; let fileData = null; let mediaElement = null;
 
-    let item = null;
-    let fileData = null;
-    let mediaElement = null;
-
-    if (mediaItem) {
-        item = mediaItem;
-        if (e.relatedTarget && item.contains(e.relatedTarget)) return;
-        fileData = mediaFiles[parseInt(item.getAttribute('data-index'), 10)];
-        mediaElement = item.querySelector('img.thumb');
-    } else if (folderItem) {
-        item = folderItem;
-        if (e.relatedTarget && item.contains(e.relatedTarget)) return;
-        const coverIndex = item.getAttribute('data-cover-index');
-        if (coverIndex !== null && coverIndex !== "") {
-            fileData = getState().allFiles[parseInt(coverIndex, 10)];
-            mediaElement = item.querySelector('img.folder-cover');
-        }
-    }
+    if (mediaItem) { item = mediaItem; if (e.relatedTarget && item.contains(e.relatedTarget)) return; fileData = mediaFiles[parseInt(item.getAttribute('data-index'), 10)]; mediaElement = item.querySelector('img.thumb'); } 
+    else if (folderItem) { item = folderItem; if (e.relatedTarget && item.contains(e.relatedTarget)) return; const coverIndex = item.getAttribute('data-cover-index'); if (coverIndex !== null && coverIndex !== "") { fileData = getState().allFiles[parseInt(coverIndex, 10)]; mediaElement = item.querySelector('img.folder-cover'); } }
 
     if (!fileData || !fileData.isHovering || !mediaElement) return;
-
     fileData.isHovering = false;
     
-    if (fileData.file.type === "image/gif") {
-        mediaElement.src = fileData.thumbSrc; 
-    } else if (fileData.previewVideo) {
-        fileData.previewVideo.pause(); 
-        fileData.previewVideo.removeAttribute('src'); 
-        fileData.previewVideo.load(); 
-        fileData.previewVideo.remove(); 
-        fileData.previewVideo = null; 
-        mediaElement.style.opacity = "1";
-    }
-    
-    if (fileData.hoverUrl) {
-        URL.revokeObjectURL(fileData.hoverUrl);
-        fileData.hoverUrl = null;
-    }
+    if (fileData.file.type === "image/gif") { mediaElement.src = fileData.thumbSrc; } 
+    else if (fileData.previewVideo) { fileData.previewVideo.pause(); fileData.previewVideo.removeAttribute('src'); fileData.previewVideo.load(); fileData.previewVideo.remove(); fileData.previewVideo = null; mediaElement.style.opacity = "1"; }
+    if (fileData.hoverUrl) { URL.revokeObjectURL(fileData.hoverUrl); fileData.hoverUrl = null; }
 }
 
 gallery.addEventListener('mouseover', handlePreviewStart);
@@ -1843,63 +1423,37 @@ gallery.addEventListener('touchcancel', handlePreviewStop);
 gallery.addEventListener('dragstart', e => { if (e.target.tagName === 'IMG') e.preventDefault(); });
 
 // =========================================================================
-// VISOR MULTIMEDIA Y REPRODUCTOR YT
+//  SECCIÓN 10: VISOR MULTIMEDIA Y REPRODUCTOR YT
 // =========================================================================
 let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
 
-function formatTime(seconds) {
-    if (isNaN(seconds)) return "0:00";
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return m + ":" + (s < 10 ? "0" : "") + s;
-}
+function formatTime(seconds) { if (isNaN(seconds)) return "0:00"; const m = Math.floor(seconds / 60); const s = Math.floor(seconds % 60); return m + ":" + (s < 10 ? "0" : "") + s; }
 
 async function openViewer(index) {
     scrollArea.style.overflowY = "hidden"; 
-
-    if (currentViewerUrl) {
-        URL.revokeObjectURL(currentViewerUrl);
-        currentViewerUrl = null;
-    }
+    if (currentViewerUrl) { URL.revokeObjectURL(currentViewerUrl); currentViewerUrl = null; }
 
     if(mediaFiles.length === 0) return; currentIndex = index; const file = mediaFiles[currentIndex];
     viewer.querySelectorAll('.viewer-content, .yt-player, iframe').forEach(el => el.remove());
     viewer.style.display = "flex"; fileNameDisplay.textContent = file.name;
     
     scale = 1; currentTranslateX = currentTranslateY = xOffset = yOffset = 0; isDragging = false;
-    
-    const vLoad = document.getElementById("viewerLoading");
-    if(vLoad) vLoad.style.display = "flex"; 
+    const vLoad = document.getElementById("viewerLoading"); if(vLoad) vLoad.style.display = "flex"; 
     
     const isFav = favorites.has(file.uniquePath); 
-    favBtn.innerHTML = isFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>'; 
-    favBtn.style.color = isFav ? "#ff4d4d" : "white";
+    favBtn.innerHTML = isFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>'; favBtn.style.color = isFav ? "#ff4d4d" : "white";
     favBtn.onclick = () => { 
         if (favorites.has(file.uniquePath)) favorites.delete(file.uniquePath); else favorites.add(file.uniquePath); 
-        saveFavorites(); 
-        
-        const isNowFav = favorites.has(file.uniquePath); 
-        favBtn.innerHTML = isNowFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>'; 
-        favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; 
-        
+        saveFavorites(); const isNowFav = favorites.has(file.uniquePath); favBtn.innerHTML = isNowFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>'; favBtn.style.color = isNowFav ? "#ff4d4d" : "white"; 
         const targetItem = document.querySelector(`.item[data-index="${file.index}"]`); 
-        if(targetItem) { 
-            const existingHeart = targetItem.querySelector('.fav-badge'); 
-            if (isNowFav && !existingHeart) { 
-                const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetItem.appendChild(fb); 
-            } else if (!isNowFav && existingHeart) {
-                existingHeart.remove(); 
-            }
-        } 
+        if(targetItem) { const existingHeart = targetItem.querySelector('.fav-badge'); if (isNowFav && !existingHeart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; targetItem.appendChild(fb); } else if (!isNowFav && existingHeart) { existingHeart.remove(); } } 
         if (currentFilter === "favs") updateGalleryView(); 
     };
 
     let mediaUrl = "";
     if (currentViewSource === 'local') {
-        currentViewerUrl = URL.createObjectURL(file.file);
-        mediaUrl = currentViewerUrl; 
-        if(vLoad) vLoad.style.display = "none"; 
-        renderViewerMedia(file, mediaUrl);
+        currentViewerUrl = URL.createObjectURL(file.file); mediaUrl = currentViewerUrl; 
+        if(vLoad) vLoad.style.display = "none"; renderViewerMedia(file, mediaUrl);
     } else if (currentViewSource === 'drive') {
         if (file.type === "video") {
             if(vLoad) vLoad.style.display = "none";
@@ -1923,117 +1477,32 @@ async function openViewer(index) {
 
 function renderViewerMedia(file, mediaUrl) {
     downloadBtn.href = currentViewSource === 'drive' ? (file.downloadUrl || mediaUrl) : mediaUrl; downloadBtn.download = file.name;
-    
     const setupInteractive = targetEl => {
-        targetEl.ondragstart = () => false;
-        targetEl.style.willChange = 'transform';
-        targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`;
-        let animationFrameId;
-
-        targetEl.onpointerdown = e => {
-            if (e.target.closest('.yt-controls')) return; 
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-            startClickX = e.clientX;
-            startClickY = e.clientY;
-            isMouseDown = true;
-            isDragging = false;
-            targetEl.setPointerCapture(e.pointerId);
-        };
-
-        targetEl.onpointermove = e => {
-            if (!isMouseDown) return;
-            e.preventDefault();
-            if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) {
-                isDragging = true;
-                targetEl.classList.add('is-dragging');
-            }
-            if (isDragging) {
-                currentTranslateX = e.clientX - initialX;
-                currentTranslateY = e.clientY - initialY;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`);
-            }
-        };
-
-        const dragEnd = e => {
-            if (!isMouseDown) return;
-            isMouseDown = false;
-            if (isDragging) {
-                xOffset = currentTranslateX;
-                yOffset = currentTranslateY;
-                targetEl.classList.remove('is-dragging');
-            }
-            if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId);
-        };
-
-        targetEl.onpointerup = dragEnd;
-        targetEl.onpointercancel = dragEnd;
-
-        targetEl.onwheel = e => {
-            if (e.target.closest('.yt-controls')) return; 
-            e.preventDefault();
-            scale += e.deltaY * -0.002;
-            scale = Math.min(Math.max(0.5, scale), 5); 
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`);
-        };
-
-        let initialDistance = 0;
-        let initialScale = 1;
-
-        targetEl.addEventListener('touchstart', e => {
-            if (e.touches.length === 2) {
-                e.preventDefault();
-                isMouseDown = false;
-                initialDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                initialScale = scale;
-            }
-        }, { passive: false });
-
-        targetEl.addEventListener('touchmove', e => {
-            if (e.touches.length === 2) {
-                e.preventDefault();
-                const currentDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-
-                const distanceRatio = currentDistance / initialDistance;
-                scale = Math.min(Math.max(0.5, initialScale * distanceRatio), 5);
-
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`);
-            }
-        }, { passive: false });
+        targetEl.ondragstart = () => false; targetEl.style.willChange = 'transform'; targetEl.style.transform = `translate3d(0px, 0px, 0px) scale(1)`; let animationFrameId;
+        targetEl.onpointerdown = e => { if (e.target.closest('.yt-controls')) return; initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; startClickX = e.clientX; startClickY = e.clientY; isMouseDown = true; isDragging = false; targetEl.setPointerCapture(e.pointerId); };
+        targetEl.onpointermove = e => { if (!isMouseDown) return; e.preventDefault(); if (!isDragging && (Math.abs(e.clientX - startClickX) > 5 || Math.abs(e.clientY - startClickY) > 5)) { isDragging = true; targetEl.classList.add('is-dragging'); } if (isDragging) { currentTranslateX = e.clientX - initialX; currentTranslateY = e.clientY - initialY; if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } };
+        const dragEnd = e => { if (!isMouseDown) return; isMouseDown = false; if (isDragging) { xOffset = currentTranslateX; yOffset = currentTranslateY; targetEl.classList.remove('is-dragging'); } if (e && e.pointerId) targetEl.releasePointerCapture(e.pointerId); };
+        targetEl.onpointerup = dragEnd; targetEl.onpointercancel = dragEnd;
+        targetEl.onwheel = e => { if (e.target.closest('.yt-controls')) return; e.preventDefault(); scale += e.deltaY * -0.002; scale = Math.min(Math.max(0.5, scale), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); };
+        let initialDistance = 0; let initialScale = 1;
+        targetEl.addEventListener('touchstart', e => { if (e.touches.length === 2) { e.preventDefault(); isMouseDown = false; initialDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialScale = scale; } }, { passive: false });
+        targetEl.addEventListener('touchmove', e => { if (e.touches.length === 2) { e.preventDefault(); const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); const distanceRatio = currentDistance / initialDistance; scale = Math.min(Math.max(0.5, initialScale * distanceRatio), 5); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(() => targetEl.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0) scale(${scale})`); } }, { passive: false });
     };
 
     if (file.type === "image") { 
         let element = document.createElement("img"); element.src = mediaUrl; element.className = "viewer-content"; element.alt = file.name; 
-        viewer.insertBefore(element, fileNameDisplay); 
-        setupInteractive(element); 
-        element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; 
+        viewer.insertBefore(element, fileNameDisplay); setupInteractive(element); element.onclick = e => { if (!isDragging) { if (e.clientX < window.innerWidth / 2) navigate(-1); else navigate(1); } }; 
     } else { 
-        
         const wrapper = document.createElement("div"); wrapper.className = "yt-player paused"; 
         const video = document.createElement("video"); video.src = mediaUrl; video.autoplay = true; video.controls = false; 
-        
-        video.volume = persistentVolume;
-        video.muted = persistentVolume === 0;
+        video.volume = persistentVolume; video.muted = persistentVolume === 0;
 
         const centerIcon = document.createElement("div"); centerIcon.className = "yt-center-icon"; centerIcon.innerHTML = '<i class="fa-solid fa-play" style="margin-left: 6px;"></i>'; 
-        
         const controlsDiv = document.createElement("div"); controlsDiv.className = "yt-controls"; 
         controlsDiv.innerHTML = `
             <div class="yt-progress" id="progContainer" role="slider" aria-label="Línea de tiempo" tabindex="0">
                 <div class="yt-progress-filled" id="progBar"></div>
-                <div class="progress-preview" id="progPreview">
-                    <canvas id="previewCanvas"></canvas>
-                    <div class="progress-preview-time" id="previewTime">0:00</div>
-                </div>
+                <div class="progress-preview" id="progPreview"><canvas id="previewCanvas"></canvas><div class="progress-preview-time" id="previewTime">0:00</div></div>
             </div>
             <div class="yt-bottom-row">
                 <button class="yt-btn" id="playBtn" aria-label="Reproducir o pausar"><i class="fa-solid fa-pause"></i></button>
@@ -2046,17 +1515,12 @@ function renderViewerMedia(file, mediaUrl) {
                 <button class="yt-btn" id="fullBtn" aria-label="Activar pantalla completa"><i class="fa-solid fa-expand"></i></button>
             </div>
         `; 
-        wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); 
-        viewer.insertBefore(wrapper, fileNameDisplay); 
-        
-        setupInteractive(wrapper); 
+        wrapper.appendChild(video); wrapper.appendChild(centerIcon); wrapper.appendChild(controlsDiv); viewer.insertBefore(wrapper, fileNameDisplay); setupInteractive(wrapper); 
 
         const playBtn = wrapper.querySelector('#playBtn'), muteBtn = wrapper.querySelector('#muteBtn'), fullBtn = wrapper.querySelector('#fullBtn'), progContainer = wrapper.querySelector('#progContainer'), progBar = wrapper.querySelector('#progBar'), currTimeEl = wrapper.querySelector('#currTime'), totTimeEl = wrapper.querySelector('#totTime'), volSlider = wrapper.querySelector('#volSlider'), progPreview = wrapper.querySelector('#progPreview'), previewCanvas = wrapper.querySelector('#previewCanvas'), previewCtx = previewCanvas.getContext('2d', { willReadFrequently: true }), previewTimeEl = wrapper.querySelector('#previewTime'), thumbVideo = document.createElement('video'); thumbVideo.src = mediaUrl; thumbVideo.muted = true; thumbVideo.preload = 'auto'; let isSeekingPreview = false, pendingPreviewTime = null, lastRenderedTime = -1; 
         
         thumbVideo.addEventListener('seeked', () => { if (thumbVideo.videoWidth > 0) { const videoW = thumbVideo.videoWidth, videoH = thumbVideo.videoHeight, isVertical = videoH > videoW; const maxVisualSize = 200; let visualW, visualH; if (isVertical) { visualH = maxVisualSize; visualW = maxVisualSize * (videoW / videoH); } else { visualW = maxVisualSize; visualH = maxVisualSize * (videoH / videoW); } const qualityScale = 0.5; previewCanvas.width = visualW * qualityScale; previewCanvas.height = visualH * qualityScale; previewCanvas.style.width = `${visualW}px`; previewCanvas.style.height = `${visualH}px`; previewCtx.drawImage(thumbVideo, 0, 0, previewCanvas.width, previewCanvas.height); } isSeekingPreview = false; if (pendingPreviewTime !== null) { const timeToSeek = pendingPreviewTime; pendingPreviewTime = null; setTimeout(() => triggerPreviewSeek(timeToSeek), 40); } }); 
-        
         const triggerPreviewSeek = time => { const roundedTime = Math.floor(time * 2) / 2; if (Math.abs(lastRenderedTime - roundedTime) < 0.1) return; if (isSeekingPreview) { pendingPreviewTime = roundedTime; return; } isSeekingPreview = true; lastRenderedTime = roundedTime; thumbVideo.currentTime = roundedTime; }; 
-        
         progContainer.addEventListener('mousemove', e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); const hoverTime = pos * video.duration; let previewX = e.clientX - rect.left; const boxWidth = 170; if (previewX < boxWidth / 2) previewX = boxWidth / 2; if (previewX > rect.width - boxWidth / 2) previewX = rect.width - boxWidth / 2; progPreview.style.left = `${previewX}px`; progPreview.style.display = 'flex'; previewTimeEl.textContent = formatTime(hoverTime); triggerPreviewSeek(hoverTime); }); 
         progContainer.addEventListener('mouseleave', () => { progPreview.style.display = 'none'; pendingPreviewTime = null; }); 
         
@@ -2064,59 +1528,21 @@ function renderViewerMedia(file, mediaUrl) {
         wrapper.addEventListener('mousemove', resetIdleTimer); wrapper.addEventListener('mouseleave', () => { if (!video.paused) wrapper.classList.add('idle'); }); 
         
         const showCenterIcon = iconClass => { centerIcon.innerHTML = `<i class="fa-solid ${iconClass}" ${iconClass === 'fa-play' ? 'style="margin-left: 6px;"' : ''}></i>`; wrapper.classList.add('show-center'); setTimeout(() => wrapper.classList.remove('show-center'), 400); }; 
-        
         const togglePlay = () => { if (video.paused) { video.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); showCenterIcon('fa-play'); resetIdleTimer(); } else { video.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); showCenterIcon('fa-pause'); clearTimeout(idleTimeout); wrapper.classList.remove('idle'); } }; 
         
-        video.onclick = e => { if (!isDragging) togglePlay(); }; 
-        playBtn.onclick = togglePlay; 
-        video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; 
+        video.onclick = e => { if (!isDragging) togglePlay(); }; playBtn.onclick = togglePlay; video.ondblclick = e => { if (!isDragging) { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); } }; 
         
-        video.addEventListener('loadedmetadata', () => { 
-            totTimeEl.textContent = formatTime(video.duration); 
-            if(persistentVolume === 0) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
-            else if(persistentVolume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>';
-            else muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-        }); 
+        video.addEventListener('loadedmetadata', () => { totTimeEl.textContent = formatTime(video.duration); if(persistentVolume === 0) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; else if(persistentVolume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>'; else muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; }); 
         video.addEventListener('timeupdate', () => { currTimeEl.textContent = formatTime(video.currentTime); const percent = (video.currentTime / video.duration) * 100; progBar.style.width = `${percent}%`; progContainer.setAttribute('aria-valuenow', percent); }); 
         video.addEventListener('play', () => { playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; wrapper.classList.remove('paused'); resetIdleTimer(); }); 
         video.addEventListener('pause', () => { playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; wrapper.classList.add('paused'); }); 
         
-        let isScrubbing = false; 
-        const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; 
+        let isScrubbing = false; const scrub = e => { const rect = progContainer.getBoundingClientRect(); let pos = (e.clientX - rect.left) / rect.width; pos = Math.max(0, Math.min(1, pos)); video.currentTime = pos * video.duration; progBar.style.width = `${pos * 100}%`; }; 
         progContainer.addEventListener('mousedown', e => { isScrubbing = true; progContainer.classList.add('dragging'); scrub(e); video.pause(); }); document.addEventListener('mousemove', e => { if (isScrubbing) scrub(e); }); document.addEventListener('mouseup', () => { if (isScrubbing) { isScrubbing = false; progContainer.classList.remove('dragging'); if (playBtn.innerHTML.includes('pause')) video.play(); } }); 
         
-        const updateVolumeUI = () => { 
-            if (video.muted || video.volume === 0) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; 
-            else if (video.volume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>';
-            else muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; 
-            
-            if (video.muted) volSlider.value = 0; else volSlider.value = video.volume; 
-        }; 
-        
-        muteBtn.addEventListener('click', () => { 
-            if (video.muted || video.volume === 0) { 
-                video.muted = false; 
-                if (persistentVolume === 0) persistentVolume = 0.5; 
-                video.volume = persistentVolume; 
-            } else { 
-                persistentVolume = video.volume; 
-                video.muted = true; 
-                video.volume = 0; 
-            } 
-            updateVolumeUI(); 
-            localStorage.setItem(VOL_KEY, video.volume);
-        }); 
-        
-        volSlider.addEventListener('input', e => { 
-            video.volume = parseFloat(e.target.value); 
-            video.muted = video.volume === 0; 
-            
-            persistentVolume = video.volume;
-            localStorage.setItem(VOL_KEY, persistentVolume);
-            
-            updateVolumeUI(); 
-        }); 
-        
+        const updateVolumeUI = () => { if (video.muted || video.volume === 0) muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; else if (video.volume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>'; else muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; if (video.muted) volSlider.value = 0; else volSlider.value = video.volume; }; 
+        muteBtn.addEventListener('click', () => { if (video.muted || video.volume === 0) { video.muted = false; if (persistentVolume === 0) persistentVolume = 0.5; video.volume = persistentVolume; } else { persistentVolume = video.volume; video.muted = true; video.volume = 0; } updateVolumeUI(); localStorage.setItem(VOL_KEY, video.volume); }); 
+        volSlider.addEventListener('input', e => { video.volume = parseFloat(e.target.value); video.muted = video.volume === 0; persistentVolume = video.volume; localStorage.setItem(VOL_KEY, persistentVolume); updateVolumeUI(); }); 
         fullBtn.addEventListener('click', () => { if (!document.fullscreenElement) wrapper.requestFullscreen(); else document.exitFullscreen(); }); 
     }
 }
@@ -2124,40 +1550,19 @@ function renderViewerMedia(file, mediaUrl) {
 function navigate(direction) { currentIndex += direction; if(currentIndex >= mediaFiles.length) currentIndex = 0; if(currentIndex < 0) currentIndex = mediaFiles.length - 1; openViewer(currentIndex); }
 
 function closeViewer() { 
-    viewer.style.display = "none"; 
-    viewer.querySelectorAll('.viewer-content, .yt-player, iframe').forEach(el => el.remove()); 
-    
-    scrollArea.style.overflowY = "auto";
-    
-    const containerWidth = scrollArea.clientWidth || window.innerWidth;
-    const isMobile = containerWidth <= 600;
-    const itemsPerRow = isMobile ? 2 : Math.max(1, Math.floor((containerWidth - 40) / 215));
-    const rowHeight = (isMobile ? 120 : 150) + 15; 
-    
-    const absoluteIndex = currentGridOffset + currentIndex;
-    const rowIndex = Math.floor(absoluteIndex / itemsPerRow);
-    
-    const galleryEl = document.getElementById('gallery');
-    const galleryOffset = galleryEl ? galleryEl.offsetTop : 0;
-    
-    let targetScroll = galleryOffset + (rowIndex * rowHeight) - (window.innerHeight / 2) + (rowHeight / 2);
-    if (targetScroll < 0) targetScroll = 0;
-    
+    viewer.style.display = "none"; viewer.querySelectorAll('.viewer-content, .yt-player, iframe').forEach(el => el.remove()); scrollArea.style.overflowY = "auto";
+    const containerWidth = scrollArea.clientWidth || window.innerWidth; const isMobile = containerWidth <= 600; const itemsPerRow = isMobile ? 2 : Math.max(1, Math.floor((containerWidth - 40) / 215)); const rowHeight = (isMobile ? 120 : 150) + 15; 
+    const absoluteIndex = currentGridOffset + currentIndex; const rowIndex = Math.floor(absoluteIndex / itemsPerRow);
+    const galleryEl = document.getElementById('gallery'); const galleryOffset = galleryEl ? galleryEl.offsetTop : 0;
+    let targetScroll = galleryOffset + (rowIndex * rowHeight) - (window.innerHeight / 2) + (rowHeight / 2); if (targetScroll < 0) targetScroll = 0;
     scrollArea.scrollTop = targetScroll;
     
-    if (currentViewerUrl) {
-        URL.revokeObjectURL(currentViewerUrl);
-        currentViewerUrl = null;
-    }
-
-    const vLoad = document.getElementById("viewerLoading");
-    if (vLoad) { vLoad.style.display = "none"; vLoad.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x"></i><span style="margin-top:15px;" id="viewerLoadingText">Cargando archivo...</span>`; }
+    if (currentViewerUrl) { URL.revokeObjectURL(currentViewerUrl); currentViewerUrl = null; }
+    const vLoad = document.getElementById("viewerLoading"); if (vLoad) { vLoad.style.display = "none"; vLoad.innerHTML = `<i class="fa-solid fa-spinner fa-spin fa-2x"></i><span style="margin-top:15px;" id="viewerLoadingText">Cargando archivo...</span>`; }
 }
 
 viewer.addEventListener('click', e => { if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) { if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) closeViewer(); } });
-
 viewer.addEventListener('wheel', e => { e.preventDefault(); }, { passive: false });
-
 document.addEventListener('keydown', e => { 
     if(viewer.style.display === "flex") { 
         if(e.key === "Escape") closeViewer(); 
@@ -2166,76 +1571,93 @@ document.addEventListener('keydown', e => {
             if (video) { 
                 if(e.key === "ArrowRight") { e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 5); } 
                 if(e.key === "ArrowLeft") { e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 5); } 
-                if(e.key === "ArrowUp") { e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); video.muted = false; 
-                    persistentVolume = video.volume; localStorage.setItem(VOL_KEY, persistentVolume);
-                    const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; 
-                    const muteBtn = viewer.querySelector('#muteBtn'); 
-                    if(video.volume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>'; else muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-                } 
-                if(e.key === "ArrowDown") { e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); 
-                    persistentVolume = video.volume; localStorage.setItem(VOL_KEY, persistentVolume);
-                    const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; 
-                    const muteBtn = viewer.querySelector('#muteBtn'); 
-                    if(video.volume === 0) { video.muted = true; muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; }
-                    else if(video.volume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>';
-                } 
+                if(e.key === "ArrowUp") { e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); video.muted = false; persistentVolume = video.volume; localStorage.setItem(VOL_KEY, persistentVolume); const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; const muteBtn = viewer.querySelector('#muteBtn'); if(video.volume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>'; else muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; } 
+                if(e.key === "ArrowDown") { e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); persistentVolume = video.volume; localStorage.setItem(VOL_KEY, persistentVolume); const volSlider = viewer.querySelector('#volSlider'); if(volSlider) volSlider.value = video.volume; const muteBtn = viewer.querySelector('#muteBtn'); if(video.volume === 0) { video.muted = true; muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>'; } else if(video.volume < 0.5) muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>'; } 
                 if(e.code === "Space") { e.preventDefault(); if (video.paused) video.play(); else video.pause(); } 
-            } else { 
-                if(e.key === "ArrowRight") navigate(1); if(e.key === "ArrowLeft") navigate(-1); 
-            } 
+            } else { if(e.key === "ArrowRight") navigate(1); if(e.key === "ArrowLeft") navigate(-1); } 
         } 
     } 
 });
 
+// =========================================================================
+//  SECCIÓN 11: MENÚ CONTEXTUAL Y EVENTOS FINALES
+// =========================================================================
+gallery.addEventListener('click', async e => {
+    const folderItem = e.target.closest('.item.folder');
+    if (folderItem) {
+        const action = folderItem.getAttribute('data-action'); const path = folderItem.getAttribute('data-path') || folderItem.getAttribute('data-parent');
+        if (action === 'back' && path === "search_back") {
+            searchInput.value = "";
+            if (currentFilter === "favs" || currentFilter === "folder") { currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active'); }
+            if(currentViewSource === 'local') updateGalleryView(); else renderGallery(appState.drive.rootFolderName);
+            return;
+        }
+        searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active');
+        renderGallery(path); return;
+    }
+    const mediaItem = e.target.closest('.item[data-type="media"]');
+    if (mediaItem) {
+        const index = parseInt(mediaItem.getAttribute('data-index'), 10);
+        if (selectingCoverForPath) { const fileData = mediaFiles[index]; customFolderCovers[selectingCoverForPath] = fileData.uniquePath; saveCustomCovers(); cancelSelectionMode(); return; }
+        openViewer(index);
+    }
+});
+
+gallery.addEventListener('keydown', e => { if (e.key === 'Enter') { const item = e.target.closest('.item'); if (item) item.click(); } });
+
+const ctxMenu = document.getElementById("customContextMenu"); const ctxFavIcon = document.getElementById("ctxFavIcon"); const ctxFavText = document.getElementById("ctxFavText"); const ctxChangeCover = document.getElementById("ctxChangeCover"); const ctxUploadDrive = document.getElementById("ctxUploadDrive"); const ctxUploadDriveText = document.getElementById("ctxUploadDriveText");
+let contextMenuTarget = null;
+
+gallery.addEventListener('contextmenu', e => {
+    const mediaItem = e.target.closest('.item[data-type="media"]'); const folderItem = e.target.closest('.item.folder');
+    if (!mediaItem && !folderItem) return;
+    e.preventDefault();
+    
+    if (folderItem && folderItem.getAttribute('data-action') === 'open') {
+        const folderPath = folderItem.getAttribute('data-path'); contextMenuTarget = { isFolder: true, path: folderPath };
+        document.getElementById('ctxCopy').style.display = 'none'; document.getElementById('ctxShare').style.display = 'none'; document.getElementById('ctxDownload').style.display = 'none'; document.getElementById('ctxFav').style.display = 'none'; ctxChangeCover.style.display = 'flex';
+        if (currentViewSource === 'local') { ctxUploadDrive.style.display = 'flex'; ctxUploadDriveText.innerText = "Subir carpeta a Drive"; } else { ctxUploadDrive.style.display = 'none'; }
+    } else if (mediaItem) {
+        const index = parseInt(mediaItem.getAttribute('data-index'), 10); const fileData = mediaFiles[index]; contextMenuTarget = { isFolder: false, fileData, thumbDiv: mediaItem };
+        if (favorites.has(fileData.uniquePath)) { ctxFavIcon.className = "fa-solid fa-heart-crack icon"; ctxFavIcon.style.color = "#ff4d4d"; ctxFavText.textContent = "Quitar Fav"; } else { ctxFavIcon.className = "fa-regular fa-heart icon"; ctxFavIcon.style.color = "white"; ctxFavText.textContent = "Favorito"; } 
+        document.getElementById('ctxCopy').style.display = 'flex'; document.getElementById('ctxShare').style.display = 'flex'; document.getElementById('ctxDownload').style.display = 'flex'; document.getElementById('ctxFav').style.display = 'flex'; ctxChangeCover.style.display = 'none';
+        if (currentViewSource === 'local') { ctxUploadDrive.style.display = 'flex'; ctxUploadDriveText.innerText = "Subir archivo a Drive"; } else { ctxUploadDrive.style.display = 'none'; }
+    } else { return; }
+    
+    ctxMenu.style.display = "flex"; let x = e.pageX; let y = e.pageY; 
+    if (x + ctxMenu.offsetWidth > window.innerWidth) x = window.innerWidth - ctxMenu.offsetWidth - 10; 
+    if (y + ctxMenu.offsetHeight > document.documentElement.scrollHeight) y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10; 
+    ctxMenu.style.left = `${x}px`; ctxMenu.style.top = `${y}px`;
+});
+
+document.getElementById('ctxChangeCover').addEventListener('click', () => {
+    if (!contextMenuTarget || !contextMenuTarget.isFolder) return;
+    selectingCoverForPath = contextMenuTarget.path; originalPathBeforeSelection = getState().currentPath; 
+    const banner = document.getElementById('selectionBanner'); const bannerText = document.getElementById('selectionBannerText'); const state = getState();
+    const folderName = currentViewSource === 'drive' && state.folderMetadata[selectingCoverForPath] ? state.folderMetadata[selectingCoverForPath].name : selectingCoverForPath.split('/').pop();
+    bannerText.innerHTML = `Elegir miniatura para: <b style="color:#0a0a0a;">${escapeHTML(folderName)}</b>`; banner.style.display = 'flex';
+    searchInput.value = ""; currentFilter = "all"; filterBtnText.textContent = "Todos los archivos"; document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active')); document.querySelector('.filter-option[data-value="all"]').classList.add('active');
+    renderGallery(selectingCoverForPath);
+});
+
+document.getElementById('ctxUploadDrive').addEventListener('click', () => { if (!contextMenuTarget) return; queueUploadToDrive(contextMenuTarget); });
 function closeContextMenu() { ctxMenu.style.display = "none"; contextMenuTarget = null; }
 document.addEventListener('click', closeContextMenu); document.addEventListener('scroll', closeContextMenu);
 
 document.getElementById('ctxCopy').addEventListener('click', async () => { 
     if (!contextMenuTarget) return; const fileData = contextMenuTarget.fileData; 
     try { 
-        if (currentViewSource === 'drive') { alert("Por políticas de seguridad de Google, las imágenes de Drive no se pueden copiar al portapapeles directamente. Por favor usa la opción 'Descargar'."); return; }
-        if (fileData.type === 'image') { 
-            const img = new Image(); img.crossOrigin = "Anonymous";
-            img.onload = () => { const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); alert("¡Imagen copiada!"); } catch (err) { alert("El navegador no soporta copiar imágenes de esta forma."); } }, 'image/png'); };
-            img.src = fileData.src || URL.createObjectURL(fileData.file);
-        } else alert("Solo imágenes."); 
+        if (currentViewSource === 'drive') { alert("Por políticas de seguridad de Google, las imágenes de Drive no se pueden copiar al portapapeles directamente. Usa 'Descargar'."); return; }
+        if (fileData.type === 'image') { const img = new Image(); img.crossOrigin = "Anonymous"; img.onload = () => { const canvas = document.createElement('canvas'); canvas.width = img.width; canvas.height = img.height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); alert("¡Imagen copiada!"); } catch (err) { alert("El navegador no soporta copiar imágenes de esta forma."); } }, 'image/png'); }; img.src = fileData.src || URL.createObjectURL(fileData.file); } else alert("Solo imágenes."); 
     } catch(e) { console.error(e); } 
 });
 
-document.getElementById('ctxShare').addEventListener('click', async () => { 
-    if (!contextMenuTarget) return; const fd = contextMenuTarget.fileData; 
-    if (navigator.share) { try { if (currentViewSource === 'drive') await navigator.share({ url: fd.downloadUrl, title: fd.name }); else await navigator.share({ files: [fd.file], title: fd.name }); } catch (err) {} } else alert("Función de compartir nativa no disponible en esta PC."); 
-});
-
-document.getElementById('ctxDownload').addEventListener('click', () => { 
-    if (!contextMenuTarget) return; const fd = contextMenuTarget.fileData; 
-    let url = currentViewSource === 'drive' ? (fd.downloadUrl || `https://drive.google.com/uc?id=${fd.id}&export=download`) : (fd.src || URL.createObjectURL(fd.file));
-    const a = document.createElement('a'); a.href = url; a.download = fd.name; a.click(); 
-});
-
-document.getElementById('ctxFav').addEventListener('click', () => { 
-    if (!contextMenuTarget) return; const { fileData, thumbDiv } = contextMenuTarget; 
-    const isNowFav = !favorites.has(fileData.uniquePath);
-    
-    if (!isNowFav) { 
-        favorites.delete(fileData.uniquePath); 
-        const heart = thumbDiv.querySelector('.fav-badge'); 
-        if (heart) heart.remove(); 
-    } else { 
-        favorites.add(fileData.uniquePath); 
-        const heart = thumbDiv.querySelector('.fav-badge'); 
-        if (!heart) { 
-            const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; thumbDiv.appendChild(fb); 
-        } 
-    } 
-    saveFavorites(); 
-    if(currentFilter === "favs") updateGalleryView();
-});
+document.getElementById('ctxShare').addEventListener('click', async () => { if (!contextMenuTarget) return; const fd = contextMenuTarget.fileData; if (navigator.share) { try { if (currentViewSource === 'drive') await navigator.share({ url: fd.downloadUrl, title: fd.name }); else await navigator.share({ files: [fd.file], title: fd.name }); } catch (err) {} } else alert("Función de compartir nativa no disponible en esta PC."); });
+document.getElementById('ctxDownload').addEventListener('click', () => { if (!contextMenuTarget) return; const fd = contextMenuTarget.fileData; let url = currentViewSource === 'drive' ? (fd.downloadUrl || `https://drive.google.com/uc?id=${fd.id}&export=download`) : (fd.src || URL.createObjectURL(fd.file)); const a = document.createElement('a'); a.href = url; a.download = fd.name; a.click(); });
+document.getElementById('ctxFav').addEventListener('click', () => { if (!contextMenuTarget) return; const { fileData, thumbDiv } = contextMenuTarget; const isNowFav = !favorites.has(fileData.uniquePath); if (!isNowFav) { favorites.delete(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (heart) heart.remove(); } else { favorites.add(fileData.uniquePath); const heart = thumbDiv.querySelector('.fav-badge'); if (!heart) { const fb = document.createElement("span"); fb.className = "fav-badge"; fb.innerHTML = '<i class="fa-solid fa-heart" style="color: #ff4d4d;"></i>'; thumbDiv.appendChild(fb); } } saveFavorites(); if(currentFilter === "favs") updateGalleryView(); });
 
 gallery.addEventListener('keydown', (e) => {
-    if (e.key !== 'Tab') return; 
-    const items = gallery.querySelectorAll('.item');
-    if (items.length === 0) return; 
+    if (e.key !== 'Tab') return; const items = gallery.querySelectorAll('.item'); if (items.length === 0) return; 
     const firstItem = items[0]; const lastItem = items[items.length - 1];
     if (e.shiftKey) { if (document.activeElement === firstItem) { lastItem.focus(); e.preventDefault(); } } 
     else { if (document.activeElement === lastItem) { firstItem.focus(); e.preventDefault(); } }
@@ -2243,82 +1665,29 @@ gallery.addEventListener('keydown', (e) => {
 
 let touchStartX = 0;
 viewer.addEventListener('touchstart', e => { if (scale === 1) touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-viewer.addEventListener('touchend', e => {
-    if (scale === 1 && touchStartX > 0) {
-        let touchEndX = e.changedTouches[0].screenX;
-        let swipeDistance = touchStartX - touchEndX;
-        if (swipeDistance > 50) navigate(1);  
-        else if (swipeDistance < -50) navigate(-1);
-        touchStartX = 0;
-    }
-});
+viewer.addEventListener('touchend', e => { if (scale === 1 && touchStartX > 0) { let touchEndX = e.changedTouches[0].screenX; let swipeDistance = touchStartX - touchEndX; if (swipeDistance > 50) navigate(1); else if (swipeDistance < -50) navigate(-1); touchStartX = 0; } });
 
-// =========================================================================
-// INICIALIZACIÓN Y OBSERVERS
-// =========================================================================
-window.addEventListener('resize', () => {
-    clearTimeout(window.resizeTimeout);
-    window.resizeTimeout = setTimeout(() => { if(mediaFiles.length > 0) updateGalleryView(); }, 200);
-});
+window.addEventListener('resize', () => { clearTimeout(window.resizeTimeout); window.resizeTimeout = setTimeout(() => { if(mediaFiles.length > 0) updateGalleryView(); }, 200); });
 
 window.onload = () => {
     clusterize = new Clusterize({
-        scrollId: 'scrollArea',
-        contentId: 'gallery',
-        callbacks: {
-            clusterChanged: function() {
-                document.querySelectorAll('#gallery .skeleton').forEach(el => galleryObserver.observe(el));
-            }
-        }
+        scrollId: 'scrollArea', contentId: 'gallery', callbacks: { clusterChanged: function() { document.querySelectorAll('#gallery .skeleton').forEach(el => galleryObserver.observe(el)); } }
     });
 
     galleryObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            const el = entry.target;
-            const itemDiv = el.closest('.item');
-            if (!itemDiv) return;
-
+            const el = entry.target; const itemDiv = el.closest('.item'); if (!itemDiv) return;
             let fileData;
-            if (itemDiv.classList.contains('folder')) {
-                const allIndex = el.getAttribute('data-all-index');
-                if (allIndex !== null) fileData = getState().allFiles[allIndex];
-            } else {
-                const idx = itemDiv.getAttribute('data-index');
-                if (idx !== null) fileData = mediaFiles[idx];
-            }
+            if (itemDiv.classList.contains('folder')) { const allIndex = el.getAttribute('data-all-index'); if (allIndex !== null) fileData = getState().allFiles[allIndex]; } else { const idx = itemDiv.getAttribute('data-index'); if (idx !== null) fileData = mediaFiles[idx]; }
             if (!fileData) return;
 
-            if (entry.isIntersecting) {
-                imagePriorityQueue = imagePriorityQueue.filter(q => q.fileData !== fileData);
-                imagePriorityQueue.push({ fileData, img: el });
-                processImagePriorityQueue();
-            } else {
-                imagePriorityQueue = imagePriorityQueue.filter(q => q.fileData !== fileData);
-                if (fileData.isHovering) {
-                    fileData.isHovering = false;
-                    if (fileData.previewVideo) {
-                       fileData.previewVideo.pause();
-                       fileData.previewVideo.removeAttribute('src');
-                       fileData.previewVideo.load();
-                       fileData.previewVideo.remove();
-                       fileData.previewVideo = null;
-                    }
-                    if (fileData.hoverUrl) {
-                        URL.revokeObjectURL(fileData.hoverUrl);
-                        fileData.hoverUrl = null;
-                    }
-                    const imgEl = itemDiv.querySelector('img.thumb, img.folder-cover');
-                    if (imgEl) imgEl.style.opacity = "1";
-                }
-            }
+            if (entry.isIntersecting) { imagePriorityQueue = imagePriorityQueue.filter(q => q.fileData !== fileData); imagePriorityQueue.push({ fileData, img: el }); processImagePriorityQueue(); } 
+            else { imagePriorityQueue = imagePriorityQueue.filter(q => q.fileData !== fileData); if (fileData.isHovering) { fileData.isHovering = false; if (fileData.previewVideo) { fileData.previewVideo.pause(); fileData.previewVideo.removeAttribute('src'); fileData.previewVideo.load(); fileData.previewVideo.remove(); fileData.previewVideo = null; } if (fileData.hoverUrl) { URL.revokeObjectURL(fileData.hoverUrl); fileData.hoverUrl = null; } const imgEl = itemDiv.querySelector('img.thumb, img.folder-cover'); if (imgEl) imgEl.style.opacity = "1"; } }
         });
     }, { root: document.getElementById('scrollArea'), rootMargin: "300px" });
 
     initGoogleServices();
-    
-    dbPromise.then(() => {
-        if (!getState().loaded) updateUIState();
-    });
+    dbPromise.then(() => { if (!getState().loaded) updateUIState(); });
 };
 </script>
 </body>
