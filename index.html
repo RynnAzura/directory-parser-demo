@@ -22,10 +22,20 @@ img, video { -webkit-user-drag: none; }
 @keyframes pulseBorder { 0% { border-color: rgba(77, 166, 255, 0.5); } 50% { border-color: rgba(77, 166, 255, 1); } 100% { border-color: rgba(77, 166, 255, 0.5); } }
 
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; color: rgba(255,255,255,0.4); text-align: center; animation: fadeIn 0.5s ease; user-select: none; padding: 20px; }
-.empty-state i { font-size: 80px; color: rgba(77, 166, 255, 0.4); margin-bottom: 20px; transition: color 0.3s, transform 0.3s; }
-.empty-state:hover i { color: rgba(77, 166, 255, 0.8); transform: scale(1.1); }
+.empty-state > i { font-size: 80px; color: rgba(77, 166, 255, 0.4); margin-bottom: 20px; transition: color 0.3s, transform 0.3s; }
+.empty-state:hover > i { color: rgba(77, 166, 255, 0.8); transform: scale(1.1); }
 .empty-state h2 { font-size: 26px; margin: 0 0 10px 0; font-weight: bold; color: rgba(255,255,255,0.7); }
 .empty-state p { font-size: 15px; margin: 0; }
+
+/* Nuevo diseño de botón Reabrir */
+.restore-btn { margin-bottom: 30px; font-size: 18px; font-weight: bold; padding: 15px 35px; background: linear-gradient(135deg, rgba(77, 166, 255, 0.15), rgba(77, 166, 255, 0.05)) !important; border: 1px solid rgba(77, 166, 255, 0.4) !important; color: #4da6ff; border-radius: 50px; cursor: pointer; transition: all 0.3s ease !important; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); display: inline-flex; align-items: center; gap: 12px; }
+.restore-btn i { font-size: 22px; color: #4da6ff; margin: 0 !important; transition: transform 0.3s; }
+.restore-btn:hover { background: linear-gradient(135deg, rgba(77, 166, 255, 0.25), rgba(77, 166, 255, 0.1)) !important; border-color: #4da6ff !important; transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 30px rgba(77, 166, 255, 0.2); }
+.restore-btn:hover i { transform: rotate(-20deg); }
+
+.empty-state-divider { display: flex; align-items: center; justify-content: center; width: 60%; max-width: 400px; margin: 0 auto 30px auto; opacity: 0.4; }
+.empty-state-divider::before, .empty-state-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.3); }
+.empty-state-divider span { padding: 0 15px; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: white; font-weight: bold; }
 
 /* === MODO SELECCIÓN DE MINIATURA === */
 #selectionBanner { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(77, 166, 255, 0.95); color: white; padding: 12px 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: none; align-items: center; gap: 15px; z-index: 10000; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); font-size: 15px; animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); user-select: none; }
@@ -57,6 +67,8 @@ button:hover, .dropdown-btn:hover:not(:disabled) { background: rgba(255, 255, 25
 button:active, .dropdown-btn:active { transform: scale(0.97); }
 .dropdown-btn { display: flex; align-items: center; gap: 8px; }
 .dropdown-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.file-btn-group { display: flex; gap: 8px; align-items: center; }
 
 #searchInput { padding: 10px 15px; border-radius: 8px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; font-size: 14px; width: 220px; transition: background 0.3s, border-color 0.3s, box-shadow 0.3s; }
 #searchInput::placeholder { color: rgba(255, 255, 255, 0.5); }
@@ -97,7 +109,6 @@ img.thumb { width: 100%; height: 100%; border-radius: 10px; transition: opacity 
 .folder:hover, .folder:focus-visible { border-color: rgba(255,255,255,0.2); }
 .folder-cover { width: 100%; height: 100%; object-fit: cover; background-color: #222; pointer-events: none; }
 .folder-icon-fallback { font-size: 50px; margin-bottom: 15px; pointer-events: none; opacity: 0.7; }
-/* Z-INDEX 10 agregado al overlay para que el hover en video de carpeta no tape el nombre */
 .folder-name-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0,0,0,0.5) 70%, transparent 100%); padding: 12px 5px 8px 5px; box-sizing: border-box; font-size: 13px; font-weight: bold; text-align: center; word-break: break-all; text-shadow: 1px 1px 2px black; pointer-events: none; z-index: 10; }
 
 /* === VISOR MULTIMEDIA === */
@@ -194,7 +205,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     h1 { font-size: 22px; }
     .sticky-header { padding-top: 10px; align-items: stretch; }
     .controls-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 15px; margin-bottom: 8px; }
-    .custom-dropdown, #fileInputBtn { width: 100%; margin: 0; }
+    .custom-dropdown, .file-btn-group { width: 100%; margin: 0; }
     .dropdown-btn, #fileInputBtn { width: 100%; height: 100%; padding: 10px 5px; font-size: 12px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #searchInput { grid-column: 1 / -1; width: 100%; box-sizing: border-box; margin-top: 5px; }
     #currentPathDisplay { text-align: center; margin-top: 5px; font-size: 14px; }
@@ -292,9 +303,11 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
                 </div>
             </div>
             
-            <button id="fileInputBtn" aria-label="Seleccionar carpeta local a explorar" tabindex="-1">
-                <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
-            </button>
+            <div class="file-btn-group">
+                <button id="fileInputBtn" aria-label="Seleccionar carpeta local a explorar" tabindex="-1">
+                    <i class="fa-solid fa-folder-plus"></i> Seleccionar carpeta
+                </button>
+            </div>
             
             <div class="custom-dropdown" id="sortDropdown">
                 <button class="dropdown-btn" id="sortBtn" aria-label="Opciones de ordenamiento" aria-haspopup="true" aria-expanded="false" tabindex="-1" disabled>
@@ -482,35 +495,85 @@ const appState = {
 const getState = () => appState[currentViewSource];
 
 // =========================================================================
-// INDEXED DB (CACHÉ AVANZADO)
+// INDEXED DB (MOTOR ROBUSTO CON PROMESAS Y SIN ERRORES DE VERSIÓN)
 // =========================================================================
-let localDB;
-const dbRequest = indexedDB.open("AzuraMediaDB", 1);
-dbRequest.onupgradeneeded = (e) => {
-    localDB = e.target.result;
-    if(!localDB.objectStoreNames.contains('thumbnails')) localDB.createObjectStore('thumbnails', { keyPath: 'id' });
-};
-dbRequest.onsuccess = (e) => localDB = e.target.result;
-dbRequest.onerror = (e) => console.warn("Error al abrir IndexedDB", e);
+const dbPromise = new Promise((resolve, reject) => {
+    // Subida a versión 4 de forma segura para sobreescribir cualquier fallo previo
+    const request = indexedDB.open("AzuraMediaDB", 4); 
+    
+    request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('thumbnails')) {
+            db.createObjectStore('thumbnails', { keyPath: 'id' });
+        }
+        if(!db.objectStoreNames.contains('directoryHandles')) {
+            db.createObjectStore('directoryHandles', { keyPath: 'id' });
+        }
+    };
 
-function saveThumbToDB(id, dataUrl) {
-    if(!localDB) return;
+    request.onsuccess = (e) => {
+        const db = e.target.result;
+        resolve(db);
+    };
+
+    request.onerror = (e) => {
+        console.warn("Error al abrir IndexedDB", e);
+        reject(e);
+    };
+});
+
+// Este bloque actualiza la interfaz automáticamente en cuanto la base de datos responde
+dbPromise.then(db => {
+    if (clusterize && !getState().loaded) {
+        updateUIState();
+    }
+}).catch(() => {});
+
+async function saveThumbToDB(id, dataUrl) {
     try {
-        const tx = localDB.transaction('thumbnails', 'readwrite');
+        const db = await dbPromise;
+        const tx = db.transaction('thumbnails', 'readwrite');
         tx.objectStore('thumbnails').put({ id, dataUrl });
     } catch(e) { console.warn("No se pudo guardar en caché", e); }
 }
 
-function getThumbFromDB(id) {
-    if(!localDB) return Promise.resolve(null);
-    return new Promise(resolve => {
-        try {
-            const tx = localDB.transaction('thumbnails', 'readonly');
+async function getThumbFromDB(id) {
+    try {
+        const db = await dbPromise;
+        return new Promise(resolve => {
+            const tx = db.transaction('thumbnails', 'readonly');
             const req = tx.objectStore('thumbnails').get(id);
             req.onsuccess = () => resolve(req.result ? req.result.dataUrl : null);
             req.onerror = () => resolve(null);
-        } catch(e) { resolve(null); }
-    });
+        });
+    } catch(e) { return null; }
+}
+
+async function saveDirectoryHandle(handle) {
+    try {
+        const db = await dbPromise;
+        return new Promise(resolve => {
+            const tx = db.transaction('directoryHandles', 'readwrite');
+            const req = tx.objectStore('directoryHandles').put({ id: 'last_folder', handle: handle });
+            req.onsuccess = () => {
+                if (clusterize && !getState().loaded) updateUIState();
+                resolve();
+            };
+            req.onerror = () => resolve();
+        });
+    } catch(e) { console.warn("No se pudo guardar el handle", e); }
+}
+
+async function getDirectoryHandle() {
+    try {
+        const db = await dbPromise;
+        return new Promise(resolve => {
+            const tx = db.transaction('directoryHandles', 'readonly');
+            const req = tx.objectStore('directoryHandles').get('last_folder');
+            req.onsuccess = () => resolve(req.result ? req.result.handle : null);
+            req.onerror = () => resolve(null);
+        });
+    } catch(e) { return null; }
 }
 
 // =========================================================================
@@ -529,7 +592,7 @@ function escapeHTML(str) {
     );
 }
 
-function updateUIState() {
+async function updateUIState() {
     const state = getState();
     if (state.loaded) {
         searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
@@ -538,13 +601,47 @@ function updateUIState() {
         searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
         if(clusterize) {
             if (currentViewSource === 'local') {
+                const lastHandle = await getDirectoryHandle();
+                let restoreBtnHtml = "";
+                let dragDropHtml = "";
+                
+                if (lastHandle) {
+                    const restoreBtnName = escapeHTML(lastHandle.name);
+                    restoreBtnHtml = `
+                        <button id="restoreSessionBtn" class="restore-btn">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Reabrir: ${restoreBtnName}
+                        </button>
+                        <div class="empty-state-divider"><span>o cargar nueva</span></div>
+                    `;
+                }
+
+                dragDropHtml = `
+                    <i class="fa-solid fa-folder-tree" style="${lastHandle ? 'font-size: 60px; margin-bottom: 15px;' : ''}"></i>
+                    <h2 style="${lastHandle ? 'font-size: 22px;' : ''}">Arrastra y suelta tu carpeta multimedia aquí</h2>
+                    <p>o usa el botón "Seleccionar carpeta" en la barra superior</p>
+                `;
+
                 clusterize.update([`
                     <div class="empty-state">
-                        <i class="fa-solid fa-folder-tree"></i>
-                        <h2>Arrastra y suelta tu carpeta multimedia aquí</h2>
-                        <p>o usa el botón "Seleccionar carpeta" en la barra superior</p>
+                        ${restoreBtnHtml}
+                        ${dragDropHtml}
                     </div>
                 `]);
+
+                setTimeout(() => {
+                    const restoreBtn = document.getElementById('restoreSessionBtn');
+                    if (restoreBtn && lastHandle) {
+                        restoreBtn.addEventListener('click', async () => {
+                            const hasPermission = await verifyPermission(lastHandle, false);
+                            if (hasPermission) {
+                                await loadFromDirectoryHandle(lastHandle);
+                            } else {
+                                alert("No se otorgaron permisos para leer la carpeta.");
+                            }
+                        });
+                    }
+                }, 50);
+
             } else {
                 clusterize.update([]);
             }
@@ -552,9 +649,16 @@ function updateUIState() {
     }
 }
 
-fileInputBtn.addEventListener('click', () => {
-    if (currentViewSource === 'local') input.click();
-    else {
+fileInputBtn.addEventListener('click', async () => {
+    if (currentViewSource === 'local') {
+        try {
+            const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+            await saveDirectoryHandle(dirHandle);
+            await loadFromDirectoryHandle(dirHandle);
+        } catch (err) {
+            console.log("Selección de directorio cancelada", err);
+        }
+    } else {
         if (isGoogleConnected) { initDrive(); } 
         else alert("Por favor conecta tu cuenta de Google arriba a la derecha primero.");
     }
@@ -810,7 +914,6 @@ async function processDriveUploadQueue() {
 
         try {
             if (!target.isFolder) {
-                // Verificar si existe el archivo
                 const existingId = await findDriveItem(target.fileData.name, null, false);
                 if (existingId) {
                     toastText.innerText = `Saltando (ya existe): ${escapeHTML(target.fileData.name)}`;
@@ -863,7 +966,6 @@ async function processDriveUploadQueue() {
                         }
                     }
                     
-                    // Verificar si el archivo ya existe en esta subcarpeta
                     const existingFileId = await findDriveItem(f.name, folderIdMap[f.parentFolder], false);
                     if (existingFileId) {
                         skippedCount++;
@@ -1079,8 +1181,45 @@ function cleanupLocalMemory() {
 }
 
 // =========================================================================
-// INICIO: MANEJO DE ARCHIVOS LOCALES (INPUT + DRAG&DROP)
+// MANEJO DE ARCHIVOS LOCALES (INPUT + DRAG&DROP + API)
 // =========================================================================
+async function verifyPermission(fileHandle, readWrite) {
+    const options = { mode: readWrite ? 'readwrite' : 'read' };
+    if ((await fileHandle.queryPermission(options)) === 'granted') return true;
+    if ((await fileHandle.requestPermission(options)) === 'granted') return true;
+    return false;
+}
+
+async function getFilesFromDirectoryHandle(dirHandle, path = "") {
+    let files = [];
+    for await (const entry of dirHandle.values()) {
+        if (entry.kind === 'file') {
+            const file = await entry.getFile();
+            Object.defineProperty(file, 'customPath', { value: path + file.name });
+            files.push(file);
+        } else if (entry.kind === 'directory') {
+            const subFiles = await getFilesFromDirectoryHandle(entry, path + entry.name + "/");
+            files.push(...subFiles);
+        }
+    }
+    return files;
+}
+
+async function loadFromDirectoryHandle(dirHandle) {
+    if (clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-spinner fa-spin fa-3x' style='margin-bottom: 15px;'></i><br><p style='font-size: 18px;'>Leyendo archivos locales...</p></div>"]);
+    try {
+        const files = await getFilesFromDirectoryHandle(dirHandle, dirHandle.name + "/");
+        if (files.length > 0) {
+            processLocalFiles(files);
+        } else {
+            if (clusterize) clusterize.update(["<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> Carpeta vacía o sin archivos válidos.</div>"]);
+        }
+    } catch (e) {
+        console.error("Error leyendo directorio:", e);
+        if (clusterize) clusterize.update([`<div style='width: 100%; text-align: center; color: #ff6666; margin-top: 50px;'><i class='fa-solid fa-circle-exclamation'></i> Error al leer archivos.</div>`]);
+    }
+}
+
 function processLocalFiles(fileListOrArray) {
     const state = appState.local; cleanupLocalMemory(); state.foldersMap = {}; state.rootFolderName = ""; state.allFiles = []; 
     Array.from(fileListOrArray).forEach(file => {
@@ -2177,7 +2316,10 @@ window.onload = () => {
     }, { root: document.getElementById('scrollArea'), rootMargin: "300px" });
 
     initGoogleServices();
-    updateUIState();
+    
+    dbPromise.then(() => {
+        if (!getState().loaded) updateUIState();
+    });
 };
 </script>
 </body>
