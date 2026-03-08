@@ -386,7 +386,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" aria-label="Visitar el perfil de GitHub de RynnAzura" title="Ver en GitHub" tabindex="-1">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v4.0</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v4.1</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -444,6 +444,8 @@ let mediaFiles = [];
 let currentIndex = 0;
 let clusterize;
 let currentViewerUrl = null; 
+
+let currentGridOffset = 0; // Ayudará a calcular la posición exacta del scroll
 
 let persistentVolume = parseFloat(localStorage.getItem(VOL_KEY));
 if(isNaN(persistentVolume)) persistentVolume = 1;
@@ -587,12 +589,11 @@ sourceOptions.forEach(option => {
     option.addEventListener('keydown', e => { if (e.key === 'Enter') handleSourceSelection(e); });
 });
 
-// Función para salir del modo selección restaurando los filtros y regresando a donde estabas
 function cancelSelectionMode() {
     selectingCoverForPath = null;
     document.getElementById('selectionBanner').style.display = 'none';
     
-    // REINICIAR FILTROS: Esto arregla el bug de "No data"
+    // Restaurar filtros y limpiador de búsqueda para volver a la normalidad
     searchInput.value = ""; 
     currentFilter = "all"; 
     filterBtnText.textContent = "Todos los archivos";
@@ -1121,6 +1122,7 @@ async function processImagePriorityQueue() {
 }
 
 function buildHTMLRows(filesToRender, includeBackBtn = false, backParent = null, foldersToRender = []) {
+    currentGridOffset = (includeBackBtn ? 1 : 0) + foldersToRender.length;
     let items = [];
     
     if (includeBackBtn) {
@@ -1487,7 +1489,6 @@ gallery.addEventListener('dragstart', e => { if (e.target.tagName === 'IMG') e.p
 // VISOR MULTIMEDIA Y REPRODUCTOR YT
 // =========================================================================
 let scale = 1; let isMouseDown = false; let currentTranslateX = 0, currentTranslateY = 0; let initialX, initialY, xOffset = 0, yOffset = 0; let isDragging = false; let startClickX, startClickY;
-let savedScrollTop = 0; 
 
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
@@ -1497,8 +1498,7 @@ function formatTime(seconds) {
 }
 
 async function openViewer(index) {
-    savedScrollTop = scrollArea.scrollTop;
-    scrollArea.style.display = "none"; 
+    scrollArea.style.overflowY = "hidden"; 
 
     if (currentViewerUrl) {
         URL.revokeObjectURL(currentViewerUrl);
@@ -1770,9 +1770,26 @@ function closeViewer() {
     viewer.style.display = "none"; 
     viewer.querySelectorAll('.viewer-content, .yt-player, iframe').forEach(el => el.remove()); 
     
-    scrollArea.style.display = "block";
-    scrollArea.scrollTop = savedScrollTop;
-    if (clusterize) clusterize.refresh(); 
+    // Restaurar scroll de la galería principal
+    scrollArea.style.overflowY = "auto";
+    
+    // Calcular dinámicamente la posición de la imagen para scrollear hacia ella
+    const containerWidth = scrollArea.clientWidth || window.innerWidth;
+    const isMobile = containerWidth <= 600;
+    const itemsPerRow = isMobile ? 2 : Math.max(1, Math.floor((containerWidth - 40) / 215));
+    const rowHeight = (isMobile ? 120 : 150) + 15; 
+    
+    const absoluteIndex = currentGridOffset + currentIndex;
+    const rowIndex = Math.floor(absoluteIndex / itemsPerRow);
+    
+    const galleryEl = document.getElementById('gallery');
+    const galleryOffset = galleryEl ? galleryEl.offsetTop : 0;
+    
+    let targetScroll = galleryOffset + (rowIndex * rowHeight) - (window.innerHeight / 2) + (rowHeight / 2);
+    if (targetScroll < 0) targetScroll = 0;
+    
+    // Hacer el salto de scroll al cerrar
+    scrollArea.scrollTop = targetScroll;
     
     if (currentViewerUrl) {
         URL.revokeObjectURL(currentViewerUrl);
@@ -1784,6 +1801,8 @@ function closeViewer() {
 }
 
 viewer.addEventListener('click', e => { if(e.target === viewer || e.target.classList.contains('close') || e.target.classList.contains('download-btn') || e.target.classList.contains('fav-btn')) { if (!e.target.classList.contains('download-btn') && !e.target.classList.contains('fav-btn')) closeViewer(); } });
+
+viewer.addEventListener('wheel', e => { e.preventDefault(); }, { passive: false });
 
 document.addEventListener('keydown', e => { 
     if(viewer.style.display === "flex") { 
