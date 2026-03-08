@@ -33,6 +33,13 @@ img, video { -webkit-user-drag: none; }
 .cancel-selection-btn { background: rgba(0,0,0,0.3); border: none; color: white; padding: 6px 14px; border-radius: 15px; cursor: pointer; transition: background 0.2s, transform 0.1s; font-weight: bold; }
 .cancel-selection-btn:hover { background: rgba(0,0,0,0.5); transform: scale(1.05); }
 
+/* === NOTIFICACIÓN DE SUBIDA (TOAST) === */
+#uploadToast { position: fixed; bottom: 30px; left: 30px; background: rgba(25, 25, 25, 0.9); border: 1px solid rgba(77, 166, 255, 0.4); padding: 15px 20px; border-radius: 12px; z-index: 10000; display: none; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); animation: popIn 0.3s ease; }
+#uploadToast i { color: #4da6ff; font-size: 24px; }
+.toast-content { display: flex; flex-direction: column; text-align: left; }
+.toast-title { font-size: 14px; font-weight: bold; color: white; margin-bottom: 2px; }
+.toast-desc { font-size: 12px; color: #ccc; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* === BARRA SUPERIOR === */
 .main-title-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px 5px 25px; position: relative; z-index: 150; text-align: left; }
 h1 { margin: 0; font-size: 26px; font-weight: bold; letter-spacing: 1px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); }
@@ -225,6 +232,14 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
     <button class="cancel-selection-btn" onclick="cancelSelectionMode()">Cancelar</button>
 </div>
 
+<div id="uploadToast">
+    <i class="fa-solid fa-cloud-arrow-up fa-bounce"></i>
+    <div class="toast-content">
+        <b class="toast-title">Subiendo a Drive</b>
+        <span id="uploadToastText" class="toast-desc">Preparando archivos...</span>
+    </div>
+</div>
+
 <input type="file" id="fileInput" webkitdirectory multiple hidden aria-hidden="true">
 
 <div id="scrollArea">
@@ -383,10 +398,14 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
         <i class="fa-regular fa-heart icon" id="ctxFavIcon"></i>
         <span id="ctxFavText">Favorito</span>
     </button>
+        <button class="menu-action" id="ctxUploadDrive" role="menuitem" aria-label="Subir a Drive" style="display: none;">
+        <i class="fa-brands fa-google-drive icon"></i>
+        <span id="ctxUploadDriveText">Subir a Drive</span>
+    </button>
 </div>
 
 <a href="https://github.com/RynnAzura" target="_blank" class="copyright-link" aria-label="Visitar el perfil de GitHub de RynnAzura" title="Ver en GitHub" tabindex="-1">
-    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v4.1</span>
+    <i class="fa-brands fa-github"></i> RynnAzura <span class="version-badge" aria-hidden="true">v4.4</span>
 </a>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -397,7 +416,7 @@ img.viewer-content.grabbing { cursor: grabbing !important; }
 // VARIABLES Y ESTADO GLOBAL
 // =========================================================================
 const CLIENT_ID = '731434427932-cnghf0huo1fsi27mg64dssl5q9mno82p.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const VOL_KEY = 'myGallerySavedVolume'; 
 
 const input = document.getElementById("fileInput");
@@ -445,7 +464,7 @@ let currentIndex = 0;
 let clusterize;
 let currentViewerUrl = null; 
 
-let currentGridOffset = 0; // Ayudará a calcular la posición exacta del scroll
+let currentGridOffset = 0; 
 
 let persistentVolume = parseFloat(localStorage.getItem(VOL_KEY));
 if(isNaN(persistentVolume)) persistentVolume = 1;
@@ -593,7 +612,6 @@ function cancelSelectionMode() {
     selectingCoverForPath = null;
     document.getElementById('selectionBanner').style.display = 'none';
     
-    // Restaurar filtros y limpiador de búsqueda para volver a la normalidad
     searchInput.value = ""; 
     currentFilter = "all"; 
     filterBtnText.textContent = "Todos los archivos";
@@ -699,6 +717,185 @@ async function getUserProfile() {
         if (profile.picture) { googleAvatarImg.src = profile.picture; menuBigAvatar.src = profile.picture; }
         userNameDisplay.textContent = profile.name || "Usuario"; userEmailDisplay.textContent = profile.email || "";
     } catch (e) { console.error("Error al obtener perfil", e); }
+}
+
+// =========================================================================
+// DRIVE - MOTOR DE SUBIDA (EN COLA + PREVENCIÓN DE DUPLICADOS)
+// =========================================================================
+async function findDriveItem(name, parentId, isFolder) {
+    const mimeQuery = isFolder ? "mimeType='application/vnd.google-apps.folder'" : "mimeType!='application/vnd.google-apps.folder'";
+    const parentQuery = parentId ? `'${parentId}' in parents` : "'root' in parents";
+    const q = `name='${name.replace(/'/g, "\\'")}' and ${parentQuery} and ${mimeQuery} and trashed=false`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`;
+    
+    const res = await fetchWithDriveToken(url);
+    if (!res.ok) throw new Error("Error buscando item en Drive");
+    const data = await res.json();
+    return data.files && data.files.length > 0 ? data.files[0].id : null;
+}
+
+async function createDriveFolder(name, parentId = null) {
+    const metadata = { name: name, mimeType: 'application/vnd.google-apps.folder' };
+    if (parentId) metadata.parents = [parentId];
+    
+    const res = await fetchWithDriveToken('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(metadata)
+    });
+    if (!res.ok) throw new Error("Error al crear carpeta en Drive");
+    return res.json();
+}
+
+async function uploadFileToDrive(file, parentId = null) {
+    const metadata = { name: file.name };
+    if (parentId) metadata.parents = [parentId];
+
+    const initRes = await fetchWithDriveToken('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Upload-Content-Type': file.type,
+            'X-Upload-Content-Length': file.size.toString()
+        },
+        body: JSON.stringify(metadata)
+    });
+
+    if (!initRes.ok) throw new Error("No se pudo iniciar la subida");
+    const uploadUrl = initRes.headers.get('Location');
+
+    const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+    });
+
+    if (!uploadRes.ok) throw new Error("Fallo al subir el archivo");
+    return uploadRes.json();
+}
+
+let driveUploadQueue = [];
+let isProcessingDriveUploads = false;
+
+function queueUploadToDrive(target) {
+    if (!isGoogleConnected) {
+        alert("Para subir archivos, primero conecta tu cuenta de Google Drive en la esquina superior derecha.");
+        return;
+    }
+    
+    driveUploadQueue.push(target);
+    
+    if (isProcessingDriveUploads) {
+        const toastText = document.getElementById('uploadToastText');
+        toastText.innerText = `Añadido a la cola. (${driveUploadQueue.length} tareas pendientes)`;
+    } else {
+        processDriveUploadQueue();
+    }
+}
+
+async function processDriveUploadQueue() {
+    if (isProcessingDriveUploads) return;
+    isProcessingDriveUploads = true;
+
+    const toast = document.getElementById('uploadToast');
+    const toastText = document.getElementById('uploadToastText');
+    const toastIcon = toast.querySelector('i');
+    
+    toast.style.display = 'flex';
+
+    while (driveUploadQueue.length > 0) {
+        const target = driveUploadQueue.shift();
+        toastIcon.className = "fa-solid fa-cloud-arrow-up fa-bounce";
+        toastIcon.style.color = "#4da6ff";
+
+        try {
+            if (!target.isFolder) {
+                // Verificar si existe el archivo
+                const existingId = await findDriveItem(target.fileData.name, null, false);
+                if (existingId) {
+                    toastText.innerText = `Saltando (ya existe): ${escapeHTML(target.fileData.name)}`;
+                    await new Promise(r => setTimeout(r, 1000));
+                } else {
+                    toastText.innerText = `Subiendo archivo: ${escapeHTML(target.fileData.name)}${driveUploadQueue.length > 0 ? ` (+${driveUploadQueue.length} en cola)` : ''}`;
+                    await uploadFileToDrive(target.fileData.file);
+                }
+            } else {
+                const folderPath = target.path; 
+                const folderName = folderPath.split('/').pop();
+                const filesToUpload = appState.local.allFiles.filter(f => f.parentFolder === folderPath || f.parentFolder.startsWith(folderPath + '/'));
+                
+                if (filesToUpload.length === 0) {
+                    toastText.innerText = `Carpeta vacía saltada: ${escapeHTML(folderName)}`;
+                    await new Promise(r => setTimeout(r, 1500));
+                    continue;
+                }
+
+                toastText.innerText = `Verificando/Creando carpeta "${escapeHTML(folderName)}"...`;
+                let rootFolderId = await findDriveItem(folderName, null, true);
+                if (!rootFolderId) {
+                    const rootFolderRes = await createDriveFolder(folderName);
+                    rootFolderId = rootFolderRes.id;
+                }
+                const folderIdMap = { [folderPath]: rootFolderId };
+                
+                let uploadedCount = 0;
+                let skippedCount = 0;
+                
+                for (const f of filesToUpload) {
+                    let currentPath = folderPath;
+                    let currentParentId = rootFolderId;
+                    
+                    const relativeSub = f.parentFolder.substring(folderPath.length); 
+                    if (relativeSub && relativeSub.startsWith('/')) {
+                        const parts = relativeSub.substring(1).split('/');
+                        for (const part of parts) {
+                            const nextPath = currentPath + '/' + part;
+                            if (!folderIdMap[nextPath]) {
+                                let subId = await findDriveItem(part, currentParentId, true);
+                                if (!subId) {
+                                    const newFolder = await createDriveFolder(part, currentParentId);
+                                    subId = newFolder.id;
+                                }
+                                folderIdMap[nextPath] = subId;
+                            }
+                            currentPath = nextPath;
+                            currentParentId = folderIdMap[nextPath];
+                        }
+                    }
+                    
+                    // Verificar si el archivo ya existe en esta subcarpeta
+                    const existingFileId = await findDriveItem(f.name, folderIdMap[f.parentFolder], false);
+                    if (existingFileId) {
+                        skippedCount++;
+                        toastText.innerText = `Carpeta: ${escapeHTML(folderName)} | Saltando (ya existe): ${escapeHTML(f.name)} (${uploadedCount+skippedCount}/${filesToUpload.length})`;
+                    } else {
+                        toastText.innerText = `Carpeta: ${escapeHTML(folderName)} | Subiendo: ${escapeHTML(f.name)} (${uploadedCount+skippedCount+1}/${filesToUpload.length})${driveUploadQueue.length > 0 ? ` (+${driveUploadQueue.length} tareas)` : ''}`;
+                        await uploadFileToDrive(f.file, folderIdMap[f.parentFolder]);
+                        uploadedCount++;
+                    }
+                }
+            }
+        } catch(e) {
+            console.error("Error en subida:", e);
+            toastIcon.className = "fa-solid fa-circle-exclamation";
+            toastIcon.style.color = "#ff4d4d";
+            toastText.innerText = `Error al subir: ${target.isFolder ? target.path.split('/').pop() : target.fileData.name}`;
+            await new Promise(r => setTimeout(r, 3000)); 
+        }
+    }
+
+    toastIcon.className = "fa-solid fa-circle-check";
+    toastIcon.style.color = "#4dff88";
+    toastText.innerText = "¡Todas las tareas finalizadas!";
+    
+    appState.drive.loaded = false;
+
+    isProcessingDriveUploads = false; 
+    setTimeout(() => {
+        if (!isProcessingDriveUploads) {
+            toast.style.display = 'none';
+        }
+    }, 4000);
 }
 
 // =========================================================================
@@ -1321,6 +1518,9 @@ const ctxMenu = document.getElementById("customContextMenu");
 const ctxFavIcon = document.getElementById("ctxFavIcon"); 
 const ctxFavText = document.getElementById("ctxFavText"); 
 const ctxChangeCover = document.getElementById("ctxChangeCover");
+const ctxUploadDrive = document.getElementById("ctxUploadDrive");
+const ctxUploadDriveText = document.getElementById("ctxUploadDriveText");
+
 let contextMenuTarget = null;
 
 gallery.addEventListener('contextmenu', e => {
@@ -1340,6 +1540,13 @@ gallery.addEventListener('contextmenu', e => {
         document.getElementById('ctxFav').style.display = 'none';
         ctxChangeCover.style.display = 'flex';
         
+        if (currentViewSource === 'local') {
+            ctxUploadDrive.style.display = 'flex';
+            ctxUploadDriveText.innerText = "Subir carpeta a Drive";
+        } else {
+            ctxUploadDrive.style.display = 'none';
+        }
+        
     } else if (mediaItem) {
         const index = parseInt(mediaItem.getAttribute('data-index'), 10);
         const fileData = mediaFiles[index];
@@ -1353,6 +1560,13 @@ gallery.addEventListener('contextmenu', e => {
         document.getElementById('ctxDownload').style.display = 'flex';
         document.getElementById('ctxFav').style.display = 'flex';
         ctxChangeCover.style.display = 'none';
+
+        if (currentViewSource === 'local') {
+            ctxUploadDrive.style.display = 'flex';
+            ctxUploadDriveText.innerText = "Subir archivo a Drive";
+        } else {
+            ctxUploadDrive.style.display = 'none';
+        }
     } else {
         return;
     }
@@ -1382,6 +1596,11 @@ document.getElementById('ctxChangeCover').addEventListener('click', () => {
     document.querySelector('.filter-option[data-value="all"]').classList.add('active');
     
     renderGallery(selectingCoverForPath);
+});
+
+document.getElementById('ctxUploadDrive').addEventListener('click', () => {
+    if (!contextMenuTarget) return;
+    queueUploadToDrive(contextMenuTarget);
 });
 
 function handlePreviewStart(e) {
@@ -1770,10 +1989,8 @@ function closeViewer() {
     viewer.style.display = "none"; 
     viewer.querySelectorAll('.viewer-content, .yt-player, iframe').forEach(el => el.remove()); 
     
-    // Restaurar scroll de la galería principal
     scrollArea.style.overflowY = "auto";
     
-    // Calcular dinámicamente la posición de la imagen para scrollear hacia ella
     const containerWidth = scrollArea.clientWidth || window.innerWidth;
     const isMobile = containerWidth <= 600;
     const itemsPerRow = isMobile ? 2 : Math.max(1, Math.floor((containerWidth - 40) / 215));
@@ -1788,7 +2005,6 @@ function closeViewer() {
     let targetScroll = galleryOffset + (rowIndex * rowHeight) - (window.innerHeight / 2) + (rowHeight / 2);
     if (targetScroll < 0) targetScroll = 0;
     
-    // Hacer el salto de scroll al cerrar
     scrollArea.scrollTop = targetScroll;
     
     if (currentViewerUrl) {
