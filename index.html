@@ -498,7 +498,6 @@ const getState = () => appState[currentViewSource];
 // INDEXED DB (MOTOR ROBUSTO CON PROMESAS Y SIN ERRORES DE VERSIÓN)
 // =========================================================================
 const dbPromise = new Promise((resolve, reject) => {
-    // Subida a versión 4 de forma segura para sobreescribir cualquier fallo previo
     const request = indexedDB.open("AzuraMediaDB", 4); 
     
     request.onupgradeneeded = (e) => {
@@ -522,7 +521,6 @@ const dbPromise = new Promise((resolve, reject) => {
     };
 });
 
-// Este bloque actualiza la interfaz automáticamente en cuanto la base de datos responde
 dbPromise.then(db => {
     if (clusterize && !getState().loaded) {
         updateUIState();
@@ -555,10 +553,7 @@ async function saveDirectoryHandle(handle) {
         return new Promise(resolve => {
             const tx = db.transaction('directoryHandles', 'readwrite');
             const req = tx.objectStore('directoryHandles').put({ id: 'last_folder', handle: handle });
-            req.onsuccess = () => {
-                if (clusterize && !getState().loaded) updateUIState();
-                resolve();
-            };
+            req.onsuccess = () => resolve();
             req.onerror = () => resolve();
         });
     } catch(e) { console.warn("No se pudo guardar el handle", e); }
@@ -1181,7 +1176,7 @@ function cleanupLocalMemory() {
 }
 
 // =========================================================================
-// MANEJO DE ARCHIVOS LOCALES (INPUT + DRAG&DROP + API)
+// INICIO: MANEJO DE ARCHIVOS LOCALES (INPUT + DRAG&DROP + API)
 // =========================================================================
 async function verifyPermission(fileHandle, readWrite) {
     const options = { mode: readWrite ? 'readwrite' : 'read' };
