@@ -1553,6 +1553,8 @@ function renderGlobalSearch(searchTerm) {
     clusterize.update(rows);
     
     if (rows.length === 0) clusterize.update(["<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-ghost'></i> No se encontraron resultados.</div>"]);
+
+    scrollArea.scrollTop = 0;
 }
 
 function renderGallery(folderPath) { 
@@ -1599,6 +1601,8 @@ function renderGallery(folderPath) {
     const rows = buildHTMLRows(filesToRender, includeBackBtn, backParent, foldersToRender);
     clusterize.update(rows);
     searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
+
+    scrollArea.scrollTop = 0;
 }
 
 // =========================================================================
