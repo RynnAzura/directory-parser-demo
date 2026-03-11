@@ -4628,8 +4628,12 @@
       const ctxUploadDriveText = document.getElementById("ctxUploadDriveText");
       let contextMenuTarget = null;
 
-      scrollArea.addEventListener("contextmenu", (e) => {
+      document.addEventListener("contextmenu", (e) => {
         e.preventDefault();
+
+        if (ctxMenu.contains(e.target)) {
+          return;
+        }
 
         const mediaItem = e.target.closest('.item[data-type="media"]');
         const folderItem = e.target.closest(".item.folder");
