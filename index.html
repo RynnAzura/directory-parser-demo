@@ -456,14 +456,33 @@
         align-items: center;
       }
 
+      .search-wrapper {
+        position: relative;
+        flex-grow: 1;
+        max-width: 400px;
+      }
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.5);
+        pointer-events: none;
+        font-size: 14px;
+        transition: color 0.3s;
+      }
+      .search-wrapper:focus-within .search-icon {
+        color: #4da6ff; /* La lupa se pinta de azul al escribir */
+      }
       #searchInput {
-        padding: 10px 15px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 15px 10px 35px; /* Espacio extra a la izquierda para que el texto no pise la lupa */
         border-radius: 8px;
         background: rgba(0, 0, 0, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.1);
         color: white;
         font-size: 14px;
-        width: 220px;
         transition:
           background 0.3s,
           border-color 0.3s,
@@ -1422,10 +1441,10 @@
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        #searchInput {
+        .search-wrapper {
           grid-column: 1 / -1;
           width: 100%;
-          box-sizing: border-box;
+          max-width: none;
           margin-top: 5px;
         }
         #currentPathDisplay {
@@ -1847,15 +1866,19 @@
             </div>
           </div>
 
-          <input
-            type="text"
-            id="searchInput"
-            aria-label="Buscar archivos multimedia"
-            placeholder="Buscar..."
-            tabindex="-1"
-            disabled
-            style="flex-grow: 1; max-width: 400px"
-          />
+          <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input
+              type="text"
+              id="searchInput"
+              aria-label="Buscar archivos multimedia"
+              placeholder="Buscar..."
+              tabindex="-1"
+              disabled
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
         </div>
 
         <div id="currentPathDisplay" aria-live="polite">
