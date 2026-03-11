@@ -13,6 +13,13 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.19.0/clusterize.min.css"
     />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
       /* ========================================================================= */
       /* === 1. ESTILOS GLOBALES Y CONTENEDORES PRINCIPALES                    === */
@@ -20,7 +27,7 @@
       body {
         background: #0a0a0a;
         color: white;
-        font-family: Arial, sans-serif;
+        font-family: "Inter", sans-serif;
         text-align: center;
         margin: 0;
         overflow: hidden;
@@ -233,7 +240,7 @@
         position: fixed;
         bottom: 30px;
         left: 30px;
-        background: rgba(25, 25, 25, 0.9);
+        background: rgba(30, 30, 30, 0.75);
         border: 1px solid rgba(77, 166, 255, 0.4);
         padding: 15px 20px;
         border-radius: 12px;
@@ -241,9 +248,9 @@
         display: none;
         align-items: center;
         gap: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         animation: popIn 0.3s ease;
       }
       #uploadToast i {
@@ -494,13 +501,13 @@
         z-index: 1000;
         display: none;
         flex-direction: column;
-        background: rgba(25, 25, 25, 0.9);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(30, 30, 30, 0.65);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         padding: 6px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
         min-width: 190px;
         text-align: left;
         opacity: 0;
@@ -577,20 +584,22 @@
         width: 200px;
         height: 150px;
         cursor: pointer;
-        border-radius: 10px;
+        border-radius: 12px;
         outline: none;
         flex-shrink: 0;
+
         transition:
-          transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-          box-shadow 0.2s,
+          transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+          box-shadow 0.4s ease,
           z-index 0s;
         z-index: 1;
       }
+
       .item:hover,
       .item:focus-visible {
-        transform: scale(1.08);
+        transform: scale(1.03);
         z-index: 200;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.9);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
       }
 
       img.thumb {
@@ -1059,18 +1068,24 @@
         z-index: 10000;
         display: none;
         flex-direction: column;
-        background: rgba(20, 20, 20, 0.65);
-        backdrop-filter: blur(20px) saturate(150%);
-        -webkit-backdrop-filter: blur(20px) saturate(150%);
+        background: rgba(
+          35,
+          35,
+          35,
+          0.85
+        ); /* <-- Opacidad ligeramente aumentada */
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         padding: 5px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-        min-width: 160px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        min-width: 220px;
         user-select: none;
         transform-origin: top left;
         animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         gap: 2px;
+        overflow: visible;
       }
       @keyframes popIn {
         from {
@@ -1127,6 +1142,52 @@
       }
       .menu-action span {
         pointer-events: none;
+      }
+
+      .submenu-parent {
+        position: relative;
+      }
+      .win11-submenu {
+        position: absolute;
+        top: -5px;
+        left: 100%;
+        display: none;
+        flex-direction: column;
+        /* Fondo casi sólido y sin blur anidado para evitar glitches en navegadores */
+        background: rgba(35, 35, 35, 0.98);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 5px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        min-width: 180px;
+        z-index: 10001;
+        gap: 2px;
+      }
+      .submenu-parent:hover .win11-submenu {
+        display: flex;
+      }
+      .ms-auto {
+        margin-left: auto;
+        font-size: 10px;
+        opacity: 0.7;
+      }
+      .menu-action .dot-indicator {
+        width: 18px;
+        display: inline-block;
+        font-size: 6px;
+        color: transparent;
+        text-align: center;
+        margin-right: 5px;
+      }
+      .menu-action.active .dot-indicator {
+        color: white;
+      }
+
+      /* BOTONES MÓVILES */
+      .mobile-controls {
+        display: none;
       }
 
       .google-profile-container {
@@ -1190,13 +1251,13 @@
         z-index: 1000;
         display: none;
         flex-direction: column;
-        background: rgba(25, 25, 25, 0.95);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
+        background: rgba(30, 30, 30, 0.7);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
         padding: 25px;
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         min-width: 250px;
         text-align: center;
         opacity: 0;
@@ -1337,6 +1398,11 @@
           padding: 0 15px;
           margin-bottom: 8px;
         }
+
+        .mobile-controls {
+          display: inline-block;
+        }
+
         .custom-dropdown,
         .file-btn-group {
           width: 100%;
@@ -1386,7 +1452,6 @@
         .nav-btn {
           display: none !important;
         }
-        /* CAMBIO PUNTO 2: Eliminamos el display:none del volumen y lo hacemos visible en móvil */
         .yt-vol-slider {
           width: 60px;
           opacity: 1;
@@ -1662,27 +1727,64 @@
             </button>
           </div>
 
-          <div class="custom-dropdown" id="sortDropdown">
+          <div class="custom-dropdown mobile-controls" id="filterDropdown">
             <button
               class="dropdown-btn"
-              id="sortBtn"
-              aria-label="Opciones de ordenamiento"
               aria-haspopup="true"
               aria-expanded="false"
               tabindex="-1"
-              disabled
             >
-              <i class="fa-solid fa-arrows-up-down"></i> Ordenar
-              <i
-                class="fa-solid fa-chevron-down"
-                style="font-size: 12px; margin-left: 5px"
-              ></i>
+              <i class="fa-solid fa-filter"></i> Filtrar
             </button>
-            <div class="dropdown-menu" id="sortMenu" role="menu">
+            <div class="dropdown-menu" role="menu">
               <div
-                class="dropdown-item sort-option criteria active"
-                tabindex="-1"
-                role="menuitem"
+                class="dropdown-item top-filter-option active"
+                data-value="all"
+              >
+                <span class="dot-indicator"
+                  ><i class="fa-solid fa-circle"></i
+                ></span>
+                Todos
+              </div>
+              <div class="dropdown-item top-filter-option" data-value="image">
+                <span class="dot-indicator"
+                  ><i class="fa-solid fa-circle"></i
+                ></span>
+                Imágenes
+              </div>
+              <div class="dropdown-item top-filter-option" data-value="video">
+                <span class="dot-indicator"
+                  ><i class="fa-solid fa-circle"></i
+                ></span>
+                Videos
+              </div>
+              <div class="dropdown-item top-filter-option" data-value="gif">
+                <span class="dot-indicator"
+                  ><i class="fa-solid fa-circle"></i
+                ></span>
+                GIFs
+              </div>
+              <div class="dropdown-item top-filter-option" data-value="favs">
+                <span class="dot-indicator"
+                  ><i class="fa-solid fa-circle"></i
+                ></span>
+                Favoritos
+              </div>
+            </div>
+          </div>
+
+          <div class="custom-dropdown mobile-controls" id="sortDropdown">
+            <button
+              class="dropdown-btn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              tabindex="-1"
+            >
+              <i class="fa-solid fa-arrow-down-a-z"></i> Ordenar
+            </button>
+            <div class="dropdown-menu" role="menu">
+              <div
+                class="dropdown-item top-sort-option criteria active"
                 data-type="criteria"
                 data-value="name"
               >
@@ -1692,21 +1794,17 @@
                 Nombre
               </div>
               <div
-                class="dropdown-item sort-option criteria"
-                tabindex="-1"
-                role="menuitem"
+                class="dropdown-item top-sort-option criteria"
                 data-type="criteria"
-                data-value="type"
+                data-value="date"
               >
                 <span class="dot-indicator"
                   ><i class="fa-solid fa-circle"></i
                 ></span>
-                Tipo
+                Fecha
               </div>
               <div
-                class="dropdown-item sort-option criteria"
-                tabindex="-1"
-                role="menuitem"
+                class="dropdown-item top-sort-option criteria"
                 data-type="criteria"
                 data-value="size"
               >
@@ -1716,22 +1814,18 @@
                 Tamaño
               </div>
               <div
-                class="dropdown-item sort-option criteria"
-                tabindex="-1"
-                role="menuitem"
+                class="dropdown-item top-sort-option criteria"
                 data-type="criteria"
-                data-value="date"
+                data-value="type"
               >
                 <span class="dot-indicator"
                   ><i class="fa-solid fa-circle"></i
                 ></span>
-                Fecha
+                Tipo
               </div>
               <div class="dropdown-divider"></div>
               <div
-                class="dropdown-item sort-option order active"
-                tabindex="-1"
-                role="menuitem"
+                class="dropdown-item top-sort-option order active"
                 data-type="order"
                 data-value="asc"
               >
@@ -1741,9 +1835,7 @@
                 Ascendente
               </div>
               <div
-                class="dropdown-item sort-option order"
-                tabindex="-1"
-                role="menuitem"
+                class="dropdown-item top-sort-option order"
                 data-type="order"
                 data-value="desc"
               >
@@ -1755,86 +1847,6 @@
             </div>
           </div>
 
-          <div class="custom-dropdown" id="filterDropdown">
-            <button
-              class="dropdown-btn"
-              id="filterBtn"
-              aria-label="Opciones de filtrado por tipo de archivo"
-              aria-haspopup="true"
-              aria-expanded="false"
-              tabindex="-1"
-              disabled
-            >
-              <span id="filterBtnText">Todos los archivos</span>
-              <i
-                class="fa-solid fa-chevron-down"
-                style="font-size: 12px; margin-left: 5px"
-              ></i>
-            </button>
-            <div class="dropdown-menu" id="filterMenu" role="menu">
-              <div
-                class="dropdown-item filter-option active"
-                tabindex="-1"
-                role="menuitem"
-                data-value="all"
-                data-label="Todos los archivos"
-              >
-                <span class="dot-indicator"
-                  ><i class="fa-solid fa-circle"></i
-                ></span>
-                Todos los archivos
-              </div>
-              <div
-                class="dropdown-item filter-option"
-                tabindex="-1"
-                role="menuitem"
-                data-value="image"
-                data-label="Solo Imágenes"
-              >
-                <span class="dot-indicator"
-                  ><i class="fa-solid fa-circle"></i
-                ></span>
-                Solo Imágenes
-              </div>
-              <div
-                class="dropdown-item filter-option"
-                tabindex="-1"
-                role="menuitem"
-                data-value="video"
-                data-label="Solo Videos"
-              >
-                <span class="dot-indicator"
-                  ><i class="fa-solid fa-circle"></i
-                ></span>
-                Solo Videos
-              </div>
-              <div
-                class="dropdown-item filter-option"
-                tabindex="-1"
-                role="menuitem"
-                data-value="gif"
-                data-label="Solo GIFs"
-              >
-                <span class="dot-indicator"
-                  ><i class="fa-solid fa-circle"></i
-                ></span>
-                Solo GIFs
-              </div>
-              <div
-                class="dropdown-item filter-option"
-                tabindex="-1"
-                role="menuitem"
-                data-value="favs"
-                data-label="Solo Favoritos"
-              >
-                <span class="dot-indicator"
-                  ><i class="fa-solid fa-circle"></i
-                ></span>
-                Solo Favoritos
-              </div>
-            </div>
-          </div>
-
           <input
             type="text"
             id="searchInput"
@@ -1842,6 +1854,7 @@
             placeholder="Buscar..."
             tabindex="-1"
             disabled
+            style="flex-grow: 1; max-width: 400px"
           />
         </div>
 
@@ -1934,60 +1947,192 @@
       id="customContextMenu"
       class="win11-context-menu"
       role="menu"
-      aria-label="Opciones de archivo"
+      aria-label="Opciones de archivo y vista"
     >
-      <button
-        class="menu-action"
-        id="ctxChangeCover"
-        role="menuitem"
-        aria-label="Cambiar miniatura"
-        style="display: none"
+      <div
+        id="ctxItemActions"
+        style="display: none; flex-direction: column; gap: 2px"
       >
-        <i class="fa-regular fa-image icon"></i> <span>Cambiar miniatura</span>
-      </button>
-      <button
-        class="menu-action"
-        id="ctxCopy"
-        role="menuitem"
-        aria-label="Copiar imagen"
+        <button
+          class="menu-action"
+          id="ctxChangeCover"
+          role="menuitem"
+          aria-label="Cambiar miniatura"
+          style="display: none"
+        >
+          <i class="fa-regular fa-image icon"></i>
+          <span>Cambiar miniatura</span>
+        </button>
+        <button
+          class="menu-action"
+          id="ctxCopy"
+          role="menuitem"
+          aria-label="Copiar imagen"
+        >
+          <i class="fa-regular fa-copy icon"></i> <span>Copiar</span>
+        </button>
+        <button
+          class="menu-action"
+          id="ctxShare"
+          role="menuitem"
+          aria-label="Compartir archivo"
+        >
+          <i class="fa-solid fa-share-nodes icon"></i> <span>Compartir</span>
+        </button>
+        <button
+          class="menu-action"
+          id="ctxDownload"
+          role="menuitem"
+          aria-label="Descargar archivo"
+        >
+          <i class="fa-solid fa-download icon"></i> <span>Descargar</span>
+        </button>
+        <button
+          class="menu-action"
+          id="ctxFav"
+          role="menuitem"
+          aria-label="Añadir a favoritos"
+        >
+          <i class="fa-regular fa-heart icon" id="ctxFavIcon"></i>
+          <span id="ctxFavText">Favorito</span>
+        </button>
+        <button
+          class="menu-action"
+          id="ctxUploadDrive"
+          role="menuitem"
+          aria-label="Subir a Drive"
+          style="display: none"
+        >
+          <i class="fa-brands fa-google-drive icon"></i>
+          <span id="ctxUploadDriveText">Subir a Drive</span>
+        </button>
+        <div class="dropdown-divider"></div>
+      </div>
+
+      <div
+        id="ctxGeneralActions"
+        style="display: flex; flex-direction: column; gap: 2px"
       >
-        <i class="fa-regular fa-copy icon"></i> <span>Copiar</span>
-      </button>
-      <button
-        class="menu-action"
-        id="ctxShare"
-        role="menuitem"
-        aria-label="Compartir archivo"
-      >
-        <i class="fa-solid fa-share-nodes icon"></i> <span>Compartir</span>
-      </button>
-      <button
-        class="menu-action"
-        id="ctxDownload"
-        role="menuitem"
-        aria-label="Descargar archivo"
-      >
-        <i class="fa-solid fa-download icon"></i> <span>Descargar</span>
-      </button>
-      <button
-        class="menu-action"
-        id="ctxFav"
-        role="menuitem"
-        aria-label="Añadir a favoritos"
-      >
-        <i class="fa-regular fa-heart icon" id="ctxFavIcon"></i>
-        <span id="ctxFavText">Favorito</span>
-      </button>
-      <button
-        class="menu-action"
-        id="ctxUploadDrive"
-        role="menuitem"
-        aria-label="Subir a Drive"
-        style="display: none"
-      >
-        <i class="fa-brands fa-google-drive icon"></i>
-        <span id="ctxUploadDriveText">Subir a Drive</span>
-      </button>
+        <div
+          class="menu-action submenu-parent"
+          role="menuitem"
+          aria-haspopup="true"
+        >
+          <i class="fa-solid fa-eye icon"></i> <span>Ver (Filtro)</span>
+          <i class="fa-solid fa-chevron-right ms-auto"></i>
+          <div class="win11-submenu" role="menu">
+            <button class="menu-action filter-option active" data-value="all">
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Todos los archivos
+            </button>
+            <button class="menu-action filter-option" data-value="image">
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Solo Imágenes
+            </button>
+            <button class="menu-action filter-option" data-value="video">
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Solo Videos
+            </button>
+            <button class="menu-action filter-option" data-value="gif">
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Solo GIFs
+            </button>
+            <button class="menu-action filter-option" data-value="favs">
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Solo Favoritos
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="menu-action submenu-parent"
+          role="menuitem"
+          aria-haspopup="true"
+        >
+          <i class="fa-solid fa-arrow-down-a-z icon"></i>
+          <span>Ordenar por</span>
+          <i class="fa-solid fa-chevron-right ms-auto"></i>
+          <div class="win11-submenu" role="menu">
+            <button
+              class="menu-action sort-option criteria active"
+              data-type="criteria"
+              data-value="name"
+            >
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Nombre
+            </button>
+            <button
+              class="menu-action sort-option criteria"
+              data-type="criteria"
+              data-value="type"
+            >
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Tipo
+            </button>
+            <button
+              class="menu-action sort-option criteria"
+              data-type="criteria"
+              data-value="size"
+            >
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Tamaño
+            </button>
+            <button
+              class="menu-action sort-option criteria"
+              data-type="criteria"
+              data-value="date"
+            >
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Fecha
+            </button>
+            <div class="dropdown-divider"></div>
+            <button
+              class="menu-action sort-option order active"
+              data-type="order"
+              data-value="asc"
+            >
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Ascendente
+            </button>
+            <button
+              class="menu-action sort-option order"
+              data-type="order"
+              data-value="desc"
+            >
+              <span class="dot-indicator"
+                ><i class="fa-solid fa-circle"></i
+              ></span>
+              Descendente
+            </button>
+          </div>
+        </div>
+
+        <div class="dropdown-divider"></div>
+        <button class="menu-action" id="ctxRefresh" role="menuitem">
+          <i class="fa-solid fa-rotate-right icon"></i>
+          <span>Actualizar vista</span>
+        </button>
+      </div>
     </div>
 
     <a
@@ -1999,7 +2144,7 @@
       tabindex="-1"
     >
       <i class="fa-brands fa-github"></i> RynnAzura
-      <span class="version-badge" aria-hidden="true">v4.7.1</span>
+      <span class="version-badge" aria-hidden="true">v4.8.0</span>
     </a>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -2037,14 +2182,7 @@
       const sourceBtn = document.getElementById("sourceBtn");
       const sourceBtnText = document.getElementById("sourceBtnText");
       const sourceMenu = document.getElementById("sourceMenu");
-
       const fileInputBtn = document.getElementById("fileInputBtn");
-      const sortBtn = document.getElementById("sortBtn");
-      const sortMenu = document.getElementById("sortMenu");
-
-      const filterBtn = document.getElementById("filterBtn");
-      const filterBtnText = document.getElementById("filterBtnText");
-      const filterMenu = document.getElementById("filterMenu");
 
       let currentSortCriteria = "name";
       let currentSortOrder = "asc";
@@ -2071,7 +2209,6 @@
       let selectingCoverForPath = null;
       let originalPathBeforeSelection = null;
 
-      // EL ESTADO AHORA SE GESTIONA DE FORMA CENTRALIZADA CON CACHÉ
       const appState = {
         local: {
           foldersMap: {},
@@ -2187,7 +2324,6 @@
         );
       }
 
-      // NUEVO SISTEMA DE TOASTS
       function showToast(message, type = "info") {
         const existing = document.getElementById("appToastMsg");
         if (existing) existing.remove();
@@ -2215,10 +2351,10 @@
       async function updateUIState() {
         const state = getState();
         if (state.loaded) {
-          searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
+          searchInput.disabled = false;
           updateGalleryView();
         } else {
-          searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
+          searchInput.disabled = true;
           if (clusterize) {
             if (currentViewSource === "local") {
               const lastHandle = await getDirectoryHandle();
@@ -2286,15 +2422,19 @@
         e.stopPropagation();
         toggleDropdown(sourceMenu, sourceBtn);
       });
-      sortBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleDropdown(sortMenu, sortBtn);
-      });
-      filterBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleDropdown(filterMenu, filterBtn);
-      });
-      document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      // LÓGICA PARA LOS DROPDOWNS MÓVILES
+      document
+        .querySelectorAll(
+          "#filterDropdown .dropdown-btn, #sortDropdown .dropdown-btn",
+        )
+        .forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const menu = btn.nextElementSibling;
+            toggleDropdown(menu, btn);
+          });
+        });
 
       function handleSourceSelection(option) {
         originalPathBeforeSelection = null;
@@ -2348,29 +2488,22 @@
           handleSourceSelection(option);
         }
       });
-      sourceMenu.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const option = e.target.closest(".source-option");
-          if (option) {
-            e.stopPropagation();
-            handleSourceSelection(option);
-          }
-        }
-      });
 
       function cancelSelectionMode() {
         selectingCoverForPath = null;
         document.getElementById("selectionBanner").style.display = "none";
         searchInput.value = "";
+
+        // Reset Filtros
         currentFilter = "all";
-        filterBtnText.textContent = "Todos los archivos";
         document
-          .querySelectorAll(".filter-option")
+          .querySelectorAll(".filter-option, .top-filter-option")
           .forEach((el) => el.classList.remove("active"));
-        const allFilterOpt = document.querySelector(
-          '.filter-option[data-value="all"]',
-        );
-        if (allFilterOpt) allFilterOpt.classList.add("active");
+        document
+          .querySelectorAll(
+            '.filter-option[data-value="all"], .top-filter-option[data-value="all"]',
+          )
+          .forEach((el) => el.classList.add("active"));
 
         if (originalPathBeforeSelection !== null) {
           const pathToRender = originalPathBeforeSelection;
@@ -2396,25 +2529,28 @@
           profileMenu.classList.toggle("show");
         });
 
+        // ACTUALIZADO: Cerrar cualquier dropdown si se hace clic fuera
         document.addEventListener("click", (e) => {
           if (
+            avatarWrapper &&
             !avatarWrapper.contains(e.target) &&
+            profileMenu &&
             profileMenu.classList.contains("show")
-          )
+          ) {
             profileMenu.classList.remove("show");
-          if (!sortBtn.contains(e.target) && !sortMenu.contains(e.target)) {
-            sortMenu.classList.remove("show");
-            sortBtn.setAttribute("aria-expanded", "false");
           }
-          if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
-            filterMenu.classList.remove("show");
-            filterBtn.setAttribute("aria-expanded", "false");
-          }
-          if (!sourceBtn.contains(e.target) && !sourceMenu.contains(e.target)) {
-            sourceMenu.classList.remove("show");
-            sourceBtn.setAttribute("aria-expanded", "false");
-          }
+          document.querySelectorAll(".custom-dropdown").forEach((dropdown) => {
+            if (!dropdown.contains(e.target)) {
+              const menu = dropdown.querySelector(".dropdown-menu");
+              const btn = dropdown.querySelector(".dropdown-btn");
+              if (menu && menu.classList.contains("show")) {
+                menu.classList.remove("show");
+                if (btn) btn.setAttribute("aria-expanded", "false");
+              }
+            }
+          });
         });
+
         realSignoutBtn.addEventListener("click", handleSignout);
         checkStoredToken();
       }
@@ -2738,7 +2874,7 @@
         });
 
         triggerGalleryAnimation();
-        searchInput.disabled = sortBtn.disabled = filterBtn.disabled = true;
+        searchInput.disabled = true;
 
         if (clusterize)
           clusterize.update([
@@ -2803,10 +2939,7 @@
               clusterize.update([
                 "<div style='width: 100%; text-align: center; color: #888; margin-top: 50px;'><i class='fa-solid fa-box-open'></i> No se encontraron imágenes o videos en tu Drive.</div>",
               ]);
-            searchInput.disabled =
-              sortBtn.disabled =
-              filterBtn.disabled =
-                false;
+            searchInput.disabled = false;
             return;
           }
 
@@ -3026,25 +3159,6 @@
             currentPath: tempRootFolderName,
           });
           searchInput.value = "";
-          currentFilter = "all";
-          filterBtnText.textContent = "Todos los archivos";
-          currentSortCriteria = "name";
-          currentSortOrder = "asc";
-          document
-            .querySelectorAll(".sort-option")
-            .forEach((el) => el.classList.remove("active"));
-          document
-            .querySelector('.sort-option.criteria[data-value="name"]')
-            .classList.add("active");
-          document
-            .querySelector('.sort-option.order[data-value="asc"]')
-            .classList.add("active");
-          document
-            .querySelectorAll(".filter-option")
-            .forEach((el) => el.classList.remove("active"));
-          document
-            .querySelector('.filter-option[data-value="all"]')
-            .classList.add("active");
 
           if (currentViewSource !== "local")
             document
@@ -3132,7 +3246,7 @@
       });
 
       // =========================================================================
-      // ⚙️ SECCIÓN 8: WORKERS Y GENERACIÓN DE MINIATURAS
+      // SECCIÓN 8: WORKERS Y GENERACIÓN DE MINIATURAS
       // =========================================================================
       const workerCodeBlock =
         document.getElementById("workerScript").textContent;
@@ -3318,70 +3432,6 @@
       // =========================================================================
       //  SECCIÓN 9: GALERÍA Y RENDERIZADO
       // =========================================================================
-
-      function handleSort(option) {
-        const type = option.getAttribute("data-type");
-        const value = option.getAttribute("data-value");
-        if (type === "criteria") {
-          currentSortCriteria = value;
-          document
-            .querySelectorAll(".sort-option.criteria")
-            .forEach((el) => el.classList.remove("active"));
-        } else if (type === "order") {
-          currentSortOrder = value;
-          document
-            .querySelectorAll(".sort-option.order")
-            .forEach((el) => el.classList.remove("active"));
-        }
-        option.classList.add("active");
-        sortMenu.classList.remove("show");
-        sortBtn.setAttribute("aria-expanded", "false");
-        updateGalleryView();
-      }
-      sortMenu.addEventListener("click", (e) => {
-        const option = e.target.closest(".sort-option");
-        if (option) {
-          e.stopPropagation();
-          handleSort(option);
-        }
-      });
-      sortMenu.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const option = e.target.closest(".sort-option");
-          if (option) {
-            e.stopPropagation();
-            handleSort(option);
-          }
-        }
-      });
-
-      function handleFilter(option) {
-        currentFilter = option.getAttribute("data-value");
-        filterBtnText.textContent = option.getAttribute("data-label");
-        document
-          .querySelectorAll(".filter-option")
-          .forEach((el) => el.classList.remove("active"));
-        option.classList.add("active");
-        filterMenu.classList.remove("show");
-        filterBtn.setAttribute("aria-expanded", "false");
-        updateGalleryView();
-      }
-      filterMenu.addEventListener("click", (e) => {
-        const option = e.target.closest(".filter-option");
-        if (option) {
-          e.stopPropagation();
-          handleFilter(option);
-        }
-      });
-      filterMenu.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const option = e.target.closest(".filter-option");
-          if (option) {
-            e.stopPropagation();
-            handleFilter(option);
-          }
-        }
-      });
 
       let favorites = new Set(
         JSON.parse(localStorage.getItem("myGalleryFavs")) || [],
@@ -3779,7 +3829,7 @@
           foldersToRender,
         );
         clusterize.update(rows);
-        searchInput.disabled = sortBtn.disabled = filterBtn.disabled = false;
+        searchInput.disabled = false;
         scrollArea.scrollTop = 0;
       }
 
@@ -4522,13 +4572,14 @@
             searchInput.value = "";
             if (currentFilter === "favs" || currentFilter === "folder") {
               currentFilter = "all";
-              filterBtnText.textContent = "Todos los archivos";
               document
-                .querySelectorAll(".filter-option")
+                .querySelectorAll(".filter-option, .top-filter-option")
                 .forEach((el) => el.classList.remove("active"));
               document
-                .querySelector('.filter-option[data-value="all"]')
-                .classList.add("active");
+                .querySelectorAll(
+                  '.filter-option[data-value="all"], .top-filter-option[data-value="all"]',
+                )
+                .forEach((el) => el.classList.add("active"));
             }
             if (currentViewSource === "local") updateGalleryView();
             else renderGallery(appState.drive.rootFolderName);
@@ -4536,13 +4587,14 @@
           }
           searchInput.value = "";
           currentFilter = "all";
-          filterBtnText.textContent = "Todos los archivos";
           document
-            .querySelectorAll(".filter-option")
+            .querySelectorAll(".filter-option, .top-filter-option")
             .forEach((el) => el.classList.remove("active"));
           document
-            .querySelector('.filter-option[data-value="all"]')
-            .classList.add("active");
+            .querySelectorAll(
+              '.filter-option[data-value="all"], .top-filter-option[data-value="all"]',
+            )
+            .forEach((el) => el.classList.add("active"));
           renderGallery(path);
           return;
         }
@@ -4568,6 +4620,7 @@
       });
 
       const ctxMenu = document.getElementById("customContextMenu");
+      const ctxItemActions = document.getElementById("ctxItemActions");
       const ctxFavIcon = document.getElementById("ctxFavIcon");
       const ctxFavText = document.getElementById("ctxFavText");
       const ctxChangeCover = document.getElementById("ctxChangeCover");
@@ -4575,20 +4628,23 @@
       const ctxUploadDriveText = document.getElementById("ctxUploadDriveText");
       let contextMenuTarget = null;
 
-      gallery.addEventListener("contextmenu", (e) => {
+      scrollArea.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+
         const mediaItem = e.target.closest('.item[data-type="media"]');
         const folderItem = e.target.closest(".item.folder");
-        if (!mediaItem && !folderItem) return;
-        e.preventDefault();
 
         if (folderItem && folderItem.getAttribute("data-action") === "open") {
           const folderPath = folderItem.getAttribute("data-path");
           contextMenuTarget = { isFolder: true, path: folderPath };
+
+          ctxItemActions.style.display = "flex";
           document.getElementById("ctxCopy").style.display = "none";
           document.getElementById("ctxShare").style.display = "none";
           document.getElementById("ctxDownload").style.display = "none";
           document.getElementById("ctxFav").style.display = "none";
           ctxChangeCover.style.display = "flex";
+
           if (currentViewSource === "local") {
             ctxUploadDrive.style.display = "flex";
             ctxUploadDriveText.innerText = "Subir carpeta a Drive";
@@ -4603,6 +4659,8 @@
             fileData,
             thumbDiv: mediaItem,
           };
+
+          ctxItemActions.style.display = "flex";
           if (favorites.has(fileData.uniquePath)) {
             ctxFavIcon.className = "fa-solid fa-heart-crack icon";
             ctxFavIcon.style.color = "#ff4d4d";
@@ -4623,7 +4681,11 @@
           } else {
             ctxUploadDrive.style.display = "none";
           }
-        } else return;
+        } else {
+          // CLIC DERECHO EN UNA ZONA VACÍA
+          contextMenuTarget = null;
+          ctxItemActions.style.display = "none";
+        }
 
         ctxMenu.style.display = "flex";
         let x = e.pageX;
@@ -4634,6 +4696,134 @@
           y = document.documentElement.scrollHeight - ctxMenu.offsetHeight - 10;
         ctxMenu.style.left = `${x}px`;
         ctxMenu.style.top = `${y}px`;
+      });
+
+      ctxMenu.addEventListener("click", (e) => {
+        const filterBtn = e.target.closest(".filter-option");
+        const sortBtn = e.target.closest(".sort-option");
+        const refreshBtn = e.target.closest("#ctxRefresh");
+
+        if (filterBtn) {
+          currentFilter = filterBtn.getAttribute("data-value");
+          document
+            .querySelectorAll(".filter-option, .top-filter-option")
+            .forEach((el) => el.classList.remove("active"));
+          document
+            .querySelectorAll(
+              `.filter-option[data-value="${currentFilter}"], .top-filter-option[data-value="${currentFilter}"]`,
+            )
+            .forEach((el) => el.classList.add("active"));
+          closeContextMenu();
+          updateGalleryView();
+        } else if (sortBtn) {
+          const type = sortBtn.getAttribute("data-type");
+          const value = sortBtn.getAttribute("data-value");
+          if (type === "criteria") {
+            currentSortCriteria = value;
+            document
+              .querySelectorAll(
+                ".sort-option.criteria, .top-sort-option.criteria",
+              )
+              .forEach((el) => el.classList.remove("active"));
+            document
+              .querySelectorAll(
+                `.sort-option.criteria[data-value="${value}"], .top-sort-option.criteria[data-value="${value}"]`,
+              )
+              .forEach((el) => el.classList.add("active"));
+          } else if (type === "order") {
+            currentSortOrder = value;
+            document
+              .querySelectorAll(".sort-option.order, .top-sort-option.order")
+              .forEach((el) => el.classList.remove("active"));
+            document
+              .querySelectorAll(
+                `.sort-option.order[data-value="${value}"], .top-sort-option.order[data-value="${value}"]`,
+              )
+              .forEach((el) => el.classList.add("active"));
+          }
+          closeContextMenu();
+          updateGalleryView();
+        } else if (refreshBtn) {
+          closeContextMenu();
+          updateGalleryView();
+        }
+      });
+
+      document.querySelectorAll(".top-filter-option").forEach((opt) => {
+        opt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          currentFilter = opt.getAttribute("data-value");
+          document
+            .querySelectorAll(".top-filter-option, .filter-option")
+            .forEach((el) => el.classList.remove("active"));
+          document
+            .querySelectorAll(
+              `.top-filter-option[data-value="${currentFilter}"], .filter-option[data-value="${currentFilter}"]`,
+            )
+            .forEach((el) => el.classList.add("active"));
+
+          opt.closest(".dropdown-menu").classList.remove("show");
+          opt
+            .closest(".custom-dropdown")
+            .querySelector(".dropdown-btn")
+            .setAttribute("aria-expanded", "false");
+          updateGalleryView();
+        });
+      });
+
+      document.querySelectorAll(".top-sort-option").forEach((opt) => {
+        opt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const type = opt.getAttribute("data-type");
+          const value = opt.getAttribute("data-value");
+
+          if (type === "criteria") {
+            currentSortCriteria = value;
+            document
+              .querySelectorAll(
+                ".top-sort-option.criteria, .sort-option.criteria",
+              )
+              .forEach((el) => el.classList.remove("active"));
+            document
+              .querySelectorAll(
+                `.top-sort-option.criteria[data-value="${value}"], .sort-option.criteria[data-value="${value}"]`,
+              )
+              .forEach((el) => el.classList.add("active"));
+          } else if (type === "order") {
+            currentSortOrder = value;
+            document
+              .querySelectorAll(".top-sort-option.order, .sort-option.order")
+              .forEach((el) => el.classList.remove("active"));
+            document
+              .querySelectorAll(
+                `.top-sort-option.order[data-value="${value}"], .sort-option.order[data-value="${value}"]`,
+              )
+              .forEach((el) => el.classList.add("active"));
+          }
+
+          opt.closest(".dropdown-menu").classList.remove("show");
+          opt
+            .closest(".custom-dropdown")
+            .querySelector(".dropdown-btn")
+            .setAttribute("aria-expanded", "false");
+          updateGalleryView();
+        });
+      });
+
+      document.querySelectorAll(".submenu-parent").forEach((parent) => {
+        parent.addEventListener("mouseenter", () => {
+          const submenu = parent.querySelector(".win11-submenu");
+          if (submenu) {
+            const rect = submenu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+              submenu.style.left = "auto";
+              submenu.style.right = "100%";
+            } else {
+              submenu.style.left = "100%";
+              submenu.style.right = "auto";
+            }
+          }
+        });
       });
 
       document
@@ -4654,13 +4844,14 @@
           banner.style.display = "flex";
           searchInput.value = "";
           currentFilter = "all";
-          filterBtnText.textContent = "Todos los archivos";
           document
-            .querySelectorAll(".filter-option")
+            .querySelectorAll(".filter-option, .top-filter-option")
             .forEach((el) => el.classList.remove("active"));
           document
-            .querySelector('.filter-option[data-value="all"]')
-            .classList.add("active");
+            .querySelectorAll(
+              '.filter-option[data-value="all"], .top-filter-option[data-value="all"]',
+            )
+            .forEach((el) => el.classList.add("active"));
           renderGallery(selectingCoverForPath);
         });
 
@@ -4670,12 +4861,23 @@
           if (!contextMenuTarget) return;
           queueUploadToDrive(contextMenuTarget);
         });
+
       function closeContextMenu() {
         ctxMenu.style.display = "none";
         contextMenuTarget = null;
       }
-      document.addEventListener("click", closeContextMenu);
+
+      document.addEventListener("click", (e) => {
+        if (ctxMenu.style.display === "flex" && !ctxMenu.contains(e.target)) {
+          closeContextMenu();
+        }
+      });
       document.addEventListener("scroll", closeContextMenu);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && ctxMenu.style.display === "flex") {
+          closeContextMenu();
+        }
+      });
 
       document.getElementById("ctxCopy").addEventListener("click", async () => {
         if (!contextMenuTarget) return;
