@@ -4853,6 +4853,8 @@
             )
             .forEach((el) => el.classList.add("active"));
           renderGallery(selectingCoverForPath);
+
+          closeContextMenu();
         });
 
       document
@@ -4860,6 +4862,8 @@
         .addEventListener("click", () => {
           if (!contextMenuTarget) return;
           queueUploadToDrive(contextMenuTarget);
+
+          closeContextMenu();
         });
 
       function closeContextMenu() {
@@ -4918,6 +4922,8 @@
         } catch (e) {
           console.error(e);
         }
+
+        closeContextMenu();
       });
 
       document
@@ -4936,6 +4942,8 @@
               "Función de compartir nativa no disponible en esta PC.",
               "error",
             );
+
+          closeContextMenu();
         });
       document.getElementById("ctxDownload").addEventListener("click", () => {
         if (!contextMenuTarget) return;
@@ -4949,6 +4957,8 @@
         a.href = url;
         a.download = fd.name;
         a.click();
+
+        closeContextMenu();
       });
       document.getElementById("ctxFav").addEventListener("click", () => {
         if (!contextMenuTarget) return;
@@ -4971,6 +4981,8 @@
         }
         saveFavorites();
         if (currentFilter === "favs") updateGalleryView();
+
+        closeContextMenu();
       });
 
       gallery.addEventListener("keydown", (e) => {
